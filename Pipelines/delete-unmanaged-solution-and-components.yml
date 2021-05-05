@@ -42,9 +42,9 @@ steps:
     PublishWorkflows: false
     ConvertToManaged: true
 
-- task: PowerPlatformDeleteSolution@0
-  displayName: 'Power Platform Delete Managed Solution'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '$(ServiceConnName)'
-    SolutionName: '$(SolutionName)'
+# - task: PowerPlatformDeleteSolution@0
+#   displayName: 'Power Platform Delete Managed Solution'
+#   inputs:
+#     authenticationType: PowerPlatformSPN
+#     PowerPlatformSPN: '$(ServiceConnName)'
+#     SolutionName: '$(SolutionName)'
