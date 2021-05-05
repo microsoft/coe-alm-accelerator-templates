@@ -1,6 +1,8 @@
 # This pipeline gets triggered manually or via an API call.  
 # It is a general purpose automation that allows you to delete or "clean up" an unmanaged solution from a Dataverse environment.
 # It is a destructive action and will remove everything in the solution from the environment.
+# If your unmanaged solution has dependencies that would prevent one of it's components from being deleted, the pipeline will fail.
+# You need to clean up dependencies before running this pipeline.
 
 # The following variables need to be set when the pipeline is queued to run:
 # ServiceConnName
