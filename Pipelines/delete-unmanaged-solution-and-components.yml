@@ -24,23 +24,16 @@ steps:
   displayName: 'Power Platform Tool Installer '
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@0
-  displayName: 'Export Solution as Managed'
+  displayName: 'Export Solution as Unmanaged'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '$(ServiceConnName)'
     SolutionName: '$(SolutionName)'
-    Managed: true
+    Managed: false
     SolutionOutputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
 
-- task: PowerPlatformDeleteSolution@0
-  displayName: 'Power Platform Delete Unmanaged Solution'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '$(ServiceConnName)'
-    SolutionName: '$(SolutionName)'
-
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
-  displayName: 'Import Managed Solution'
+  displayName: 'Import Unmanaged Solution and Convert to Managed'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '$(ServiceConnName)'
