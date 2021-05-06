@@ -63,7 +63,8 @@ jobs:
         $errorMessage = "Since the import failed, your environment is in an unhealthy state. "
         $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
         $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can resume this pipeline."
-        Write-Host "##[task.complete result=Failed]$errorMessage"
+        Write-Host "##vso[task.logissue type=error]$errorMessage.
+        Write-Host "##[task.complete result=Failed]DONE"
       displayName: 'Log error'
       condition: failed()
 
@@ -122,7 +123,8 @@ jobs:
         $errorMessage = $errorMessage + "Download the managed solution from the pipeline artifact. "
         $errorMessage = $errorMessage + "You can use it to try to manually import the solution until you fix all the related issues. "
         $errorMessage = $errorMessage + "Once you've manually imported it successfully, manually delete it."
-        Write-Host "##[task.complete result=Failed]$errorMessage"
+        Write-Host "##vso[task.logissue type=error]$errorMessage.
+        Write-Host "##[task.complete result=Failed]DONE"
       displayName: 'Log error'
       condition: failed()
 
