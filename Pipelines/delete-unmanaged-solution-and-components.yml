@@ -63,7 +63,7 @@ jobs:
         $errorMessage = "Since the import failed, your environment is in an unhealthy state. "
         $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
         $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can resume this pipeline."
-        echo "##[task.logissue type=error]$errorMessage"
+        echo "##[task.complete result=Failed]$errorMessage"
         exit(1)
       displayName: 'Log error'
       condition: failed()
@@ -87,8 +87,14 @@ jobs:
         onTimeout: 'reject'
     
   - job: tryImportDeleteAgain
-    #dependsOn: waitForIntervention
-    #condition: succeeded()
+    dependsOn: 
+    - main
+    - waitForIntervention
+    condition: |
+      and(
+        eq(dependencies.main.result, 'Failed'),
+        eq(dependencies.waitForIntervention.result, 'Succeeded')
+      )
     pool:
       vmImage: ${{ variables.vmImage }}
     steps:
@@ -117,7 +123,7 @@ jobs:
         $errorMessage = $errorMessage + "Download the managed solution from the pipeline artifact. "
         $errorMessage = $errorMessage + "You can use it to try to manually import the solution until you fix all the related issues. "
         $errorMessage = $errorMessage + "Once you've manually imported it successfully, manually delete it."
-        echo "##[task.logissue type=error]$errorMessage"
+        echo "##[task.complete result=Failed]$errorMessage"
         exit(1)
       displayName: 'Log error'
       condition: failed()
