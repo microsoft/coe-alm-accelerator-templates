@@ -35,8 +35,13 @@ jobs:
         PowerPlatformSPN: '$(ServiceConnName)'
         SolutionName: '$(SolutionName)'
         Managed: true
-        SolutionOutputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
+        SolutionOutputFile: '$(Pipeline.Workspace)\$(SolutionName).zip'
 
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Pipeline.Workspace)'
+        artifact: 'drop'
+        publishLocation: 'pipeline'
     - task: PowerPlatformDeleteSolution@0
       displayName: 'Power Platform Delete Unmanaged Solution (DOES NOT DELETE SOLUTION COMPONENTS)'
       inputs:
@@ -49,7 +54,7 @@ jobs:
       inputs:
         authenticationType: PowerPlatformSPN
         PowerPlatformSPN: '$(ServiceConnName)'
-        SolutionInputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
+        SolutionInputFile: '$(Pipeline.Workspace)\$(SolutionName).zip'
         OverwriteUnmanagedCustomizations: true
         PublishWorkflows: false
         ConvertToManaged: true
@@ -91,12 +96,17 @@ jobs:
     - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
       displayName: 'Power Platform Tool Installer '
 
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'drop'
+        targetPath: '$(Pipeline.Workspace)'
     - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
       displayName: 'Import Managed Solution'
       inputs:
         authenticationType: PowerPlatformSPN
         PowerPlatformSPN: '$(ServiceConnName)'
-        SolutionInputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
+        SolutionInputFile: '$(Pipeline.Workspace)\$(SolutionName).zip'
         OverwriteUnmanagedCustomizations: true
         PublishWorkflows: false
         ConvertToManaged: true
