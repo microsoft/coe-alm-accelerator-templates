@@ -56,7 +56,7 @@ steps:
     $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
     $errorMessage = $errorMessage + "You should re-import the unmanaged solution into your dev environment to return it to the state it was in before running this pipeline."
     $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can run this pipeline again."
-    echo "##[task.logissue type=error]$errorMessage"
+    echo "##[error]$errorMessage"
   displayName: 'Log error'
   condition: failed()
 
