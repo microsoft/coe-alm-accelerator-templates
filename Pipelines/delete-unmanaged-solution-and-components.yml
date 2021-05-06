@@ -53,7 +53,7 @@ stages:
           SolutionName: '$(SolutionName)'
 
 # If the import failed, we can't continue with the cleanup process. 
-# A common cause of this is that a canvas app is still open in the studio and therefor import is blocked.
+# A common cause of this is that a canvas app is still open in the studio and therefore import is blocked.
 # To accomodate for import failures, we separate into two stages so we can rerun the import stage if it fails.
 # This gives the maker an opportunity to resolve the issue, and rerun the second stage which will try to import/delete the managed solution again.
 # Maker can continute to rerun the stage (trial/error) until there are no more import errors.
