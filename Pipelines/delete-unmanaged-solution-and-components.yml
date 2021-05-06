@@ -82,6 +82,7 @@ jobs:
     
   - job: tryImportDeleteAgain
     dependsOn: waitForIntervention
+    condition: succeeded()
     pool:
       vmImage: ${{ variables.vmImage }}
     steps:
