@@ -35,11 +35,11 @@ jobs:
         PowerPlatformSPN: '$(ServiceConnName)'
         SolutionName: '$(SolutionName)'
         Managed: true
-        SolutionOutputFile: '$(Pipeline.Workspace)\$(SolutionName).zip'
+        SolutionOutputFile: '$(Pipeline.Workspace)\exported\$(SolutionName).zip'
 
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: '$(Pipeline.Workspace)'
+        targetPath: '$(Pipeline.Workspace)\exported'
         artifact: 'drop'
         publishLocation: 'pipeline'
     - task: PowerPlatformDeleteSolution@0
@@ -54,7 +54,7 @@ jobs:
       inputs:
         authenticationType: PowerPlatformSPN
         PowerPlatformSPN: '$(ServiceConnName)'
-        SolutionInputFile: '$(Pipeline.Workspace)\$(SolutionName).zip'
+        SolutionInputFile: '$(Pipeline.Workspace)\exported\$(SolutionName).zip'
         OverwriteUnmanagedCustomizations: true
         PublishWorkflows: false
         ConvertToManaged: true
@@ -63,7 +63,7 @@ jobs:
         $errorMessage = "Since the import failed, your environment is in an unhealthy state. "
         $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
         $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can resume this pipeline."
-        echo "##[error]$errorMessage"
+        echo "##[task.logissue type=error]$errorMessage"
         exit(1)
       displayName: 'Log error'
       condition: failed()
@@ -101,7 +101,7 @@ jobs:
       inputs:
         buildType: 'current'
         artifactName: 'drop'
-        targetPath: '$(Pipeline.Workspace)'
+        targetPath: '$(Pipeline.Workspace)\'
     - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
       displayName: 'Import Managed Solution'
       inputs:
@@ -114,10 +114,10 @@ jobs:
 
     - powershell: |
         $errorMessage = "The import failed again."
-        $errorMessage = $errorMessage + "Download the managed solution from the pipeline artifact.  You can use it to try to manually import the solution until you fix all the related issues. "
+        $errorMessage = $errorMessage + "Download the managed solution from the pipeline artifact. "
         $errorMessage = $errorMessage + "You can use it to try to manually import the solution until you fix all the related issues. "
         $errorMessage = $errorMessage + "Once you've manually imported it successfully, manually delete it."
-        echo "##[error]$errorMessage"
+        echo "##[task.logissue type=error]$errorMessage"
         exit(1)
       displayName: 'Log error'
       condition: failed()
