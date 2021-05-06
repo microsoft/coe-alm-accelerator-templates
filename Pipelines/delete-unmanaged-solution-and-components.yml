@@ -60,9 +60,9 @@ jobs:
         ConvertToManaged: true
 
     - powershell: |
-        $errorMessage = "Since the import failed, your environment is in an unhealthy state. "
-        $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
-        $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can resume this pipeline."
+        $errorMessage = "Since the import failed, your environment is in an unhealthy state.\n"
+        $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment.\n"
+        $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can resume this pipeline.\n"
         Write-Host "##vso[task.logissue type=error]$errorMessage"
         Write-Host "##[task.complete result=Failed]DONE"
       displayName: 'Log error'
@@ -75,6 +75,10 @@ jobs:
         PowerPlatformSPN: '$(ServiceConnName)'
         SolutionName: '$(SolutionName)'
 
+  # If the import failed, we can't continue with the cleanup process. 
+  # A common cause of this is that a canvas app is still open in the studio and therefor import is blocked
+  # So we are giving the maker an opportunity to resolve the issue by pausing the pipeline.
+  # Once they fix the issue(s), they can resume the pipeline and try import/delete again 
   - job: waitForIntervention
     dependsOn: main
     condition: failed()
@@ -118,11 +122,12 @@ jobs:
         PublishWorkflows: false
         ConvertToManaged: true
 
+    # If the maker hasn't resolved their import issue upon second attempt, we just tell them to finish the process manually.
     - powershell: |
         $errorMessage = "The import failed again."
-        $errorMessage = $errorMessage + "Download the managed solution from the pipeline artifact. "
-        $errorMessage = $errorMessage + "You can use it to try to manually import the solution until you fix all the related issues. "
-        $errorMessage = $errorMessage + "Once you've manually imported it successfully, manually delete it."
+        $errorMessage = $errorMessage + "Download the managed solution from the pipeline artifact.\n"
+        $errorMessage = $errorMessage + "You can use it to try to manually import the solution until you fix all the related issues.\n"
+        $errorMessage = $errorMessage + "Once you've manually imported it successfully, manually delete it.\n"
         Write-Host "##vso[task.logissue type=error]$errorMessage"
         Write-Host "##[task.complete result=Failed]DONE"
       displayName: 'Log error'
