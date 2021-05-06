@@ -15,7 +15,8 @@ name: delete-unmanaged-$(SolutionName)-and-components-from-environment
 
 variables:
 - group: global-variable-group
-  vmImage: 'windows-2019'
+- name: vmImage
+  value: 'windows-2019'
 
 jobs:
   - job: main  
