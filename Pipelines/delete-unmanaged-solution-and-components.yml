@@ -72,6 +72,9 @@ stages:
           artifactName: 'drop'
           targetPath: '$(Pipeline.Workspace)\'
 
+      - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
+        displayName: 'Power Platform Tool Installer '
+
       - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
         displayName: 'Import Managed Solution'
         inputs:
