@@ -1,7 +1,7 @@
 # This pipeline gets triggered manually or via an API call.  
 # It is a general purpose automation that allows you to delete or "clean up" an unmanaged solution from a Dataverse environment.
 # It is a destructive action and will remove everything in the solution from the environment.
-# If your unmanaged solution has dependencies that would prevent one of it's components from being deleted, the pipeline will fail.
+# If there are dependencies in other solutions on components in the solution you are trying to clean up / delete, the pipeline will fail.
 # You need to clean up dependencies before running this pipeline.
 
 # The following variables need to be set when the pipeline is queued to run:
@@ -26,23 +26,52 @@ steps:
   displayName: 'Power Platform Tool Installer '
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@0
-  displayName: 'Export Solution as Unmanaged'
+  displayName: 'Export Solution as Managed'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '$(ServiceConnName)'
     SolutionName: '$(SolutionName)'
     Managed: true
+    SolutionOutputFile: '$(build.binariesdirectory)\$(SolutionName)_managed.zip'
+
+# Since we will delete the unamanged container, we need to export as unamanged as well in case re-importing as managed fails.
+# When an import failure happens, we will have left the environment in a state where the unmanaged solution componentts
+# are still there, even though the unmanaged container is gone.  That's an unhealthy state, so we wil re-import the unamanged solution
+# to get back to the state the environment was in before the pipeline ran.
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@0
+  displayName: 'Export Solution as Unmanaged'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '$(ServiceConnName)'
+    SolutionName: '$(SolutionName)'
+    Managed: false
     SolutionOutputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
 
+- task: PowerPlatformDeleteSolution@0
+  displayName: 'Power Platform Delete Unmanaged Solution (DOES NOT DELETE COMPONENTS)'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '$(ServiceConnName)'
+    SolutionName: '$(SolutionName)'
+
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
-  displayName: 'Import Unmanaged Solution and Convert to Managed'
+  displayName: 'Import Managed Solution'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '$(ServiceConnName)'
+    SolutionInputFile: '$(build.binariesdirectory)\$(SolutionName)_managed.zip'
+    OverwriteUnmanagedCustomizations: true
+    PublishWorkflows: false
+    ConvertToManaged: true
+
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
+  displayName: 'Import Managed Solution'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '$(ServiceConnName)'
     SolutionInputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
-    OverwriteUnmanagedCustomizations: true
     PublishWorkflows: false
-    ConvertToManaged: true
+  condition: failed()
 
 - task: PowerPlatformDeleteSolution@0
   displayName: 'Power Platform Delete Managed Solution'
