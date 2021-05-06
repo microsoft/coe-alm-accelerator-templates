@@ -64,6 +64,7 @@ jobs:
         $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
         $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can resume this pipeline."
         echo "##[error]$errorMessage"
+        exit(1)
       displayName: 'Log error'
       condition: failed()
 
@@ -117,6 +118,7 @@ jobs:
         $errorMessage = $errorMessage + "You can use it to try to manually import the solution until you fix all the related issues. "
         $errorMessage = $errorMessage + "Once you've manually imported it successfully, manually delete it."
         echo "##[error]$errorMessage"
+        exit(1)
       displayName: 'Log error'
       condition: failed()
 
