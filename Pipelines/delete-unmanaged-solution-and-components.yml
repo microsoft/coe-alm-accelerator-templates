@@ -21,7 +21,7 @@ variables:
 stages:
 - stage: exportAndDeleteUnmanaged
   jobs:
-    - job: main  
+    - job: exportAndDeleteUnmanaged  
       pool:
         vmImage: ${{ variables.vmImage }}
       steps:
@@ -60,7 +60,7 @@ stages:
 
 - stage: importAndDeleteManaged
   jobs:
-    - job: main  
+    - job: importAndDeleteManaged  
       pool:
         vmImage: ${{ variables.vmImage }}
       steps:
