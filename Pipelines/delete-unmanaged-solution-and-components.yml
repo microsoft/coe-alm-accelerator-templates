@@ -16,53 +16,67 @@ name: delete-unmanaged-$(SolutionName)-and-components-from-environment
 variables:
 - group: global-variable-group
 
-pool:
-  vmImage: 'windows-2019'
+jobs:
+  - job: main  
+    pool:
+      vmImage: 'windows-2019'
 
-steps:
-- checkout: none
+    steps:
+    - checkout: none
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
-  displayName: 'Power Platform Tool Installer '
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
+      displayName: 'Power Platform Tool Installer '
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@0
-  displayName: 'Export Solution as Managed'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '$(ServiceConnName)'
-    SolutionName: '$(SolutionName)'
-    Managed: true
-    SolutionOutputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@0
+      displayName: 'Export Solution as Managed'
+      inputs:
+        authenticationType: PowerPlatformSPN
+        PowerPlatformSPN: '$(ServiceConnName)'
+        SolutionName: '$(SolutionName)'
+        Managed: true
+        SolutionOutputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
 
-- task: PowerPlatformDeleteSolution@0
-  displayName: 'Power Platform Delete Unmanaged Solution (DOES NOT DELETE SOLUTION COMPONENTS)'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '$(ServiceConnName)'
-    SolutionName: '$(SolutionName)'
+    - task: PowerPlatformDeleteSolution@0
+      displayName: 'Power Platform Delete Unmanaged Solution (DOES NOT DELETE SOLUTION COMPONENTS)'
+      inputs:
+        authenticationType: PowerPlatformSPN
+        PowerPlatformSPN: '$(ServiceConnName)'
+        SolutionName: '$(SolutionName)'
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
-  displayName: 'Import Managed Solution'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '$(ServiceConnName)'
-    SolutionInputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
-    OverwriteUnmanagedCustomizations: true
-    PublishWorkflows: false
-    ConvertToManaged: true
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
+      displayName: 'Import Managed Solution'
+      inputs:
+        authenticationType: PowerPlatformSPN
+        PowerPlatformSPN: '$(ServiceConnName)'
+        SolutionInputFile: '$(build.binariesdirectory)\$(SolutionName).zip'
+        OverwriteUnmanagedCustomizations: true
+        PublishWorkflows: false
+        ConvertToManaged: true
 
-- powershell: |
-    $errorMessage = "Since the import failed, your environment is in an unhealthy state. "
-    $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
-    $errorMessage = $errorMessage + "You should re-import the unmanaged solution into your dev environment to return it to the state it was in before running this pipeline."
-    $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can run this pipeline again."
-    echo "##[error]$errorMessage"
-  displayName: 'Log error'
-  condition: failed()
+    # - powershell: |
+    #     $errorMessage = "Since the import failed, your environment is in an unhealthy state. "
+    #     $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
+    #     $errorMessage = $errorMessage + "You should re-import the unmanaged solution into your dev environment to return it to the state it was in before running this pipeline."
+    #     $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can run this pipeline again."
+    #     echo "##[error]$errorMessage"
+    #   displayName: 'Log error'
+    #   condition: failed()
 
-- task: PowerPlatformDeleteSolution@0
-  displayName: 'Power Platform Delete Managed Solution'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '$(ServiceConnName)'
-    SolutionName: '$(SolutionName)'
+    - task: PowerPlatformDeleteSolution@0
+      displayName: 'Power Platform Delete Managed Solution'
+      inputs:
+        authenticationType: PowerPlatformSPN
+        PowerPlatformSPN: '$(ServiceConnName)'
+        SolutionName: '$(SolutionName)'
+
+  - job: waitForIntervention
+    dependsOn: main
+    condition: failed()
+    pool: server
+    steps:
+    - checkout: none
+    - task: ManualValidation@0
+      timeoutInMinutes: 30
+      inputs:
+        instructions: 'Fix what caused the import to fail and resume'
+        onTimeout: 'reject'
