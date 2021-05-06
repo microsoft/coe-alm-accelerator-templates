@@ -87,8 +87,8 @@ jobs:
         onTimeout: 'reject'
     
   - job: tryImportDeleteAgain
-    dependsOn: waitForIntervention
-    condition: succeeded()
+    #dependsOn: waitForIntervention
+    #condition: succeeded()
     pool:
       vmImage: ${{ variables.vmImage }}
     steps:
