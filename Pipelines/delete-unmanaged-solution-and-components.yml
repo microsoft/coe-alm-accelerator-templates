@@ -65,7 +65,7 @@ steps:
     ConvertToManaged: true
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
-  displayName: 'Import Managed Solution'
+  displayName: 'Import Unmanaged Solution'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '$(ServiceConnName)'
