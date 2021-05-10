@@ -5,8 +5,9 @@
 # -Create a Pull Request to merge changes
 # -Assign Pull Request to the user that requested the pipeline to run.
 
-# The following variables need to be set when the pipeline is queued to run:
-# Template-repo: The source github repository to be synced intot the Azure DevOps git repository that this pipeline is in.
+# The following variables need to be set as a pipeline variable or when the pipeline is queued to run:
+# Template-repo: The source github repository to be synced into the Azure DevOps git repository that this pipeline is in.
+#                Example: https://github.com/microsoft/coe-alm-accelerator-templates
 
 # The following parameters are required for pipeline to run:
 # BranchToCreate: The name of the new Azure DevOps Branch to create in the Repo above to which we are pulling main branch from Template-repo.
@@ -19,7 +20,7 @@ parameters:
 - name: TargetBranch
   type: string
   default: 'main'
-
+  
 trigger:
 - none
 
