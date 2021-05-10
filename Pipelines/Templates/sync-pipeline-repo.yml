@@ -5,7 +5,7 @@
 # -Create a Pull Request to merge changes
 # -Assign Pull Request to the user that requested the pipeline to run.
 
-# The following variables need to be set as a pipeline variable or when the pipeline is queued to run:
+# The following variables need to be set when the pipeline is queued to run:
 # Template-repo: The source github repository to be synced into the Azure DevOps git repository that this pipeline is in.
 #                Example: https://github.com/microsoft/coe-alm-accelerator-templates
 
@@ -57,13 +57,16 @@ stages:
           git fetch template-repo main
         displayName: 'Fetch main branch from cloned repository'
 
-        # create new branch and push to origin
+        # Create new branch and push to origin
       - script: |
           git checkout -b ${{parameters.BranchToCreate}} template-repo/main
           git push origin +${{parameters.BranchToCreate}}
         displayName: 'Push ${{parameters.BranchToCreate}} to AzDO repo'
 
-        #Create Pull Requests
-      - powershell: |
-          az repos pr create --source-branch ${{parameters.BranchToCreate}} --target-branch ${{parameters.TargetBranch}} --reviewers="$(Build.RequestedForEmail)" --title 'Sync from cloned repository'
+        # Set default org and project
+      - powershell: az devops configure --defaults organization=$(System.CollectionUri) project=$(System.TeamProject)
+        displayName: 'Set az devops defaults'
+
+        # Create Pull Requests
+      - powershell: az repos pr create --source-branch ${{parameters.BranchToCreate}} --target-branch ${{parameters.TargetBranch}} --reviewers="$(Build.RequestedForEmail)" --title 'Sync from cloned repository'
         displayName: 'Create PR - ${{parameters.BranchToCreate}} to ${{parameters.TargetBranch}}'
