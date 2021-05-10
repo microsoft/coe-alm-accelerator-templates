@@ -54,7 +54,7 @@ stages:
       - script: | 
           git remote add template-repo $(TEMPLATE-REPO)
           git fetch template-repo main
-        displayName: 'Fetch main branch from $(TEMPLATE-REPO)'
+        displayName: 'Fetch main branch from cloned repository'
 
         # create new branch and push to origin
       - script: |
