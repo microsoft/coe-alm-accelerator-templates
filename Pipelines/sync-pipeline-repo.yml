@@ -17,8 +17,8 @@ parameters:
   type: string
   default: 'update from original repo'
   
-trigger:
-- none
+trigger: none
+pr: none
 
 stages:
 - stage: sync
