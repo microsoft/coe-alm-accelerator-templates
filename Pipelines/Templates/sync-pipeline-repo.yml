@@ -19,9 +19,6 @@ parameters:
 - name: TargetBranch
   type: string
   default: 'main'
-- name: CommitMessage
-  type: string
-  default: 'update from original repo'
 
 trigger:
 - none
