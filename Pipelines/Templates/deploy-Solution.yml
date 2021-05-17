@@ -94,6 +94,7 @@ steps:
     PowerPlatformSPN: '${{parameters.serviceConnection}}'
     SolutionInputFile: $(ManagedSolutionPath)
     PublishWorkflows: true
+    OverwriteUnmanagedCustomizations: true
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), or(eq(variables['TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'False')))
 
 # If the TriggerSolutionUpgrade variable is true, then import the solution as an Upgrade, staging it as a holding solution, so we can apply a solution Upgrade.
@@ -105,6 +106,7 @@ steps:
     PowerPlatformSPN: '${{parameters.serviceConnection}}'
     SolutionInputFile: $(ManagedSolutionPath)
     HoldingSolution: true
+    OverwriteUnmanagedCustomizations: true
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'True'))
 
 # NOTE: Sometimes you need to perform intermediary steps between staging the upgrade and applying it.  
