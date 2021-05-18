@@ -17,7 +17,7 @@ resources:
   repositories:
   - repository: PipelineRepo  # repository name (DO NOT CHANGE THIS VALUE) 
     type: git
-    name: coe-alm-accelerator-templates  #This is the name of the repo in the current project in Azure Devops that has the pipeline templates. If the repo is in a different project you can specify the project and repo using the format ProjectContainingTheBuildTemplates/RepositoryContainingTheBuildTemplates (https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema%2Cparameter-schema#type)
+    name: self  #This is the name of the repo in the current project in Azure Devops that has the pipeline templates. If the repo is in a different project you can specify the project and repo using the format ProjectContainingTheBuildTemplates/RepositoryContainingTheBuildTemplates (https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema%2Cparameter-schema#type)
 
 trigger: none
 pr: none
@@ -35,7 +35,7 @@ steps:
   displayName: 'Checkout Source Branch'
 
 # Get the solution package from artifact uploaded by the build pipeline
-- template: Templates\build-Solution.yml #The @PipelineRepo tells the pipeline where to look for the templates based on the name of the repo you specified above
+- template: Templates\build-Solution.yml
   parameters:
     buildUnmanaged: 'true'
 
