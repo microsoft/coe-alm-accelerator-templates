@@ -1,15 +1,17 @@
-- powershell: |
-    Write-Host "##vso[task.setvariable variable=RepoName]$(Repo)"
-  displayName: 'Set Source Repo Name'
+steps:  
+# Checkout Pipelines
+- checkout: self
+  path: 'PipelineUtils'
+  displayName: 'Checkout Pipeline Branch'
 
 # Checkout our Branch
 - checkout: git://$(Project)/$(Repo)@$(Branch)
   displayName: 'Checkout Source Branch'
 
 # Get the solution package from artifact uploaded by the build pipeline
-- template: Templates\build-Solution.yml
+- template: build-Solution.yml
   parameters:
-    buildUnmanaged: 'true'
+    buildType: 'Unmanaged'
 
 - powershell: |
    Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Filter "$(SolutionName)*.zip" | 

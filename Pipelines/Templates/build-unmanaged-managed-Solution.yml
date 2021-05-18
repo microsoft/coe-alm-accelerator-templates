@@ -5,8 +5,7 @@ steps:
 
 - checkout: self
   displayName: 'Checkout Source Branch'
-  condition: and(succeeded(), eq('${{parameters.buildUnmanaged}}', 'false'))
 
 - template: build-Solution.yml
   parameters:
-    buildUnmanaged: 'false'
+    buildType: 'Both'

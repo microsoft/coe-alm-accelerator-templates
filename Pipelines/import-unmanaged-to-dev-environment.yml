@@ -8,25 +8,25 @@
 # - PipelineId
 #
 # NOTE: If you want to use different values for these variables, you can remove the variable group and attach them directly to this pipeline.
+
+trigger: none
+pr: none
+
 variables:
 - group: global-variable-group
 
 name: import-$(SolutionName)
 
-resources:
-  repositories:
-  - repository: PipelineRepo  # repository name (DO NOT CHANGE THIS VALUE) 
-    type: git
-    name: self  #This is the name of the repo in the current project in Azure Devops that has the pipeline templates. If the repo is in a different project you can specify the project and repo using the format ProjectContainingTheBuildTemplates/RepositoryContainingTheBuildTemplates (https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema%2Cparameter-schema#type)
-
-trigger: none
-pr: none
-
 pool:
   vmImage: 'windows-2019'
 
 steps:
+- powershell: |
+    Write-Host "##vso[task.setvariable variable=RepoName]$(Repo)"
+  displayName: 'Set Source Repo Name'
+
 - template: Templates\build-unmanaged-Solution.yml
+
 - template: Templates\deploy-Solution.yml
   parameters:
     serviceConnection: '$(ServiceConnection)'
@@ -36,6 +36,7 @@ steps:
     aadGroupCanvasConfiguration: '$(DevAadGroupCanvasConfiguration)'
     solutionComponentOwnershipConfiguration: '$(DevSolutionComponentOwnershipConfiguration)'
     importUnmanaged: 'true'
+
 - template: Templates\update-canvas-app-ownership.yml
   parameters:
     serviceConnection: '$(ServiceConnection)'
