@@ -122,6 +122,7 @@ steps:
     npm install -g xml-sorter
     Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.Repo}}\${{parameters.SolutionName}}\SolutionPackage" -Recurse -Filter *.xml | 
     ForEach-Object {
+      Write-Host $_.FullName
       xml-sorter -o $_.FullName
       # xml-sorter uses tabs for formatting, but we want spaces, so we replace tabs with spaces
       Set-Content -Path $_.FullName -Value (Get-Content $_.FullName).Replace("`t", " ") 
@@ -138,8 +139,9 @@ steps:
    ForEach-Object {
     #skip canvas app folder because canvas team already handles this for canvas unpack
     if(-not $_.FullName.Contains('CanvasApps')) {
-       $formatted = .\jq.exe . $_.FullName --sort-keys
-       $formatted | Out-File $_.FullName -Encoding UTF8
+      Write-Host $_.FullName
+      $formatted = .\jq.exe . $_.FullName --sort-keys
+      $formatted | Out-File $_.FullName -Encoding UTF8
     }
    }
    del jq.exe
