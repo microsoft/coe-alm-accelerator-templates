@@ -121,7 +121,8 @@ steps:
 - powershell: |
     Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.Repo}}\${{parameters.SolutionName}}" -Recurse -Filter *.xml | 
     ForEach-Object {
-      [xml]$xml = Get-Content $_.FullName
+      Write-Host $_.FullName
+      # [xml]$xml = Get-Content $_.FullName
 
       # function SortChildNodes($node, $depth = 0, $maxDepth = 20) {
       #   if ($node.HasChildNodes -and $depth -lt $maxDepth) {
