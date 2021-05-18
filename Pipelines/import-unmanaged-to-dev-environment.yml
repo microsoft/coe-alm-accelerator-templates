@@ -26,31 +26,7 @@ pool:
   vmImage: 'windows-2019'
 
 steps:
-- powershell: |
-    Write-Host "##vso[task.setvariable variable=RepoName]$(Repo)"
-  displayName: 'Set Source Repo Name'
-
-# Checkout our Branch
-- checkout: git://$(Project)/$(Repo)@$(Branch)
-  displayName: 'Checkout Source Branch'
-
-# Get the solution package from artifact uploaded by the build pipeline
-- template: Templates\build-Solution.yml
-  parameters:
-    buildUnmanaged: 'true'
-
-- powershell: |
-   Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Filter "$(SolutionName)*.zip" | 
-   ForEach-Object {
-       If (-Not $_.FullName.Contains("_managed")) 
-       { 
-         $unmanagedSolutionPath = $_.FullName 
-       }
-   }
-   Write-Host "##vso[task.setVariable variable=UnmanagedSolutionPath]$unmanagedSolutionPath"
-   Write-Host $unmanagedSolutionPath
-  displayName: 'Get unmanaged solution zip path'
-
+- template: Templates\build-unmanaged-Solution.yml
 - template: Templates\deploy-Solution.yml
   parameters:
     serviceConnection: '$(ServiceConnection)'

@@ -9,14 +9,6 @@ parameters:
   default: 'false'
 
 steps:  
-- checkout: PipelineRepo
-  path: 'PipelineUtils'
-  displayName: 'Checkout Pipeline Branch'
-
-- checkout: self
-  displayName: 'Checkout Source Branch'
-  condition: and(succeeded(), eq('${{parameters.buildUnmanaged}}', 'false'))
-
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
   displayName: 'Install Power Platform Build Tools'
 

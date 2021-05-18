@@ -12,7 +12,7 @@ stages:
     variables:
       TriggerSolutionUpgrade: 'false'
     steps:
-    - template: build-Solution.yml
+    - template: build-managed-Solution.yml
 - stage: deploy
   displayName: Deploy
   jobs:

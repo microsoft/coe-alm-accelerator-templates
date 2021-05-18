@@ -1,0 +1,12 @@
+steps:  
+- checkout: PipelineRepo
+  path: 'PipelineUtils'
+  displayName: 'Checkout Pipeline Branch'
+
+- checkout: self
+  displayName: 'Checkout Source Branch'
+  condition: and(succeeded(), eq('${{parameters.buildUnmanaged}}', 'false'))
+
+- template: Templates\build-Solution.yml
+  parameters:
+    buildUnmanaged: 'false'
