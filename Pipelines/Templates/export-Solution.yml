@@ -117,6 +117,40 @@ steps:
   displayName: 'unpack msapp files'
   enabled: true
 
+# Solution xml sometimes still shows noisy diffs.  So we format the xml to prevent noisy diffs.
+- powershell: |
+    Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.Repo}}\${{parameters.SolutionName}}" -Recurse -Filter *.xml | 
+    ForEach-Object {
+      [xml]$xml = Get-Content $_.FullName
+
+      function SortChildNodes($node, $depth = 0, $maxDepth = 20) {
+        if ($node.HasChildNodes -and $depth -lt $maxDepth) {
+          foreach ($child in $node.ChildNodes) {
+            SortChildNodes $child ($depth + 1) $maxDepth
+          }
+        }
+
+        $sortedAttributes = $node.Attributes | Sort-Object { $_.Name }
+        $sortedChildren = $node.ChildNodes | Sort-Object { $_.OuterXml }
+
+        $node.RemoveAll()
+
+        foreach ($sortedAttribute in $sortedAttributes) {
+          [void]$node.Attributes.Append($sortedAttribute)
+        }
+
+        foreach ($sortedChild in $sortedChildren) {
+          [void]$node.AppendChild($sortedChild)
+        }
+      }
+
+      SortChildNodes $xml.DocumentElement
+
+      $xml.Save($_.FullName)
+    }
+  displayName: 'Format xml files'
+  enabled: true
+
 # TEMPORARY until SolutionPackager supports formatting json files on unpack we
 # update all the json files to be pretty-print / formatted so they are easier to read in source control.
 # This also makes it easier to read changes from one commit to another
