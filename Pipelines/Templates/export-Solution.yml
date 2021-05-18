@@ -119,9 +119,10 @@ steps:
 
 # Solution xml sometimes still shows noisy diffs.  So we format the xml to prevent noisy diffs.
 - powershell: |
+    npm install -g xml-sorter
     Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.Repo}}\${{parameters.SolutionName}}" -Recurse -Filter *.xml | 
     ForEach-Object {
-      Write-Host $_.FullName
+      xml-sorter -o $_.FullName
       # [xml]$xml = Get-Content $_.FullName
 
       # function SortChildNodes($node, $depth = 0, $maxDepth = 20) {
