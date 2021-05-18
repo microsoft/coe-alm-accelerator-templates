@@ -123,30 +123,30 @@ steps:
     ForEach-Object {
       [xml]$xml = Get-Content $_.FullName
 
-      function SortChildNodes($node, $depth = 0, $maxDepth = 20) {
-        if ($node.HasChildNodes -and $depth -lt $maxDepth) {
-          foreach ($child in $node.ChildNodes) {
-            SortChildNodes $child ($depth + 1) $maxDepth
-          }
-        }
+      # function SortChildNodes($node, $depth = 0, $maxDepth = 20) {
+      #   if ($node.HasChildNodes -and $depth -lt $maxDepth) {
+      #     foreach ($child in $node.ChildNodes) {
+      #       SortChildNodes $child ($depth + 1) $maxDepth
+      #     }
+      #   }
 
-        $sortedAttributes = $node.Attributes | Sort-Object { $_.Name }
-        $sortedChildren = $node.ChildNodes | Sort-Object { $_.OuterXml }
+      #   $sortedAttributes = $node.Attributes | Sort-Object { $_.Name }
+      #   $sortedChildren = $node.ChildNodes | Sort-Object { $_.OuterXml }
 
-        $node.RemoveAll()
+      #   $node.RemoveAll()
 
-        foreach ($sortedAttribute in $sortedAttributes) {
-          [void]$node.Attributes.Append($sortedAttribute)
-        }
+      #   foreach ($sortedAttribute in $sortedAttributes) {
+      #     [void]$node.Attributes.Append($sortedAttribute)
+      #   }
 
-        foreach ($sortedChild in $sortedChildren) {
-          [void]$node.AppendChild($sortedChild)
-        }
-      }
+      #   foreach ($sortedChild in $sortedChildren) {
+      #     [void]$node.AppendChild($sortedChild)
+      #   }
+      # }
 
-      SortChildNodes $xml.DocumentElement
+      # SortChildNodes $xml.DocumentElement
 
-      $xml.Save($_.FullName)
+      # $xml.Save($_.FullName)
     }
   displayName: 'Format xml files'
   enabled: true
