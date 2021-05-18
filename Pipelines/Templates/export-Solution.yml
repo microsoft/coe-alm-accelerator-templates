@@ -123,6 +123,7 @@ steps:
     Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.Repo}}\${{parameters.SolutionName}}" -Recurse -Filter *.xml | 
     ForEach-Object {
       xml-sorter -o $_.FullName
+      (Get-Content $_.FullName).Replace("`t", " ")
     }
   displayName: 'Format xml files'
   enabled: true
