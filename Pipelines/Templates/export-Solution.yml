@@ -123,7 +123,8 @@ steps:
     Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.Repo}}\${{parameters.SolutionName}}" -Recurse -Filter *.xml | 
     ForEach-Object {
       xml-sorter -o $_.FullName
-      (Get-Content $_.FullName).Replace("`t", " ")
+      # xml-sorter uses tabs for formatting, but we want spaces, so we replace tabs with spaces
+      Set-Content -Path $_.FullName -Value (Get-Content $_.FullName).Replace("`t", " ") 
     }
   displayName: 'Format xml files'
   enabled: true
