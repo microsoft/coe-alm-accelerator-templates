@@ -6,7 +6,7 @@ stages:
 - stage: build_and_deploy
   displayName: 'Build and Deploy' 
   jobs:
-  - job: build-and-deploy-job
+  - job: build_and_deploy_job
     pool: 
       vmImage: 'windows-2019'
     steps:
