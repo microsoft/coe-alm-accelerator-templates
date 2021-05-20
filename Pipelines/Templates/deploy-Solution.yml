@@ -103,8 +103,7 @@ steps:
         $headers.Add("Authorization", "Bearer $env:SYSTEM_ACCESSTOKEN")
         $headers.Add("Content-Type", "application/json")
 
-        $buildSourceVersion = "$(Build.SourceVersion)"
-        Write-Host $buildSourceVersion
+        $buildSourceVersion = "$(Build.SourceVersion)"        
 
         $pullrequestqueryBody = "{
         `n  `"queries`": [
@@ -143,6 +142,8 @@ steps:
         $headers.Add("Accept", "application/vnd.github.groot-preview+json")
         $headers.Add("Authorization", "Bearer $(GitHubPAT)")
 
+        Write-Host $buildSourceVersion
+
         $pullsResponse = Invoke-RestMethod "https://api.github.com/repos/microsoft/coe-starter-kit/commits/$(Build.SourceVersion)/pulls" -Method 'GET' -Headers $headers
         Write-Host $pullsResponse
 
@@ -150,6 +151,7 @@ steps:
           $pullNumber = $pullsResponse[0].number
           $issuesResponse = Invoke-RestMethod "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$pullNumber" -Method 'GET' -Headers $headers 
           Write-Host "issuesResponse.Count greater than 0"        
+          Write-Host $issuesResponse
           $triggerSolutionUpgrade = $issuesResponse.labels.Contains('solution-upgrade').ToString().ToLower()
           Write-Host $triggerSolutionUpgrade
           echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"    
