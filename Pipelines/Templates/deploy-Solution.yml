@@ -145,8 +145,16 @@ steps:
       }
       
       if("$(Build.Repository.Provider)" -eq "GitHub") {
-        # Placeholder for alternative logic when GitHub is the backing repo
-        Write-Host "GitHub is the backing repo"
+        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+        $headers.Add("Accept", "application/vnd.github.groot-preview+json")
+        $headers.Add("Authorization", "Bearer $(GitHubPAT)")
+
+        $pullsResponse = Invoke-RestMethod "https://api.github.com/repos/microsoft/coe-starter-kit/commits/$(Build.SourceVersion)/pulls" -Method 'GET' -Headers $headers
+        Write-Host $pullsResponse
+
+        if ($pullsResponse.Count -gt 0) {
+          Write-Host "pullsResponse.Count greater than 0"            
+        }
       }
     }
   name: setTriggerSolutionUpgrade
