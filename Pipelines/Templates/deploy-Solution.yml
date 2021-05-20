@@ -93,7 +93,6 @@ steps:
     $triggerSolutionUpgradeVariableSupplied = !$triggerSolutionUpgrade.Contains("TriggerSolutionUpgrade")
 
     # If the TriggerSolutionUpgrade variable is set at queue time, then override the logic to determine solution upgrade based on PR label of solution-upgrade
-    Write-Host $triggerSolutionUpgrade
     if ($triggerSolutionUpgradeVariableSupplied) {
       echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
     }
