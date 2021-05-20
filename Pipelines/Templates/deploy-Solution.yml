@@ -25,11 +25,6 @@ parameters:
   default: 'false'
 
 steps:
-
-- powershell: |
-    Write-Host ${{parameters.skipBuildToolsInstaller}}
-  displayName: 'Get managed solution zip path'
-
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
   displayName: 'Install Power Platform Build Tools'
   condition: and(succeeded(), eq('${{parameters.skipBuildToolsInstaller}}', 'false'))
