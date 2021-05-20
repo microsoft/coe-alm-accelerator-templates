@@ -87,70 +87,81 @@ steps:
 - powershell: |    
     echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]false"
 
-    # In order to determine if we need to perform a Solution Upgrade, we see if the Pull Request has a label of solution-upgrade on it.
-    # The only way we know how to determine if the PR that created the commit for the branch had a label is to use the REST API
+    $solutionUpgradeLabel = "solution-upgrade"
 
-    if ("$(Build.Reason)" -ne "PullRequest") { 
-      Write-Host "Build.Repository.Provider is $(Build.Repository.Provider)"
+    $triggerSolutionUpgrade = '$(TriggerSolutionUpgrade)'
+    $triggerSolutionUpgradeVariableSupplied = !$triggerSolutionUpgrade.Contains("TriggerSolutionUpgrade")
 
-      if("$(Build.Repository.Provider)" -eq "TfsGit") {      
-        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-        $headers.Add("Authorization", "Bearer $env:SYSTEM_ACCESSTOKEN")
-        $headers.Add("Content-Type", "application/json")
+    # If the TriggerSolutionUpgrade variable is set at queue time, then override the logic to determine solution upgrade based on PR label of solution-upgrade
+    if ($triggerSolutionUpgradeVariableSupplied) {
+      echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
+    }
+    else {
+      # In order to determine if we need to perform a Solution Upgrade, we see if the Pull Request has a label of solution-upgrade on it.
+      # The only way we know how to determine if the PR that created the commit for the branch had a label is to use the REST API
 
-        $buildSourceVersion = "$(Build.SourceVersion)"        
+      if ("$(Build.Reason)" -ne "PullRequest") { 
+        Write-Host "Build.Repository.Provider is $(Build.Repository.Provider)"
 
-        $pullrequestqueryBody = "{
-        `n  `"queries`": [
-        `n    {
-        `n      `"type`": `"lastMergeCommit`",
-        `n      `"items`": [ `"$buildSourceVersion`" ]
-        `n    }
-        `n  ]
-        `n}"
+        if("$(Build.Repository.Provider)" -eq "TfsGit") {      
+          $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+          $headers.Add("Authorization", "Bearer $env:SYSTEM_ACCESSTOKEN")
+          $headers.Add("Content-Type", "application/json")
 
-        $pullrequestqueryBodyResourceUrl = "$(System.TeamFoundationCollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.Name)/pullrequestquery?api-version=6.0"
-        
-        $pullrequestqueryResponse = Invoke-RestMethod $pullrequestqueryBodyResourceUrl -Method 'POST' -Headers $headers -Body $pullrequestqueryBody 
+          $buildSourceVersion = "$(Build.SourceVersion)"        
 
-        $pullrequestqueryResponseResults = $pullrequestqueryResponse.results
-        
-        if ($pullrequestqueryResponseResults.Count -gt 0) {
-          $pullRequestId = $pullrequestqueryResponseResults.$buildSourceVersion.pullRequestId
-          $pullRequestLabelQuery = "$(System.TeamFoundationCollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.Name)/pullRequests/$pullRequestId/labels?api-version=6.0"
+          $pullrequestqueryBody = "{
+          `n  `"queries`": [
+          `n    {
+          `n      `"type`": `"lastMergeCommit`",
+          `n      `"items`": [ `"$buildSourceVersion`" ]
+          `n    }
+          `n  ]
+          `n}"
+
+          $pullrequestqueryBodyResourceUrl = "$(System.TeamFoundationCollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.Name)/pullrequestquery?api-version=6.0"
           
-          $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method Get -Headers @{
-            Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
-          }
+          $pullrequestqueryResponse = Invoke-RestMethod $pullrequestqueryBodyResourceUrl -Method 'POST' -Headers $headers -Body $pullrequestqueryBody 
 
-          $pullRequestLabelQueryResponseValue = $pullRequestLabelQueryResponse.value
+          $pullrequestqueryResponseResults = $pullrequestqueryResponse.results
           
-          if ($pullRequestLabelQueryResponseValue.Count -gt 0) {
-            $triggerSolutionUpgrade = $pullRequestLabelQueryResponseValue.name.Contains('solution-upgrade').ToString().ToLower()
-            echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
+          if ($pullrequestqueryResponseResults.Count -gt 0) {
+            $pullRequestId = $pullrequestqueryResponseResults.$buildSourceVersion.pullRequestId
+            $pullRequestLabelQuery = "$(System.TeamFoundationCollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.Name)/pullRequests/$pullRequestId/labels?api-version=6.0"
+            
+            $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method Get -Headers @{
+              Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+            }
+
+            $pullRequestLabelQueryResponseValue = $pullRequestLabelQueryResponse.value
+            
+            if ($pullRequestLabelQueryResponseValue.Count -gt 0) {
+              $triggerSolutionUpgrade = $pullRequestLabelQueryResponseValue.name.Contains($solutionUpgradeLabel).ToString().ToLower()
+              echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
+            }
           }
         }
-      }
-      
-      if("$(Build.Repository.Provider)" -eq "GitHub") {
-        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-        $headers.Add("Accept", "application/vnd.github.groot-preview+json")
-        $headers.Add("Authorization", "Bearer $(GitHubPAT)")
+        
+        if("$(Build.Repository.Provider)" -eq "GitHub") {
+          $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+          $headers.Add("Accept", "application/vnd.github.groot-preview+json")
+          $headers.Add("Authorization", "Bearer $(GitHubPAT)")
 
-        # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
-        #       We will consider improving this in the future, but needed minimum to get it working for BUILD preview release
-        $pullsRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/commits/$(Build.SourceVersion)/pulls"
-        
-        $pullsResponse = Invoke-RestMethod $pullsRequest -Method 'GET' -Headers $headers
-        
-        if ($pullsResponse.Count -gt 0) {
-          $pullNumber = $pullsResponse[0].number
-          $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$pullNumber"
-          $issuesResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers 
+          # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
+          #       We will consider improving this in the future, but needed minimum to get it working for BUILD preview release
+          $pullsRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/commits/$(Build.SourceVersion)/pulls"
           
-          if ($issuesResponse.labels.Count -gt 0) {
-            $triggerSolutionUpgrade = $issuesResponse.labels.name.Contains('solution-upgrade').ToString().ToLower()
-            echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
+          $pullsResponse = Invoke-RestMethod $pullsRequest -Method 'GET' -Headers $headers
+          
+          if ($pullsResponse.Count -gt 0) {
+            $pullNumber = $pullsResponse[0].number
+            $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$pullNumber"
+            $issuesResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers 
+            
+            if ($issuesResponse.labels.Count -gt 0) {
+              $triggerSolutionUpgrade = $issuesResponse.labels.name.Contains($solutionUpgradeLabel).ToString().ToLower()
+              echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
+            }
           }
         }
       }
