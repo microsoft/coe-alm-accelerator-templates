@@ -91,8 +91,8 @@ steps:
     # The only way we know how to determine if the PR that created the commit for the branch had a label is to use the REST API
 
     if ("$(Build.Reason)" -ne "PullRequest") { 
-      Write-Host "Provider-$(Build.Repository.Provider)"
-      
+      Write-Host "Build.Repository.Provider is $(Build.Repository.Provider)"
+
       if("$(Build.Repository.Provider)" -eq "TfsGit") {      
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
         $headers.Add("Authorization", "Bearer $env:SYSTEM_ACCESSTOKEN")
