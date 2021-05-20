@@ -20,7 +20,10 @@ parameters:
 - name: overwriteUnmanagedCustomizations
   type: string
   default: 'true'
+
 steps:
+- checkout: none
+
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
   displayName: 'Install Power Platform Build Tools'
 
@@ -81,13 +84,49 @@ steps:
   displayName: 'Get managed solution zip path'
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
 
-# Task will read the json file from the Pipeline Artifact and populate the value of the variables from the build pipeline for PRs and for Solution Upgrade
-- task: nkdagility.variablehydration.variablerehydration-task.variablerehydration@0
-  displayName: 'Load Variables from drop'
-  inputs:
-    jsonfiles: '$(Pipeline.Workspace)/buildPipeline/drop/meta-*.json'
-  condition: and(succeeded(), eq(variables['BuildDropExists'], 'true'), ne('${{parameters.importUnmanaged}}', 'true'))
-  continueOnError: true 
+- powershell: |    
+    echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]false"
+
+    if ("$(Build.Reason)" -ne "PullRequest"){
+      $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+      $headers.Add("Authorization", "Bearer $env:SYSTEM_ACCESSTOKEN")
+      $headers.Add("Content-Type", "application/json")
+
+      $buildSourceVersion = "$(Build.SourceVersion)"
+
+      $pullrequestqueryBody = "{
+      `n  `"queries`": [
+      `n    {
+      `n      `"type`": `"lastMergeCommit`",
+      `n      `"items`": [ `"$buildSourceVersion`" ]
+      `n    }
+      `n  ]
+      `n}"
+
+      $pullrequestqueryBodyResourceUrl = "$(System.TeamFoundationCollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.Name)/pullrequestquery?api-version=6.0"
+
+      $pullrequestqueryResponse = Invoke-RestMethod $pullrequestqueryBodyResourceUrl -Method 'POST' -Headers $headers -Body $pullrequestqueryBody 
+
+      $pullRequestId = $pullrequestqueryResponse.results.$buildSourceVersion.pullRequestId
+      
+      if ($pullRequestId.ToString() -ne ""){
+        $pullRequestLabelQuery = "$(System.TeamFoundationCollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.Name)/pullRequests/$pullRequestId/labels?api-version=6.0"
+
+        $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method Get -Headers @{
+            Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+        }
+
+        $pullRequestLabelQueryResponseValue = $pullRequestLabelQueryResponse.value
+        if ($pullRequestLabelQueryResponseValue -ne $null){
+          $triggerSolutionUpgrade = $pullRequestLabelQueryResponse.value.name.Contains('solution-upgrade').ToString().ToLower()
+          echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
+        }
+      }
+    }
+  name: setTriggerSolutionUpgrade
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  displayName: 'Set TriggerSolutionUpgrade Variable'
 
 # If the TriggerSolutionUpgrade variable is false, then import the solution as an Update
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
@@ -98,7 +137,7 @@ steps:
     SolutionInputFile: $(ManagedSolutionPath)
     PublishWorkflows: true
     OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
-  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), or(eq(variables['TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'False')))
+  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), or(eq(variables['setTriggerSolutionUpgrade.TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'False')))
 
 # If the TriggerSolutionUpgrade variable is true, then import the solution as an Upgrade, staging it as a holding solution, so we can apply a solution Upgrade.
 # Doing this will ensure that items removed from the solution in development are also removed from the solution in the target environment after the Upgrade is applied.
@@ -110,7 +149,7 @@ steps:
     SolutionInputFile: $(ManagedSolutionPath)
     HoldingSolution: true
     OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
-  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'True'))
+  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), eq(variables['setTriggerSolutionUpgrade.TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'True'))
 
 # NOTE: Sometimes you need to perform intermediary steps between staging the upgrade and applying it.  
 # An example would be moving data from one entity to another before deleting the entity.
@@ -123,7 +162,7 @@ steps:
     PowerPlatformSPN: '${{parameters.serviceConnection}}'
     SolutionName: '$(SolutionName)'
     AsyncOperation: true
-  condition: and(succeeded(), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'True'))
+  condition: and(succeeded(), eq(variables['setTriggerSolutionUpgrade.TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'True'))
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.publish-customizations.PowerPlatformPublishCustomizations@0
   displayName: 'Power Platform Publish Customizations '
