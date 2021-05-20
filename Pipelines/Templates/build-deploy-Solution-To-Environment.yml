@@ -3,7 +3,7 @@
 # -Deploying the solution to a specific environment based on pipeline variables
 # This is most commonly used for PR Validation where both the build and deploy must suceeed in order for the PR checks to succeed.
 stages:
-- stage: build-and-deploy
+- stage: build_and_deploy
   displayName: 'Build and Deploy' 
   jobs:
   - job: build-and-deploy-job
@@ -11,7 +11,7 @@ stages:
       vmImage: 'windows-2019'
     steps:
     - template: build-unmanaged-managed-Solution.yml
-    
+
     - template: deploy-Solution.yml
       parameters:
         serviceConnection: '$(ServiceConnection)'
