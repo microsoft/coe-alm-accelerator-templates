@@ -153,7 +153,12 @@ steps:
         Write-Host $pullsResponse
 
         if ($pullsResponse.Count -gt 0) {
-          Write-Host "pullsResponse.Count greater than 0"            
+          $pullNumber = $pullsResponse[0].number
+          $issuesResponse = Invoke-RestMethod "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$pullNumber" -Method 'GET' -Headers $headers 
+          Write-Host "issuesResponse.Count greater than 0"        
+          $triggerSolutionUpgrade = $issuesResponse.labels.Contains('solution-upgrade').ToString().ToLower()
+          Write-Host $triggerSolutionUpgrade
+          echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"    
         }
       }
     }
