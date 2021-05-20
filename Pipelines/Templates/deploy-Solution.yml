@@ -137,6 +137,7 @@ steps:
         }
       }
 
+      Write-Host "Provider-$(Build.Repository.Provider)"
       if("$(Build.Repository.Provider)" -eq "GitHub") {
         # Placeholder for alternative logic when GitHub is the backing repo
         Write-Host "GitHub is the backing repo"
