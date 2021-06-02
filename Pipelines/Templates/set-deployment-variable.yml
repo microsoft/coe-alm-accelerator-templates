@@ -1,0 +1,42 @@
+parameters:
+- name: variableName
+  type: string
+- name: pipelineVariableValue
+  type: string
+- name: deploymentSettingsNode
+  type: string
+- name: displayName
+  type: string
+
+
+steps:
+- powershell: |
+    # The if statement below is checking to see if the variable has been set in the pipeline. If it hasn't been set the value of the variable will be the name of the variable (e.g. $(SomeDeploymentVariable) it should be safe to check for the characters '$(' to determine if it's been set
+    if(!'${{parameters.pipelineVariableValue}}'.Contains('$('))
+    {
+      Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]${{parameters.pipelineVariableValue}}'
+    }
+    else
+    {
+        # If not set in pipeline variables check if exists in deplyomentSettings.json
+        $path = "$(Pipeline.Workspace)/drop/deploymentSettings-$(EnvironmentName).json"
+        if(Test-Path $path)
+        {
+            $deploymentSettings = Get-Content $path | ConvertFrom-Json
+            $settingsNode = $deploymentSettings.${{parameters.deploymentSettingsNode}}
+            $settingsJson = ConvertTo-Json($settingsNode) -Compress
+            if ($settingsJson) {
+                Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'$settingsJson
+            }
+            else {
+                Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'
+            }
+        }
+        else
+        {
+            Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'
+        }
+
+    }
+  name: ${{parameters.variableName}}
+  displayName: ${{parameters.displayName}}
