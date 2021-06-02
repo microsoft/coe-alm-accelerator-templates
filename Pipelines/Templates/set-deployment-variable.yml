@@ -37,7 +37,7 @@ steps:
     $variableValue | 
         select-string -pattern '\#\{(.*?)\}\#' -AllMatches | 
         ForEach-Object {$_.Matches} |
-        ForEach-Object {$variableValue = $variableValue.replace($_.Value, $($_.Groups.Groups[1].Value))}
+        ForEach-Object {$variableValue = $variableValue.replace($_.Value, 'Testing 1123122123123')}
 
 
     # Set the deployment variable for use elsewhere
