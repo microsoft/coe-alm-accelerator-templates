@@ -12,9 +12,11 @@ parameters:
 steps:
 - powershell: |
     # The if statement below is checking to see if the variable has been set in the pipeline. If it hasn't been set the value of the variable will be the name of the variable (e.g. $(SomeDeploymentVariable) it should be safe to check for the characters '$(' to determine if it's been set
+    $variableValue = ''
+    $appendVariable = false
     if(!'${{parameters.pipelineVariableValue}}'.Contains('$('))
     {
-      Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]${{parameters.pipelineVariableValue}}'
+        $variableValue = ${{parameters.pipelineVariableValue}}
     }
     else
     {
@@ -26,17 +28,27 @@ steps:
             $settingsNode = $deploymentSettings.${{parameters.deploymentSettingsNode}}
             $settingsJson = ConvertTo-Json($settingsNode) -Compress
             if ($settingsJson) {
-                Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'$settingsJson
-            }
-            else {
-                Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'
+                $appendVariable = true 
+                $variableValue = $settingsJson
             }
         }
-        else
-        {
-            Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'
-        }
-
     }
+    # Replace tokens in the deployment variable
+    $variableValue | 
+        select-string -pattern '\#\{(.*?)\}\#' -AllMatches | 
+        ForEach-Object {$_.Matches} |
+        ForEach-Object {$variableValue = $variableValue.replace($_.Value, $($_.Groups.Groups[1].Value))}
+
+
+    # Set the deployment variable for use elsewhere
+    if(appendVariable)
+    {
+        Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'$variableValue
+    }
+    else
+    {
+        Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]$variableValue'
+    }
+
   name: ${{parameters.variableName}}
   displayName: ${{parameters.displayName}}
