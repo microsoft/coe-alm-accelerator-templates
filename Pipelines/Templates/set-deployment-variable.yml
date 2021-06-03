@@ -3,52 +3,32 @@ parameters:
   type: string
 - name: pipelineVariableValue
   type: string
+- name: deploymentSettingsPath
+  type: string
 - name: deploymentSettingsNode
   type: string
 - name: displayName
   type: string
 
-
 steps:
 - powershell: |
     # The if statement below is checking to see if the variable has been set in the pipeline. If it hasn't been set the value of the variable will be the name of the variable (e.g. $(SomeDeploymentVariable) it should be safe to check for the characters '$(' to determine if it's been set
     $variableValue = ''
-    $appendVariable = false
-    if(!'${{parameters.pipelineVariableValue}}'.Contains('$('))
+    if('{{parameters.deploymentSettingsPath}}' -ne '')
     {
-        $variableValue = ${{parameters.pipelineVariableValue}}
-    }
-    else
-    {
-        # If not set in pipeline variables check if exists in deplyomentSettings.json
-        $path = "$(Pipeline.Workspace)/drop/deploymentSettings-$(EnvironmentName).json"
-        if(Test-Path $path)
-        {
-            $deploymentSettings = Get-Content $path | ConvertFrom-Json
-            $settingsNode = $deploymentSettings.${{parameters.deploymentSettingsNode}}
-            $settingsJson = ConvertTo-Json($settingsNode) -Compress
-            if ($settingsJson) {
-                $appendVariable = true 
-                $variableValue = $settingsJson
-            }
+        $deploymentSettings = Get-Content '${{parameters.deploymentSettingsPath}}' | ConvertFrom-Json
+        $settingsNode = $deploymentSettings.${{parameters.deploymentSettingsNode}}
+        $settingsJson = ConvertTo-Json($settingsNode) -Compress
+        if ($settingsJson) {
+            $variableValue = $settingsJson
         }
     }
-    # Replace tokens in the deployment variable
-    $variableValue | 
-        select-string -pattern '\#\{(.*?)\}\#' -AllMatches | 
-        ForEach-Object {$_.Matches} |
-        ForEach-Object {$variableValue = $variableValue.replace($_.Value, 'Testing 1123122123123')}
-
-
+    elseif(!'${{parameters.pipelineVariableValue}}'.Contains('$('))
+    {
+        $variableValue = '${{parameters.pipelineVariableValue}}'
+    }
     # Set the deployment variable for use elsewhere
-    if(appendVariable)
-    {
-        Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'$variableValue
-    }
-    else
-    {
-        Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]$variableValue'
-    }
+    Write-Host '##vso[task.setvariable variable=${{parameters.variableName}};isOutput=true]'$variableValue
 
   name: ${{parameters.variableName}}
   displayName: ${{parameters.displayName}}
