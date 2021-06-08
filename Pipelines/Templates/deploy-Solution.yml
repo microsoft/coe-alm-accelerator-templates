@@ -218,24 +218,44 @@ steps:
   #Check for deployment settings for this environment
 - powershell: |
     $deploymentSettingsPath = ''
+    $deploymentSettingsFile = ''
     $path = "$(Pipeline.Workspace)/drop/deploymentSettings-$(EnvironmentName).json"
     if(Test-Path $path)
     {
+        $deploymentSettingsFile = 'deploymentSettings-$(EnvironmentName).json'
         $deploymentSettingsPath = $path
     }
+    else
+    {
+        $path = "$(Pipeline.Workspace)/drop/deploymentSettings.json"
+        if(Test-Path $path)
+        {
+            $deploymentSettingsFile = 'deploymentSettings.json'
+            $deploymentSettingsPath = $path
+        }
+    }
+    Write-Host "##vso[task.setVariable variable=DeploymentSettingsFile]$deploymentSettingsFile"
     Write-Host "##vso[task.setVariable variable=DeploymentSettingsPath]$deploymentSettingsPath"
   displayName: 'Check if Deployment Settings Exist'
 
-# Update appsettings.json via FileTransform task.
+# Update deploymentSettings.json via FileTransform task. This task will replace values in a JSON file based on their path. See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/transforms-variable-substitution?view=azure-devops&tabs=Classic#jsonvarsubs
 - task: FileTransform@1
-  displayName: 'File transformation: deploymentSettings.json'
+  displayName: 'File Transformation: deploymentSettings.json'
   inputs:
     folderPath: '$(Pipeline.Workspace)/drop/'
-    targetFiles: "deploymentSettings-$(EnvironmentName).json"
+    targetFiles: '$(DeploymentSettingsFile)'
     fileType: json
   condition: and(succeeded(), ne(variables['DeploymentSettingsPath'], ''))
 
+# Third party task to replace tokens in files. The FileTransform above replaces JSON tokens based on their path as opposed to replacing text tokens in a file which can be more error prone in some cases.
+# If you aren't using this task it can be safely removed. Sample token: #{VariableNameToReplace}#
+- task: qetza.replacetokens.replacetokens-task.replacetokens@3
+  displayName: 'Replace tokens in deploymentSettingsTest.json'
+  inputs:
+    targetFiles: '$(DeploymentSettingsPath)'
+  condition: and(succeeded(), ne(variables['DeploymentSettingsPath'], ''))
 
+# Set deployment variable for environment variables
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outEnvironmentVariables'
@@ -255,6 +275,7 @@ steps:
     environmentVariablesJson: '$(outEnvironmentVariables.outEnvironmentVariables)'
   condition: and(succeeded(), ne(variables['outEnvironmentVariables.outEnvironmentVariables'], ''))
 
+# Set deployment variable for connection references
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outConnectionReferences'
@@ -263,11 +284,13 @@ steps:
     deploymentSettingsNode: 'ConnectionReferences'
     displayName: 'Retrieve Connection Reference Config'
 
+# Update connection references with existing connection IDs and activate Flows using Connection references.
 - template: update-connection-references.yml
   parameters:
     serviceConnection: '${{parameters.serviceConnection}}'
     connectionReferences: '$(outConnectionReferences.outConnectionReferences)'
 
+# Set deployment variable for AAD Group Team Configuration
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outAadGroupTeamConfiguration'
