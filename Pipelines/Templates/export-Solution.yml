@@ -144,7 +144,7 @@ steps:
     $gitStatus = iex "git status --porcelain"
     if ($gitStatus) 
     {
-        git commit -m "$(CommitMessage)"
+        git commit -m "${{parameters.CommitMessage}}"
     }
     else 
     {
