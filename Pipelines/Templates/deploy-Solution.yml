@@ -59,30 +59,27 @@ steps:
     SolutionInputFile: '$(UnmanagedSolutionPath)'
     PublishWorkflows: true
   condition: and(succeeded(), eq('${{parameters.importUnmanaged}}', 'true'))
-
 - powershell: |
-   $managedSolutionPath = ''
-   $buildDropExists = 'false'
+   $artifactDropPath = '$(Pipeline.Workspace)/drop/'
    If (Test-Path -Path "$(Pipeline.Workspace)/buildPipeline/drop")
    {
-       $buildDropExists = 'true'
-       #Attempt to find the managed solution in the build pipeline drop if build and deploy are seperate pipelines
-       Get-ChildItem -Path "$(Pipeline.Workspace)/buildPipeline/drop" -Filter "$(SolutionName)*.zip" | 
-       ForEach-Object {
-           If ($_.FullName.Contains("_managed")) 
-           { 
-             $managedSolutionPath = $_.FullName 
-           }
-       }
+       $artifactDropPath = "$(Pipeline.Workspace)/buildPipeline/drop/"
    }
-   If ($managedSolutionPath -eq '')
-   {
-        #Default to managed solution path in the same pipeline if using build-deploy-Solution.yml
-        $managedSolutionPath = '$(Pipeline.Workspace)/drop/$(SolutionName)_$(Build.BuildNumber)_managed.zip'
-   }
-   Write-Host "##vso[task.setVariable variable=ManagedSolutionPath]$managedSolutionPath"
-   Write-Host "##vso[task.setVariable variable=BuildDropExists]$buildDropExists"
-   Write-Host $managedSolutionPath
+   Write-Host "##vso[task.setVariable variable=ArtifactDropPath]$artifactDropPath"
+  displayName: 'Get artifact drop path'
+
+- powershell: |
+    $managedSolutionPath = ''
+    $artifactDropPath = "$(Pipeline.Workspace)/buildPipeline/drop/"
+    #Attempt to find the managed solution in the build pipeline drop if build and deploy are seperate pipelines
+    Get-ChildItem -Path "$(ArtifactDropPath)" -Filter "$(SolutionName)*.zip" | 
+    ForEach-Object {
+        If ($_.FullName.Contains("_managed")) 
+        { 
+            $managedSolutionPath = $_.FullName 
+        }
+    }
+    Write-Host "##vso[task.setVariable variable=ManagedSolutionPath]$managedSolutionPath"
   displayName: 'Get managed solution zip path'
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
 
@@ -217,50 +214,61 @@ steps:
 
   #Check for deployment settings for this environment
 - powershell: |
-    $deploymentSettingsPath = ''
-    $deploymentSettingsFile = ''
-    $path = "$(Pipeline.Workspace)/drop/deploymentSettings-$(EnvironmentName).json"
-    if(Test-Path $path)
-    {
-        $deploymentSettingsFile = 'deploymentSettings-$(EnvironmentName).json'
-        $deploymentSettingsPath = $path
-    }
-    else
-    {
-        $path = "$(Pipeline.Workspace)/drop/deploymentSettings.json"
+
+    $settingFiles = @("deploymentSettings","customDeploymentSettings")
+
+    foreach ($settingFile in $settingFiles) {
+        $deploymentSettingsPath = ''
+        $path = "$(ArtifactDropPath)$settingFile-$(EnvironmentName).json"
         if(Test-Path $path)
         {
-            $deploymentSettingsFile = 'deploymentSettings.json'
             $deploymentSettingsPath = $path
         }
+        else
+        {
+            $path = "$(ArtifactDropPath)$settingFile.json"
+            if(Test-Path $path)
+            {
+                $deploymentSettingsPath = $path
+            }
+        }
+
+        if($settingFile -eq "deploymentSettings")
+        {
+            Write-Host "##vso[task.setVariable variable=DeploymentSettingsPath]$deploymentSettingsPath"
+        }
+        else
+        {
+            Write-Host "##vso[task.setVariable variable=CustomDeploymentSettingsPath]$deploymentSettingsPath"
+        }
     }
-    Write-Host "##vso[task.setVariable variable=DeploymentSettingsFile]$deploymentSettingsFile"
-    Write-Host "##vso[task.setVariable variable=DeploymentSettingsPath]$deploymentSettingsPath"
   displayName: 'Check if Deployment Settings Exist'
 
-# Update deploymentSettings.json via FileTransform task. This task will replace values in a JSON file based on their path. See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/transforms-variable-substitution?view=azure-devops&tabs=Classic#jsonvarsubs
+# Update any deploymentSettings.json via FileTransform task. This task will replace values in a JSON file based on their path. See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/transforms-variable-substitution?view=azure-devops&tabs=Classic#jsonvarsubs
 - task: FileTransform@1
   displayName: 'File Transformation: deploymentSettings.json'
   inputs:
-    folderPath: '$(Pipeline.Workspace)/drop/'
-    targetFiles: '$(DeploymentSettingsFile)'
+    folderPath: '$(ArtifactDropPath)'
+    targetFiles: '*deploymentSettings*.json'
     fileType: json
-  condition: and(succeeded(), ne(variables['DeploymentSettingsPath'], ''))
+  condition: and(succeeded(), or(ne(variables['DeploymentSettingsPath'], ''), ne(variables['CustomDeploymentSettingsPath'], '')))
 
 # Third party task to replace tokens in files. The FileTransform above replaces JSON tokens based on their path as opposed to replacing text tokens in a file which can be more error prone in some cases.
 # If you aren't using this task it can be safely removed. Sample token: #{VariableNameToReplace}#
 - task: qetza.replacetokens.replacetokens-task.replacetokens@3
-  displayName: 'Replace tokens in deploymentSettingsTest.json'
+  displayName: 'Replace Tokens: deploymentSettings.json'
   inputs:
-    targetFiles: '$(DeploymentSettingsPath)'
-  condition: and(succeeded(), ne(variables['DeploymentSettingsPath'], ''))
+    rootDirectory: '$(ArtifactDropPath)'
+    targetFiles: '*deploymentSettings*.json'
+    actionOnMissing: 'silently continue'
+  condition: and(succeeded(), or(ne(variables['DeploymentSettingsPath'], ''), ne(variables['CustomDeploymentSettingsPath'], '')))
 
 # Set deployment variable for environment variables
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outEnvironmentVariables'
     pipelineVariableValue: '${{parameters.environmentVariables}}'
-    deploymentSettingsPath: $(DeploymentSettingsPath)
+    deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'EnvironmentVariables'
     displayName: 'Retrieve Environment Variable Config'
 
@@ -280,7 +288,7 @@ steps:
   parameters:
     variableName: 'outConnectionReferences'
     pipelineVariableValue: '${{parameters.connectionReferences}}'
-    deploymentSettingsPath: $(DeploymentSettingsPath)
+    deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'ConnectionReferences'
     displayName: 'Retrieve Connection Reference Config'
 
@@ -295,7 +303,7 @@ steps:
   parameters:
     variableName: 'outAadGroupTeamConfiguration'
     pipelineVariableValue: '${{parameters.aadGroupTeamConfiguration}}'
-    deploymentSettingsPath: $(DeploymentSettingsPath)
+    deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'AadGroupTeamConfiguration'
     displayName: 'Retrieve AAD Group Team Config'
 
@@ -308,7 +316,7 @@ steps:
   parameters:
     variableName: 'outAadGroupCanvasConfiguration'
     pipelineVariableValue: '${{parameters.aadGroupCanvasConfiguration}}'
-    deploymentSettingsPath: $(DeploymentSettingsPath)
+    deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'AadGroupCanvasConfiguration'
     displayName: 'Retrieve AAD Group Canvas Config'
 
@@ -321,7 +329,7 @@ steps:
   parameters:
     variableName: 'outSolutionComponentOwnershipConfiguration'
     pipelineVariableValue: '${{parameters.solutionComponentOwnershipConfiguration}}'
-    deploymentSettingsPath: $(DeploymentSettingsPath)
+    deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'SolutionComponentOwnershipConfiguration'
     displayName: 'Retrieve Solution Component Onwership Config'
 
