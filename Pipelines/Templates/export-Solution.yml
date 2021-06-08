@@ -48,13 +48,14 @@ steps:
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
   displayName: 'Initialize Git'
 
-# If the BranchToCreate variable *does not* contain an empty string, then
+# If the BranchToCreate parameter *does not* contain an empty string, then
 # create a branch based on BranchToCreate variable value and checkout that branch.
-- script: |
-   git checkout -b ${{parameters.BranchToCreate}} ${{parameters.Branch}}
-  displayName: 'Create New Git Branch: ${{parameters.BranchToCreate}}'
-  workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
-  condition: and(succeeded(), ne(variables.BranchToCreate, '')) # If an empty value is passed for the BranchToCreate variable, then skip this task
+- ${{ if ne(parameters.BranchToCreate, '')}}: # If an empty value is passed for the BranchToCreate parameter, then skip this task
+  - script: |
+      git checkout -b ${{parameters.BranchToCreate}} ${{parameters.Branch}}
+    displayName: 'Create New Git Branch: ${{parameters.BranchToCreate}}'
+    workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
+    condition: succeeded()
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
   displayName: 'Install Power Platform Build Tools'
@@ -154,32 +155,40 @@ steps:
   displayName: 'Commit Changes to Git Branch'
   continueOnError: true
   
-# If BranchToCreate variable value is '', then push to the branch specified in the Branch variable
-- script: |
-   git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push origin ${{parameters.Branch}}
-  workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
-  displayName: 'Push to $(Branch) Local Branch'
-  condition: and(eq('${{parameters.GitAccessUrl}}', ''), succeeded(), eq(variables.BranchToCreate, '')) # If an empty value is passed for the BranchToCreate variable, then run this task
+# If BranchToCreate parameter value is '' and no git access url is specified, 
+# then push to the local branch specified in the Branch parameter
+- ${{ if eq(parameters.BranchToCreate, '')}}: # If an empty value is passed for the BranchToCreate parameter, then run this task
+  - script: |
+      git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push origin ${{parameters.Branch}}
+    workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
+    displayName: 'Push to ${{parameters.Branch}} Local Branch'
+    condition: and(eq('${{parameters.GitAccessUrl}}', ''), succeeded())
 
-# If BranchToCreate variable value is not '', then push to the branch specified in the BranchToCreate variable
-- script: |
-   git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push origin ${{parameters.BranchToCreate}}
-  workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
-  displayName: 'Push to ${{parameters.BranchToCreate}} Local Branch'
-  condition: and(eq('${{parameters.GitAccessUrl}}', ''), succeeded(), ne(variables.BranchToCreate, '')) # If an empty value is not passed for the BranchToCreate variable, then run this task
+# If BranchToCreate parameter value is not '' and no git access url is specified, 
+# then push to the local branch specified in the BranchToCreate parameter
+- ${{ if ne(parameters.BranchToCreate, '')}}: # If an empty value is passed for the BranchToCreate parameter, then skip this task
+  - script: |
+      git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push origin ${{parameters.BranchToCreate}}
+    workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
+    displayName: 'Push to ${{parameters.BranchToCreate}} Local Branch'
+    condition: and(eq('${{parameters.GitAccessUrl}}', ''), succeeded())
 
-# If BranchToCreate variable value is not '', then push to the branch specified in the BranchToCreate variable
-- script: |
-   git remote set-url origin ${{parameters.GitAccessUrl}}
-   git push origin ${{parameters.Branch}}
-  workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
-  displayName: 'Push to ${{parameters.BranchToCreate}} Remote Branch'
-  condition: and(ne('${{parameters.GitAccessUrl}}', ''), succeeded(), eq(variables.BranchToCreate, '')) # If an empty value is not passed for the BranchToCreate variable, then run this task
+# If BranchToCreate parameter value is '' and a git access url is specified, 
+# then push to the remote branch specified in the Branch parameter
+- ${{ if eq(parameters.BranchToCreate, '')}}: # If an empty value is passed for the BranchToCreate parameter, then run this task
+  - script: |
+      git remote set-url origin ${{parameters.GitAccessUrl}}
+      git push origin ${{parameters.Branch}}
+    workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
+    displayName: 'Push to ${{parameters.Branch}} Remote Branch'
+    condition: and(ne('${{parameters.GitAccessUrl}}', ''), succeeded())
 
-# If BranchToCreate variable value is not '', then push to the branch specified in the BranchToCreate variable
-- script: |
-   git remote set-url origin ${{parameters.GitAccessUrl}}
-   git push origin ${{parameters.BranchToCreate}}
-  workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
-  displayName: 'Push to ${{parameters.BranchToCreate}} Remote Branch'
-  condition: and(ne('${{parameters.GitAccessUrl}}', ''), succeeded(), ne(variables.BranchToCreate, '')) # If an empty value is not passed for the BranchToCreate variable, then run this task
+# If BranchToCreate parameter value is not '' and a git access url is specified, 
+# then push to the branch specified in the BranchToCreate parameter
+- ${{ if ne(parameters.BranchToCreate, '')}}: # If an empty value is passed for the BranchToCreate parameter, then skip this task
+  - script: |
+      git remote set-url origin ${{parameters.GitAccessUrl}}
+      git push origin ${{parameters.BranchToCreate}}
+    workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
+    displayName: 'Push to ${{parameters.BranchToCreate}} Remote Branch'
+    condition: and(ne('${{parameters.GitAccessUrl}}', ''), succeeded())
