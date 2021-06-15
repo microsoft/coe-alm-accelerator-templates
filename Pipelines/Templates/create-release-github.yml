@@ -11,12 +11,16 @@ steps:
 #- task: DownloadPipelineArtifact@2
 #  displayName: 'Download Build Pipeline Artifact'
 
+- powershell: 
+    Get-ChildItem -Path '$(Pipeline.Workspace)' -recurse
+
 - powershell: |
     $today = (Get-Date)
     $monthName = $today.ToString("MMMM")
     $yearName = $today.ToString("yyyy")
     Write-Host "##vso[task.setVariable variable=MonthName]$monthName"
     Write-Host "##vso[task.setVariable variable=YearName]$yearName"
+
 - task: GitHubRelease@1
   displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
   inputs:
