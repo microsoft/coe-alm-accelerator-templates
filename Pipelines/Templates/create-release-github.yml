@@ -5,6 +5,8 @@ parameters:
   type: string
 - name: connectionName
   type: string
+- name: releaseNotesPath
+  type: string
 
 steps:  
 # Get the solution package from artifact uploaded by the build pipeline
@@ -28,9 +30,9 @@ steps:
     tagSource: 'userSpecifiedTag'
     tag: '${{ parameters.solutionName }}-$(MonthName)$(YearName)'
     title: '${{ parameters.solutionDisplayName }} $(MonthName) $(YearName)'
-    releaseNotesFilePath: '${{ parameters.solutionName }}/RELEASENOTES.md'
+    releaseNotesFilePath: '${{ parameters.releaseNotesPath }}'
     changeLogType: issueBased
     isDraft: true
     isPreRelease: true
     assets: |
-      $(Pipeline.Workspace)/drop/*managed.zip
+      $(Pipeline.Workspace)/drop/*
