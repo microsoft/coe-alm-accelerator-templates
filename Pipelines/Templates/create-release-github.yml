@@ -24,7 +24,7 @@ steps:
     tagSource: 'userSpecifiedTag'
     tag: '${{ parameters.solutionName }}-$(MonthName)$(YearName)'
     title: '${{ parameters.solutionDisplayName }} $(MonthName) $(YearName)'
-    releaseNotesFilePath: 'RELEASENOTES.md'
+    releaseNotesFilePath: '${{ parameters.solutionName }}\RELEASENOTES.md'
     changeLogType: issueBased
     isDraft: true
     isPreRelease: true
