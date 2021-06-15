@@ -1,0 +1,32 @@
+parameters:
+- name: solutionName
+  type: string
+- name: solutionDisplayName
+  type: string
+- name: connectionName
+  type: string
+
+steps:  
+# Get the solution package from artifact uploaded by the build pipeline
+#- task: DownloadPipelineArtifact@2
+#  displayName: 'Download Build Pipeline Artifact'
+
+- powershell: |
+    $today = (Get-Date)
+    $monthName = $today.ToString("MMMM")
+    $yearName = $today.ToString("yyyy")
+    Write-Host "##vso[task.setVariable variable=MonthName]$monthName"
+    Write-Host "##vso[task.setVariable variable=YearName]$yearName"
+- task: GitHubRelease@1
+  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
+  inputs:
+    gitHubConnection: ${{ parameters.connectionName }}
+    tagSource: 'userSpecifiedTag'
+    tag: '${{ parameters.solutionName }}-$(MonthName)$(YearName)'
+    title: '${{ parameters.solutionDisplayName }} $(MonthName) $(YearName)'
+    releaseNotesFilePath: 'RELEASENOTES.md'
+    changeLogType: issueBased
+    isDraft: true
+    isPreRelease: true
+    assets: |
+      $(Pipeline.Workspace)/drop/${{ parameters.solutionName }}*managed.zip
