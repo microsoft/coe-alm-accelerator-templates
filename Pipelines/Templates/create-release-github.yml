@@ -15,6 +15,7 @@ steps:
 
 - powershell: 
     Get-ChildItem -Path '$(Pipeline.Workspace)' -recurse
+  displayName: 'Showing the folder tree'
 
 - powershell: |
     $today = (Get-Date)
@@ -22,9 +23,9 @@ steps:
     $yearName = $today.ToString("yyyy")
     Write-Host "##vso[task.setVariable variable=MonthName]$monthName"
     Write-Host "##vso[task.setVariable variable=YearName]$yearName"
+  displayName: 'Get Current Month and Year for Release Name'
 
 - task: GitHubRelease@1
-  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
     tagSource: 'userSpecifiedTag'
@@ -36,3 +37,4 @@ steps:
     isPreRelease: true
     assets: |
       $(Pipeline.Workspace)/drop/*.*
+  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
