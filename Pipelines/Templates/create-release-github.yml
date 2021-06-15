@@ -33,4 +33,4 @@ steps:
     isDraft: true
     isPreRelease: true
     assets: |
-      $(Pipeline.Workspace)/drop/${{ parameters.solutionName }}*managed.zip
+      $(Pipeline.Workspace)/drop/*managed.zip
