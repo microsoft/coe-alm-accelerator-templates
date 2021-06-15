@@ -35,4 +35,4 @@ steps:
     isDraft: true
     isPreRelease: true
     assets: |
-      $(Pipeline.Workspace)/drop/*
+      $(Pipeline.Workspace)/drop/*.*
