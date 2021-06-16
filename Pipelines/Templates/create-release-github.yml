@@ -20,8 +20,7 @@ steps:
   displayName: Build Release Notes from Milestone
 
 - powershell: |
-    Write-Host 'Single Quoted: $(ReleaseNotes)'
-    echo 'No Quoted: '$(ReleaseNotes)
+    Write-Host "Double Quoted: $(ReleaseNotes)"
   displayName: Show variable value
 
 - task: GitHubRelease@1
@@ -31,7 +30,7 @@ steps:
     tag: '${{ parameters.solutionName }}-${{ parameters.releaseMonth }}${{ parameters.releaseYear }}'
     title: '${{ parameters.solutionDisplayName }} ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
     releaseNotesSource: inline
-    releaseNotesInline: '$(ReleaseNotes)'
+    releaseNotesInline: "$(ReleaseNotes)"
     changeLogType: issueBased
     isDraft: true
     isPreRelease: true
