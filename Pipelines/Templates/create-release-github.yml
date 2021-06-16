@@ -16,10 +16,8 @@ steps:
 
 - powershell: |
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
-    $bytes = [System.Text.Encoding]::Unicode.GetBytes($releaseNotes)
-    $releaseNotes =[Convert]::ToBase64String($bytes)
-    Write-Host $releaseNotes
-    Write-Host "##vso[task.setvariable variable=ReleaseNotes]$releaseNotes"
+    $releaseNotes = $releaseNotes + '\nTesting newline'
+    Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
   displayName: Build Release Notes from Milestone
 
 - task: GitHubRelease@1
@@ -28,8 +26,7 @@ steps:
     tagSource: 'userSpecifiedTag'
     tag: '${{ parameters.solutionName }}-${{ parameters.releaseMonth }}${{ parameters.releaseYear }}'
     title: '${{ parameters.solutionDisplayName }} ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
-    releaseNotesSource: inline
-    releaseNotesInline: $(ReleaseNotes)
+    releaseNotesFilePath: '${{ parameters.releaseNotesPath }}'
     changeLogType: issueBased
     isDraft: true
     isPreRelease: true
