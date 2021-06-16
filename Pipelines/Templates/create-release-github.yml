@@ -27,7 +27,7 @@ steps:
     tag: '${{ parameters.solutionName }}-${{ parameters.releaseMonth }}${{ parameters.releaseYear }}'
     title: '${{ parameters.solutionDisplayName }} ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
     releaseNotesSource: inline
-    releaseNotesInline: $(ReleaseNotes)
+    releaseNotesInline: '$(ReleaseNotes)'
     changeLogType: issueBased
     isDraft: true
     isPreRelease: true
