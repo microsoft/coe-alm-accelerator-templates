@@ -27,6 +27,7 @@ steps:
     tagSource: 'userSpecifiedTag'
     tag: '${{ parameters.solutionName }}-${{ parameters.releaseMonth }}${{ parameters.releaseYear }}'
     title: '${{ parameters.solutionDisplayName }} ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
+    releaseNotesSource: inline
     releaseNotesInline: '$(ReleaseNotes)'
     changeLogType: issueBased
     isDraft: true
