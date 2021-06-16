@@ -15,7 +15,7 @@ parameters:
 steps:
 
 - powershell: |
-    $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}'
+    $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Encoding UTF8 -Raw
     Write-Host "##vso[task.setvariable variable=ReleaseNotes]$releaseNotes"
     echo "Release Notes: $releaseNotes"
   displayName: Build Release Notes from Milestone
