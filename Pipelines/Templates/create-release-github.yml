@@ -3,6 +3,10 @@ parameters:
   type: string
 - name: solutionDisplayName
   type: string
+- name: releaseMonth
+  type: string
+- name: releaseYear
+  type: string
 - name: connectionName
   type: string
 - name: releaseNotesPath
@@ -13,24 +17,12 @@ steps:
 #- task: DownloadPipelineArtifact@2
 #  displayName: 'Download Build Pipeline Artifact'
 
-- powershell: 
-    Get-ChildItem -Path '$(Pipeline.Workspace)' -recurse
-  displayName: 'Showing the folder tree'
-
-- powershell: |
-    $today = (Get-Date)
-    $monthName = $today.ToString("MMMM")
-    $yearName = $today.ToString("yyyy")
-    Write-Host "##vso[task.setVariable variable=MonthName]$monthName"
-    Write-Host "##vso[task.setVariable variable=YearName]$yearName"
-  displayName: 'Get Current Month and Year for Release Name'
-
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
     tagSource: 'userSpecifiedTag'
-    tag: '${{ parameters.solutionName }}-$(MonthName)$(YearName)'
-    title: '${{ parameters.solutionDisplayName }} $(MonthName) $(YearName)'
+    tag: '${{ parameters.solutionName }}-${{ parameters.releaseMonth }}${{ parameters.releaseYear }}'
+    title: '${{ parameters.solutionDisplayName }} ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
     releaseNotesFilePath: '${{ parameters.releaseNotesPath }}'
     changeLogType: issueBased
     isDraft: true
