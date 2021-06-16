@@ -16,13 +16,11 @@ steps:
 
 - powershell: |
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
+    $bytes = [System.Text.Encoding]::Unicode.GetBytes($releaseNotes)
+    $releaseNotes =[Convert]::ToBase64String($bytes)
     Write-Host $releaseNotes
     Write-Host "##vso[task.setvariable variable=ReleaseNotes]$releaseNotes"
   displayName: Build Release Notes from Milestone
-
-- powershell: |
-    Write-Host "Double Quoted: "$(ReleaseNotes)
-  displayName: Show variable value
 
 - task: GitHubRelease@1
   inputs:
