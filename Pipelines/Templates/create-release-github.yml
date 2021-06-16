@@ -16,7 +16,7 @@ steps:
 
 - powershell: |
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
-    $releaseNotes = $releaseNotes + '\nTesting newline'
+    $releaseNotes = $releaseNotes + '`nTesting newline'
     Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
   displayName: Build Release Notes from Milestone
 
