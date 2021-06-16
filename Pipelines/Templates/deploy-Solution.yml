@@ -145,7 +145,7 @@ steps:
           $headers.Add("Authorization", "Bearer $(GitHubPAT)")
 
           # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
-          #       We will consider improving this in the future, but needed minimum to get it working for BUILD preview release
+          #       We will consider improving this in the future, but needed minimum to get it working for preview release
           $pullsRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/commits/$(Build.SourceVersion)/pulls"
           
           $pullsResponse = Invoke-RestMethod $pullsRequest -Method 'GET' -Headers $headers

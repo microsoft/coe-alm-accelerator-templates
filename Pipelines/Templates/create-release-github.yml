@@ -16,7 +16,19 @@ steps:
 
 - powershell: |
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
-    $releaseNotes = $releaseNotes + [Environment]::NewLine + 'Testing newline'
+    $releaseNotes = $releaseNotes + [Environment]::NewLine + '##Change Log'
+
+    $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+    $headers.Add("Accept", "application/vnd.github.groot-preview+json")
+    $headers.Add("Authorization", "Bearer $(GitHubPAT)")
+
+    # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
+    #       We will consider improving this in the future, but needed minimum to get it working for preview release
+    $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?milestone=10"
+    $issuesResponse = Invoke-RestMethod $pullsRequest -Method 'GET' -Headers $headers
+    Write-Host $issuesResponse
+    $releaseNotes = $releaseNotes + [Environment]::NewLine + $issuesResponse
+
     Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
   displayName: Build Release Notes from Milestone
 
