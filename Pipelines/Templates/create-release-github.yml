@@ -12,10 +12,12 @@ parameters:
 - name: releaseNotesPath
   type: string
 
-steps:  
-# Get the solution package from artifact uploaded by the build pipeline
-#- task: DownloadPipelineArtifact@2
-#  displayName: 'Download Build Pipeline Artifact'
+steps:
+
+- powershell: |
+    $releaseNotes = Get-Content ${{ parameters.releaseNotesPath }}
+    Write-Host "##vso[task.setvariable variable=ReleaseNotes]$releaseNotes"
+  displayName: Build Release Notes from Milestone
 
 - task: GitHubRelease@1
   inputs:
@@ -23,7 +25,7 @@ steps:
     tagSource: 'userSpecifiedTag'
     tag: '${{ parameters.solutionName }}-${{ parameters.releaseMonth }}${{ parameters.releaseYear }}'
     title: '${{ parameters.solutionDisplayName }} ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
-    releaseNotesFilePath: '${{ parameters.releaseNotesPath }}'
+    releaseNotesInline: $(ReleaseNotes)
     changeLogType: issueBased
     isDraft: true
     isPreRelease: true
