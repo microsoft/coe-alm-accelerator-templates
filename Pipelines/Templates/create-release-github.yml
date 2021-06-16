@@ -20,8 +20,6 @@ steps:
   displayName: Build Release Notes from Milestone
 
 - powershell: |
-    $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
-    Write-Host 'Release Notes Raw: $releaseNotes'
     Write-Host 'Single Quoted: $(ReleaseNotes)'
     echo 'No Quoted: $(ReleaseNotes)
   displayName: Show variable value
