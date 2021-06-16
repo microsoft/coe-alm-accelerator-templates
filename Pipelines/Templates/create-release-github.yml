@@ -19,11 +19,6 @@ steps:
     Write-Host "##vso[task.setvariable variable=ReleaseNotes]"$releaseNotes
   displayName: Build Release Notes from Milestone
 
-- powershell: |
-    Write-Host 'Single Quoted: $(ReleaseNotes)'
-    echo 'No Quoted: $(ReleaseNotes)
-  displayName: Show variable value
-
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
