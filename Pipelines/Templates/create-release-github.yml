@@ -16,10 +16,11 @@ steps:
 
 - powershell: |
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}'
-    $releaseNotes = $releaseNotes.replace('\n','<br />')
     Write-Host "##vso[task.setvariable variable=ReleaseNotes]$releaseNotes"
-    echo $releaseNotes
-    Write-Host $releaseNotes
+  displayName: Build Release Notes from Milestone
+
+- powershell: |
+    Write-Host $(ReleaseNotes)
   displayName: Build Release Notes from Milestone
 
 - task: GitHubRelease@1
