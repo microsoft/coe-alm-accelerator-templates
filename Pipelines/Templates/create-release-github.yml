@@ -16,6 +16,7 @@ steps:
 
 - powershell: |
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}'
+    $releaseNotes = $releaseNotes.replace('\n','<br />')
     Write-Host "##vso[task.setvariable variable=ReleaseNotes]$releaseNotes"
     echo $releaseNotes
     Write-Host $releaseNotes
