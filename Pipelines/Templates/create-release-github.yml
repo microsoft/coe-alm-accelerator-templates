@@ -47,8 +47,8 @@ steps:
         Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
     }
     else{
-      Write-Error 'No milestone was found for '$milestoneName
-      Write-Host "##vso[task.logissue type=error]No milestone was found for "$milestoneName
+      Write-Error 'No milestone was found for $milestoneName'
+      Write-Host '##vso[task.logissue type=error]No milestone was found for $milestoneName'
       exit(1)
     }
   displayName: Build Release Notes from Milestone
