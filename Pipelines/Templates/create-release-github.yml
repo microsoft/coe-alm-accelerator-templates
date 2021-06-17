@@ -1,3 +1,4 @@
+#Template to create coe-starter-kit releases in Github based on defined milestones for Month/Year
 parameters:
 - name: solutionName
   type: string
@@ -14,6 +15,10 @@ parameters:
 
 steps:
 
+#This step will read the release notes into a variable and append a list of issues based on the milestone defined by:
+#'${{ parameters.solutionDisplayName }} - ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
+#Example Milestone 'CoE Starter Kit - July 2021'
+#If a milestone with the specific name is not found an error will be thrown
 - powershell: |
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
@@ -36,7 +41,7 @@ steps:
     if($currentMilestone -ne $null){
         # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
         #       We will consider improving this in the future, but needed minimum to get it working for preview release
-        $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?milestone=10"
+        $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?milestone=" + $currentMilestone.number
         $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
 
         foreach($issue in $issueResponse){
