@@ -27,7 +27,7 @@ steps:
     $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?milestone=10"
     $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
 
-    foreach($issue in $issueResponse.value){
+    foreach($issue in $issueResponse[0]){
         $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - " + $issue.number + "-" + $issue.title
         Write-Host (ConvertTo-Json $issue)
     }
