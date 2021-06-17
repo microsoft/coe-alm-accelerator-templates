@@ -28,7 +28,7 @@ steps:
     $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
 
     foreach($issue in $issueResponse.value){
-        $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - " $issue.number + "-" + $issue.title
+        $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - " + $issue.number + "-" + $issue.title
     }
 
     Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
