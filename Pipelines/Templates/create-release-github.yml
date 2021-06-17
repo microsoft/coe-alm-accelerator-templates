@@ -12,6 +12,9 @@ parameters:
   type: string
 - name: releaseNotesPath
   type: string
+- name: isPreRelease
+  type: boolean
+  default: false
 
 steps:
 
@@ -67,7 +70,7 @@ steps:
     releaseNotesFilePath: '${{ parameters.releaseNotesPath }}'
     addChangeLog: false
     isDraft: true
-    isPreRelease: true
+    isPreRelease: ${{ parameters.isPreRelease }}
     assets: |
       $(Pipeline.Workspace)/releaseassets/*.*
   displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
