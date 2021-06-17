@@ -23,7 +23,7 @@ steps:
     $headers.Add("Authorization", "Bearer $(GitHubPAT)")
 
     $milestoneRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/milestones?sort=due_on&direction=desc"
-    $milestoneResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
+    $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
     $currentMilestone = $null
     $milestoneName = '${{ parameters.solutionDisplayName }} - ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
     foreach($milestone in $milestoneResponse){
