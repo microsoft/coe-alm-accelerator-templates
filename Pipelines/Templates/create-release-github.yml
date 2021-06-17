@@ -29,6 +29,7 @@ steps:
 
     foreach($issue in $issueResponse.value){
         $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - " + $issue.number + "-" + $issue.title
+        Write-Host (ConvertTo-Json $issue)
     }
 
     Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
