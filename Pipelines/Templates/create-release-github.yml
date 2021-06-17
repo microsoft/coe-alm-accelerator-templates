@@ -42,6 +42,7 @@ steps:
     tag: '${{ parameters.solutionName }}-${{ parameters.releaseMonth }}${{ parameters.releaseYear }}'
     title: '${{ parameters.solutionDisplayName }} ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
     releaseNotesFilePath: '${{ parameters.releaseNotesPath }}'
+    addChangeLog: false
     isDraft: true
     isPreRelease: true
     assets: |
