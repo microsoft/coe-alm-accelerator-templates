@@ -25,9 +25,11 @@ steps:
     # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
     #       We will consider improving this in the future, but needed minimum to get it working for preview release
     $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?milestone=10"
-    $issuesResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
-    Write-Host (ConvertTo-Json $issuesResponse)
-    $releaseNotes = $releaseNotes + [Environment]::NewLine + (ConvertTo-Json $issuesResponse)
+    $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers |
+
+    foreach($issue in $issueResponse.value)
+        $releaseNotes = $releaseNotes + [Environment]::NewLine + "#$issue.number - $issue.title"
+    }
 
     Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
   displayName: Build Release Notes from Milestone
