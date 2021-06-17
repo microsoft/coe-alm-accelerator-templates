@@ -28,7 +28,7 @@ steps:
     $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
 
     foreach($issue in $issueResponse){
-        $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - " + $issue.number + "-" + $issue.title
+        $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title
         Write-Host (ConvertTo-Json $issue)
     }
 
