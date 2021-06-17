@@ -30,6 +30,7 @@ steps:
     $headers.Add("Accept", "application/vnd.github.groot-preview+json")
     $headers.Add("Authorization", "Bearer $(GitHubPAT)")
 
+    #Find the milestone for this release e.g. 'CoE Starter Kit - July 2021
     $milestoneRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/milestones?sort=due_on&direction=desc"
     $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
     $currentMilestone = $null
@@ -44,17 +45,17 @@ steps:
     if($currentMilestone -ne $null){
         # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
         #       We will consider improving this in the future, but needed minimum to get it working for preview release
-        $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?milestone=" + $currentMilestone.number
+        $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?state=closed&filter=all&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
         $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
 
         foreach($issue in $issueResponse){
-            $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title
-            Write-Host (ConvertTo-Json $issue)
+            $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
         }
 
         Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
     }
     else{
+      # The milestone was not found could be a naming error
       Write-Error 'No milestone was found for $milestoneName'
       Write-Host '##vso[task.logissue type=error]No milestone was found for $milestoneName'
       exit(1)
