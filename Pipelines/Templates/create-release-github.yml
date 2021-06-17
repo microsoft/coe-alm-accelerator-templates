@@ -29,6 +29,7 @@ steps:
     foreach($milestone in $milestoneResponse){
         if($milestone.title -eq $milestoneName){
             $currentMilestone = $milestone
+            break
         }
     }
 
