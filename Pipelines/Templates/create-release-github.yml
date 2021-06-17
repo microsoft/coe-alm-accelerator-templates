@@ -16,7 +16,7 @@ steps:
 
 - powershell: |
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
-    $releaseNotes = $releaseNotes + [Environment]::NewLine + '##Change Log'
+    $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
     $headers.Add("Accept", "application/vnd.github.groot-preview+json")
@@ -28,7 +28,7 @@ steps:
     $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
 
     foreach($issue in $issueResponse.value){
-        $releaseNotes = $releaseNotes + [Environment]::NewLine + "#$issue.number - $issue.title"
+        $releaseNotes = $releaseNotes + [Environment]::NewLine + $issue.number + "-" + $issue.title"
     }
 
     Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
