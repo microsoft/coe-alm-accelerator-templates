@@ -30,7 +30,7 @@ steps:
 
     $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/RELEASENOTES-${{parameters.releaseYear}}' + ([string]${{parameters.releaseMonth}}).PadLeft(2,'0').md
 
-    $releaseNotes = Get-Content '$fullReleaseNotesPath' -Raw
+    $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
