@@ -3,7 +3,7 @@ steps:
 # However, to use functionality ahead of the tasks, we install the CLI.  Once the task is available, we move to using the task.
 - powershell: |
     $nugetPackage = "Microsoft.PowerApps.CLI"
-    $nugetPackageVersion = "$(pacVersion)""
+    $nugetPackageVersion = "$(pacVersion)"
     if ($nugetPackageVersion = "pacVersion"){
       $nugetPackageVersion =  "1.7.2"
     }    
@@ -12,4 +12,4 @@ steps:
     $pacNugetFolder = Get-ChildItem $outFolder | Where-Object {$_.Name -match $nugetPackage + "."}
     $pacPath = $pacNugetFolder.FullName + "\tools"
     echo "##vso[task.setvariable variable=pacPath]$pacPath"
-  displayName: 'Install Power Apps CLI'
+  displayName: 'Install pac cli'
