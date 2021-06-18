@@ -29,6 +29,7 @@ steps:
     Write-Host "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
     $releaseMonthPadded = ([string]${{parameters.releaseMonth}}).PadLeft(2,'0')
     $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES-${{parameters.releaseYear}}' + $releaseMonthPadded + '.md'
+    Write-Host "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
 
     $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
@@ -75,7 +76,7 @@ steps:
     tagSource: 'userSpecifiedTag'
     tag: '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}'
     title: '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
-    releaseNotesFilePath: '${{ parameters.releaseNotesPath }}'
+    releaseNotesFilePath: '$(ReleaseNotesPath)'
     addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
     isDraft: true #Always mark as draft for someone to review before publishing
     isPreRelease: ${{ parameters.isPreRelease }}
