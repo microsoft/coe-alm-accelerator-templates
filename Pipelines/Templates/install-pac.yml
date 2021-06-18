@@ -4,6 +4,7 @@ steps:
 - powershell: |
     $nugetPackage = "Microsoft.PowerApps.CLI"
     $nugetPackageVersion = "$[variables.pacVersion]"
+    Write-Host "'" & $nugetPackageVersion & "'"
     if ($nugetPackageVersion = ""){
       $nugetPackageVersion =  "1.7.2"
     }    
