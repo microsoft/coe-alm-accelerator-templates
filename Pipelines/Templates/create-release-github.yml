@@ -23,6 +23,11 @@ steps:
 #Example Milestone 'CoE Starter Kit - July 2021'
 #If a milestone with the specific name is not found an error will be thrown
 - powershell: |
+
+    #Convert release month number to name
+    $releaseMonthName = (Get-Culture).DateTimeFormat.GetMonthName(${{ parameters.releaseMonth }})
+    Write-Host "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
+
     $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
@@ -34,7 +39,7 @@ steps:
     $milestoneRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/milestones?sort=due_on&direction=desc"
     $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
     $currentMilestone = $null
-    $milestoneName = '${{ parameters.solutionDisplayName }} - ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
+    $milestoneName = '${{ parameters.solutionDisplayName }} - $releaseMonthName ${{ parameters.releaseYear }}'
     foreach($milestone in $milestoneResponse){
         if($milestone.title -eq $milestoneName){
             $currentMilestone = $milestone
@@ -66,8 +71,8 @@ steps:
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
     tagSource: 'userSpecifiedTag'
-    tag: '${{ parameters.solutionName }}-${{ parameters.releaseMonth }}${{ parameters.releaseYear }}'
-    title: '${{ parameters.solutionDisplayName }} ${{ parameters.releaseMonth }} ${{ parameters.releaseYear }}'
+    tag: '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}'
+    title: '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
     releaseNotesFilePath: '${{ parameters.releaseNotesPath }}'
     addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
     isDraft: true #Always mark as draft for someone to review before publishing
