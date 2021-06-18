@@ -27,7 +27,9 @@ steps:
     #Convert release month number to name
     $releaseMonthName = (Get-Culture).DateTimeFormat.GetMonthName(${{ parameters.releaseMonth }})
     Write-Host "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
-    $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES-${{parameters.releaseYear}}' + ([string]${{parameters.releaseMonth}}).PadLeft(2,'0') + '.md'
+
+    $releaseMonthPadded = ([string]${{parameters.releaseMonth}}).PadLeft(2,'0')
+    $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES-${{parameters.releaseYear}}' + $releaseMonthPadded + '.md'
     Write-Host $fullReleaseNotesPath
 
     $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
@@ -42,6 +44,7 @@ steps:
     $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
     $currentMilestone = $null
     $milestoneName = '${{ parameters.solutionDisplayName }} - $releaseMonthName ${{ parameters.releaseYear }}'
+    Write-Host $milestoneName
     foreach($milestone in $milestoneResponse){
         if($milestone.title -eq $milestoneName){
             $currentMilestone = $milestone
