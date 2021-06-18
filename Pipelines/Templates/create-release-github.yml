@@ -29,7 +29,6 @@ steps:
     Write-Host "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
     $releaseMonthPadded = ([string]${{parameters.releaseMonth}}).PadLeft(2,'0')
     $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES-${{parameters.releaseYear}}' + $releaseMonthPadded + '.md'
-    Write-Host $fullReleaseNotesPath
 
     $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
@@ -43,7 +42,6 @@ steps:
     $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
     $currentMilestone = $null
     $milestoneName = '${{ parameters.solutionDisplayName }} - ' + $releaseMonthName + ' ' + ${{ parameters.releaseYear }}
-    Write-Host $milestoneName
     foreach($milestone in $milestoneResponse){
         if($milestone.title -eq $milestoneName){
             $currentMilestone = $milestone
@@ -61,7 +59,7 @@ steps:
             $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
         }
 
-        Set-Content -Path ${{ parameters.releaseNotesPath }} -Value $releaseNotes
+        Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
     }
     else{
       # The milestone was not found could be a naming error
