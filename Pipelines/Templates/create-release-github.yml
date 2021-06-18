@@ -42,7 +42,7 @@ steps:
     $milestoneRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/milestones?sort=due_on&direction=desc"
     $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
     $currentMilestone = $null
-    $milestoneName = '${{ parameters.solutionDisplayName }} - ' + $releaseMonthName + ${{ parameters.releaseYear }}
+    $milestoneName = '${{ parameters.solutionDisplayName }} - ' + $releaseMonthName + ' ' + ${{ parameters.releaseYear }}
     Write-Host $milestoneName
     foreach($milestone in $milestoneResponse){
         if($milestone.title -eq $milestoneName){
