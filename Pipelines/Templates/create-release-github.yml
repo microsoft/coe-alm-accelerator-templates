@@ -5,9 +5,9 @@ parameters:
 - name: solutionDisplayName
   type: string
 - name: releaseMonth
-  type: integer
+  type: number
 - name: releaseYear
-  type: integer
+  type: number
 - name: connectionName
   type: string
 - name: releaseNotesPath
