@@ -28,7 +28,9 @@ steps:
     $releaseMonthName = (Get-Culture).DateTimeFormat.GetMonthName(${{ parameters.releaseMonth }})
     Write-Host "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
 
-    $releaseNotes = Get-Content '${{ parameters.releaseNotesPath }}' -Raw
+    $fullReleaseNotesPath = ${{ parameters.releaseNotesPath }} + ${{ parameters.releaseNotesPath }} + '/RELEASENOTES-' + ${{parameters.ReleaseYearNumber}} + ([string]${{parameters.ReleaseMonthNumber}}).PadLeft(2,'0').md
+
+    $releaseNotes = Get-Content '$fullReleaseNotesPath' -Raw
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
