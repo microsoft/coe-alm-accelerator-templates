@@ -3,10 +3,8 @@ steps:
 # However, to use functionality ahead of the tasks, we install the CLI.  Once the task is available, we move to using the task.
 - powershell: |
     $nugetPackage = "Microsoft.PowerApps.CLI"
-    $nugetPackageVersion = "$[variables.pacVersion]"
-    $temp = "'" + $nugetPackageVersion + "'"
-    Write-Host $temp
-    if ($nugetPackageVersion = ""){
+    $nugetPackageVersion = "$(pacVersion)""
+    if ($nugetPackageVersion = "pacVersion"){
       $nugetPackageVersion =  "1.7.2"
     }    
     $outFolder = "pac"
