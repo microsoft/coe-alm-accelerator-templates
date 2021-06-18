@@ -27,7 +27,7 @@ steps:
     #Convert release month number to name
     $releaseMonthName = (Get-Culture).DateTimeFormat.GetMonthName(${{ parameters.releaseMonth }})
     Write-Host "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
-
+    Write-Host $fullReleaseNotesPath
     $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/RELEASENOTES-${{parameters.releaseYear}}' + ([string]${{parameters.releaseMonth}}).PadLeft(2,'0').md
 
     $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
