@@ -38,6 +38,9 @@ parameters:
 - name: UserName
   type: string
   default: ''
+- name: DisableWorkflows
+  type: boolean
+  default: false
 steps:
 
 # Configure email/name and checkout git branch
