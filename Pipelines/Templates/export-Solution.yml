@@ -147,6 +147,18 @@ steps:
   enabled: true
 
 - powershell: |
+   Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.Repo}}\${{parameters.SolutionName}}\SolutionPackage\Workflows" -Recurse -Filter *.xml | 
+   ForEach-Object {
+    $xml=[xml](Get-Content $_.FullName)
+    $workflowNode = $xml.SelectSingleNode("//")
+    $workflowNode.StateCode = '0'
+    $workflowNode.StatusCode = '1'
+    $xml.Save($_.FullName)
+   }
+  displayName: 'Conditionally Disable Workflows'
+  condition: and(succeeded(), ${{parameters.DisableWorkflows}})
+
+- powershell: |
     git add --all
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
   displayName: 'Add Changes to Git Branch'
