@@ -298,6 +298,7 @@ steps:
   parameters:
     serviceConnection: '${{parameters.serviceConnection}}'
     connectionReferences: '$(outConnectionReferences.outConnectionReferences)'
+    enableFlows: '$(EnableFlows)'
 
 # Set deployment variable for AAD Group Team Configuration
 - template: set-deployment-variable.yml
@@ -338,6 +339,7 @@ steps:
   parameters:
     serviceConnection: '${{parameters.serviceConnection}}'
     solutionComponentOwnershipConfiguration: '$(outSolutionComponentOwnershipConfiguration.outSolutionComponentOwnershipConfiguration)'
+    enableFlows: '$(EnableFlows)'
 
 - template: import-configuration-migration-data.yml
   parameters:

@@ -56,4 +56,3 @@ steps:
     ServiceConnection: $(ServiceConnection)
     SolutionName: $(SolutionName)
     UserName: $(UserName)
-    DisableWorkflows: true
