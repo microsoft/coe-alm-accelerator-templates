@@ -67,8 +67,8 @@ steps:
                 # Comment and close the issue if issueClosingComment is supplied
                 # /repos/{owner}/{repo}/issues/{issue_number}/comments
                 $commentRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/" + $issue.number + "/comments"
-                Write-Host $commentRequestUrl
-                $commentBody = "@" + $issue.$user.login + " ${{ parameters.issueClosingComment }}"
+                $commentFormatted = "@" + $issue.$user.login + " ${{ parameters.issueClosingComment }}"
+                $commentBody = "{`"body`": `"$commentFormatted`"}"
                 Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
 
                 #/repos/{owner}/{repo}/issues/{issue_number}
