@@ -58,7 +58,7 @@ steps:
         # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
         #       We will consider improving this in the future, but needed minimum to get it working for preview release
         $issuesRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?state=closed&filter=all&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
-        if(${{ parameters.issueClosingComment }} -ne ''){
+        if('${{ parameters.issueClosingComment }}' -ne ''){
             $issuesRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?state=open&filter=all&milestone=" + $currentMilestone.number #retrieve all open issues to be closed in this milestone
         }
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
