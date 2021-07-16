@@ -53,6 +53,7 @@ steps:
         }
     }
 
+    Write-Host "Here-1"
     if($currentMilestone -ne $null){
         # NOTE: Since this is for internal use only right now, we are hardcoding microsoft/coe-starter-kit
         #       We will consider improving this in the future, but needed minimum to get it working for preview release
@@ -61,6 +62,7 @@ steps:
             $issuesRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?state=open&filter=all&milestone=" + $currentMilestone.number #retrieve all open issues to be closed in this milestone
         }
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
+        Write-Host "Here0"
 
         foreach($issue in $issueResponse){
             if(${{ parameters.issueClosingComment }} -ne ''){
