@@ -68,7 +68,10 @@ steps:
                 # /repos/{owner}/{repo}/issues/{issue_number}/comments
                 $commentRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$issue.number/comments"
                 $commentBody = "@$issue.$user.login ${{ parameters.issueClosingComment }}"
-                $response = Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
+                Write-Host "Creating comment"
+                Write-Host $commentBody
+                Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
+
                 #/repos/{owner}/{repo}/issues/{issue_number}
                 #$issueRequestClosingUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$issue.number"
                 #$commentBody = "@" + $issue.$user.login + " ${{ parameters.issueClosingComment }}"
