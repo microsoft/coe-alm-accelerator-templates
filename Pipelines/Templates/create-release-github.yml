@@ -63,17 +63,18 @@ steps:
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
         foreach($issue in $issueResponse){
             if('${{ parameters.issueClosingComment }}' -ne ''){
-                # Comment and close the issue if issueClosingComment is supplied
+                # Add the comment to the issue
                 # /repos/{owner}/{repo}/issues/{issue_number}/comments
                 $commentRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/" + $issue.number + "/comments"
                 $commentFormatted = "${{ parameters.issueClosingComment }}"
                 $commentBody = "{`"body`": `"$commentFormatted`"}"
                 Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
 
+                # Close the issue
                 #/repos/{owner}/{repo}/issues/{issue_number}
-                #$issueRequestClosingUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$issue.number"
-                #$commentBody = "@" + $issue.$user.login + " ${{ parameters.issueClosingComment }}"
-                #$response = Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
+                #$issueRequestClosingUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/" + $issue.number
+                $closeRequestBody = "{`"state`": `"closed`"}"
+                Invoke-RestMethod $commentRequestUrl -Method 'PATCH' -Headers $headers -Body $commentBody
             }
             $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
         }
