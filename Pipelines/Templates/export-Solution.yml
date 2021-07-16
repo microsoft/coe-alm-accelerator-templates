@@ -156,6 +156,22 @@ steps:
   condition: and(succeeded(), eq(variables.DisableFlows, 'true'))
 
 - powershell: |
+   $foundVariableValue = $false
+   Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.Repo}}\${{parameters.SolutionName}}\SolutionPackage\environmentvariabledefinitions" -Recurse -Filter environmentvariablevalues.json | 
+   ForEach-Object {
+     $foundVariableValue = $true
+     $fullName = $_.FullName
+     # The milestone was not found could be a naming error
+     Write-Error "Found environment variable current value file in export $fullName"
+     Write-Host "##vso[task.logissue type=error]Found environment variable current value file in export $fullName"
+   }
+   if($foundVariableValue) {
+      exit(1)
+   }
+  displayName: 'Conditionally Ensure Environment Variable Current Value Not Exported'
+  condition: and(succeeded(), eq(variables.DoNotExportEnvironmentVariableValues, 'true'))
+
+- powershell: |
     git add --all
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.Repo}}
   displayName: 'Add Changes to Git Branch'
