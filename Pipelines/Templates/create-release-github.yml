@@ -56,9 +56,9 @@ steps:
     }
 
     if($currentMilestone -ne $null){
-        $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=closed&filter=all&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
+        $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=closed&filter=all&sort=created&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
         if('${{ parameters.issueClosingComment }}' -ne ''){
-            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=open&filter=all&milestone=" + $currentMilestone.number #retrieve all open issues to be closed in this milestone
+            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=open&filter=all&sort=created&milestone=" + $currentMilestone.number #retrieve all open issues to be closed in this milestone
         }
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
         foreach($issue in $issueResponse){
