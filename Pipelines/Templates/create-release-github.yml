@@ -58,7 +58,7 @@ steps:
         #       We will consider improving this in the future, but needed minimum to get it working for preview release
         $issuesRequest = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?state=closed&filter=all&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
         $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
-        Write-Host $issueResponse
+        Write-Host "Issue Response: $issueResponse"
         foreach($issue in $issueResponse){
             if(${{ parameters.issueClosingComment }} -ne ''){
                 # Comment and close the issue if issueClosingComment is supplied
