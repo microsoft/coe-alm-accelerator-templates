@@ -61,13 +61,12 @@ steps:
             $issuesRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues?state=open&filter=all&milestone=" + $currentMilestone.number #retrieve all open issues to be closed in this milestone
         }
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
-        Write-Host $issueResponse
         foreach($issue in $issueResponse){
             if('${{ parameters.issueClosingComment }}' -ne ''){
                 # Comment and close the issue if issueClosingComment is supplied
                 # /repos/{owner}/{repo}/issues/{issue_number}/comments
                 $commentRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/" + $issue.number + "/comments"
-                $commentFormatted = "@" + $issue.$user.login + " ${{ parameters.issueClosingComment }}"
+                $commentFormatted = "${{ parameters.issueClosingComment }}"
                 $commentBody = "{`"body`": `"$commentFormatted`"}"
                 Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
 
