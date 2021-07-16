@@ -64,8 +64,10 @@ steps:
                 # Comment and close the issue if issueClosingComment is supplied
                 # /repos/{owner}/{repo}/issues/{issue_number}/comments
                 $commentRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$issue.number/comments"
-                $commentBody = "@" + $issue.$user.login + " ${{ parameters.issueClosingComment }}."
-                Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
+                $commentBody = "@" + $issue.$user.login + " ${{ parameters.issueClosingComment }}"
+                Write-Host $commentBody
+                $response = Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
+                Write-Host response
                 #/repos/{owner}/{repo}/issues/{issue_number}
             }
             $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
