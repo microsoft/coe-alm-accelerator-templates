@@ -72,7 +72,7 @@ steps:
 
                 # Close the issue
                 #/repos/{owner}/{repo}/issues/{issue_number}
-                #$issueRequestClosingUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/" + $issue.number
+                $issueRequestClosingUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/" + $issue.number
                 $closeRequestBody = "{`"state`": `"closed`"}"
                 Invoke-RestMethod $issueRequestClosingUrl -Method 'PATCH' -Headers $headers -Body $closeRequestBody
             }
