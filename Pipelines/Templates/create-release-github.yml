@@ -12,6 +12,9 @@ parameters:
   type: string
 - name: releaseNotesPath
   type: string
+- name: issueClosingComment
+  type: string
+  default: ''
 - name: isPreRelease
   type: boolean
   default: false
@@ -57,6 +60,14 @@ steps:
         $issueResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers
 
         foreach($issue in $issueResponse){
+            if(${{ parameters.$issueClosingComment }} -ne ''){
+                # Comment and close the issue if issueClosingComment is supplied
+                # /repos/{owner}/{repo}/issues/{issue_number}/comments
+                $commentRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$issue.number/comments
+                $commentBody = "@$issue.user.login ${{ parameters.$issueClosingComment }}."
+                Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
+                #/repos/{owner}/{repo}/issues/{issue_number}
+            }
             $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
         }
 
