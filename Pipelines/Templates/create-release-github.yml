@@ -66,9 +66,13 @@ steps:
             if(${{ parameters.issueClosingComment }} -ne ''){
                 # Comment and close the issue if issueClosingComment is supplied
                 # /repos/{owner}/{repo}/issues/{issue_number}/comments
+                Write-Host "Here1"
                 $commentRequestUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$issue.number/comments"
+                Write-Host "Here2"
                 $commentBody = "@" + $issue.$user.login + ${{ parameters.issueClosingComment }}
+                Write-Host "Here3"
                 Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
+                Write-Host "Here4"
 
                 #/repos/{owner}/{repo}/issues/{issue_number}
                 #$issueRequestClosingUrl = "https://api.github.com/repos/microsoft/coe-starter-kit/issues/$issue.number"
