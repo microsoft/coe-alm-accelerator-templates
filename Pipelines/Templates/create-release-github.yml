@@ -46,8 +46,10 @@ steps:
     $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
     $currentMilestone = $null
     $milestoneName = '${{ parameters.solutionDisplayName }} - ' + $releaseMonthName + ' ' + ${{ parameters.releaseYear }}
+    Write-Host $milestoneName
     foreach($milestone in $milestoneResponse){
         if($milestone.title -eq $milestoneName){
+            Write-Host "Found $milestone.title"
             $currentMilestone = $milestone
             break
         }
