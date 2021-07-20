@@ -35,12 +35,12 @@ steps:
     $releaseMonthPadded = ([string]${{parameters.releaseMonth}}).PadLeft(2,'0')
     $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES-${{parameters.releaseYear}}' + $releaseMonthPadded + '.md'
     Write-Host "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
+    $releaseNotes = ''
     if(Test-Path $fullReleaseNotesPath) {
         $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
     }
     else {
         New-Item $fullReleaseNotesPath
-        $releaseNotes = '# ${{ parameters.solutionDisplayName }} - ' + $releaseMonthName + ' ' + ${{ parameters.releaseYear }} + ' Release Notes'
     }
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
@@ -61,7 +61,7 @@ steps:
     }
 
     if($currentMilestone -ne $null){
-        $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?filter=all&sort=created&direction=asc&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
+        $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&sort=created&direction=asc&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
         foreach($issue in $issueResponse){
             if('${{ parameters.issueClosingComment }}' -ne ''){
