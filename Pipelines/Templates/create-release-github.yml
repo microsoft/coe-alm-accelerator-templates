@@ -35,8 +35,13 @@ steps:
     $releaseMonthPadded = ([string]${{parameters.releaseMonth}}).PadLeft(2,'0')
     $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES-${{parameters.releaseYear}}' + $releaseMonthPadded + '.md'
     Write-Host "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
-
-    $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
+    if(Test-Path $fullReleaseNotesPath) {
+        $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
+    }
+    else {
+        New-Item $fullReleaseNotesPath
+        $releaseNotes = '# ${{ parameters.solutionDisplayName }} - ' + $releaseMonthName + ' ' + ${{ parameters.releaseYear }} + ' Release Notes'
+    }
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
