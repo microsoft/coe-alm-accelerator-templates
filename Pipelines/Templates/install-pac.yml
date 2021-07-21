@@ -5,7 +5,7 @@ steps:
     $nugetPackage = "Microsoft.PowerApps.CLI"
     $nugetPackageVersion = '$(pacVersion)'
     if ($nugetPackageVersion.Contains("pacVersion")){
-      $nugetPackageVersion =  "1.7.2"
+      $nugetPackageVersion =  "1.8.5"
     }    
     $outFolder = "pac"
     nuget install $nugetPackage -Version $nugetPackageVersion -OutputDirectory $outFolder
