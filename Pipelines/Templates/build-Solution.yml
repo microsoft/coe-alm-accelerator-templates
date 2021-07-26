@@ -43,13 +43,18 @@ steps:
   displayName: 'Flatten JSON files'
   enabled: true
 
+# TEMPORARY WORKAROUND: Power Apps CLI functionality will eventually be surfaced in Azure DevOps tasks.
+# However, to use functionality ahead of the tasks, we install the CLI.  Once the task is available, we move to using the task.
+- template: install-pac.yml
+
 # Use temp exe from PowerShell to pack source files into msapp
 - pwsh: |
    Get-ChildItem -Path "$(Build.SourcesDirectory)\$(RepoName)\$(SolutionName)" -Recurse -Filter *_src | 
    ForEach-Object {     
      $unpackedPath = $_.FullName
      $packedFileName = $unpackedPath.Replace("_msapp_src", ".msapp")
-     $(Pipeline.Workspace)\PipelineUtils\Pipelines\pac\pac.exe canvas pack --sources $unpackedPath --msapp $packedFileName
+     $env:PATH = $env:PATH + ";" + "$(pacPath)"
+     pac canvas pack --sources $unpackedPath --msapp $packedFileName
      Remove-Item -Path $unpackedPath -Recurse
    }
   displayName: 'pack msapp files'
@@ -62,16 +67,6 @@ steps:
     SolutionSourceFolder: $(Build.SourcesDirectory)\$(RepoName)\$(SolutionName)\SolutionPackage
     SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\$(SolutionName)_$(Build.BuildNumber).zip'
     SolutionType: ${{parameters.buildType}}
-
-#Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@0
-  displayName: 'Run Solution Checker'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '$(ServiceConnection)'
-    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\$(SolutionName)_$(Build.BuildNumber).zip'
-    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
-  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
 # We'll store configuration data as artifacts on the build pipeline to be used during deployment. This includes configuration data created via Configuration data migration tool and deploymentSettings.json and customDeploymentSettings.json 
 - powershell: |
@@ -121,3 +116,13 @@ steps:
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)'
     artifact: drop
+
+#Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@0
+  displayName: 'Run Solution Checker'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '$(ServiceConnection)'
+    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\$(SolutionName)_$(Build.BuildNumber).zip'
+    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
