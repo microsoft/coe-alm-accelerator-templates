@@ -90,7 +90,7 @@ steps:
 
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
 
-        Write-Host "Release notes updated"
+        Write-Host "Release notes updated $fullReleaseNotesPath"
     }
     else{
       # The milestone was not found could be a naming error
