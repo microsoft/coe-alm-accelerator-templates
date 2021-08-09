@@ -42,7 +42,6 @@ steps:
         $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
     }
     else {
-        Write-Host "Creating new release notes file"
         New-Item $fullReleaseNotesPath
     }
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
@@ -90,6 +89,8 @@ steps:
         Write-Host "Updating new release notes file"
 
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
+
+        Write-Host "Release notes updated"
     }
     else{
       # The milestone was not found could be a naming error
