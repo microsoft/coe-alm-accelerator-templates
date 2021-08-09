@@ -91,6 +91,8 @@ steps:
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
 
         Write-Host "Release notes updated $fullReleaseNotesPath"
+
+        exit 0
     }
   displayName: Build Release Notes from Milestone
 
