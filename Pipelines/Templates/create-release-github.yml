@@ -42,6 +42,7 @@ steps:
         $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
     }
     else {
+        Write-Host "Creating new release notes file"
         New-Item $fullReleaseNotesPath
     }
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
@@ -86,6 +87,7 @@ steps:
             }
             $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
         }
+        Write-Host "Updating new release notes file"
 
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
     }
