@@ -92,12 +92,7 @@ steps:
 
         Write-Host "Release notes updated $fullReleaseNotesPath"
     }
-    else{
-      # The milestone was not found could be a naming error
-      Write-Error "No milestone was found for $milestoneName"
-      Write-Host "##vso[task.logissue type=error]No milestone was found for $milestoneName"
-      exit(1)
-    }
+
   displayName: Build Release Notes from Milestone
 
 - task: GitHubRelease@1
