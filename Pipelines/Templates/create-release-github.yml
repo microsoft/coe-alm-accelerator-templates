@@ -92,7 +92,6 @@ steps:
 
         Write-Host "Release notes updated $fullReleaseNotesPath"
     }
-
   displayName: Build Release Notes from Milestone
 
 - task: GitHubRelease@1
