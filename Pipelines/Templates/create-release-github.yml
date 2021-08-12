@@ -36,7 +36,6 @@ steps:
     Write-Host "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
     $releaseMonthPadded = ([string]${{parameters.releaseMonth}}).PadLeft(2,'0')
     $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES-${{parameters.releaseYear}}' + $releaseMonthPadded + '.md'
-    Write-Host "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
     $releaseNotes = ''
     if(Test-Path $fullReleaseNotesPath) {
         $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
@@ -51,6 +50,7 @@ steps:
             New-Item $fullReleaseNotesPath
         }
     }
+    Write-Host "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
@@ -75,7 +75,7 @@ steps:
         foreach($issue in $issueResponse){
             Write-Host "CloseIssue: ${{ parameters.closeIssues }}"
             Write-Host "TrueValue: $true"
-            if(${{ parameters.closeIssues }} -eq $true){
+            if("${{ parameters.closeIssues }}" -eq "$true"){
                 if('${{ parameters.issueClosingComment }}' -ne '') {
                     # Add the comment to the issue
                     # /repos/{owner}/{repo}/issues/{issue_number}/comments
