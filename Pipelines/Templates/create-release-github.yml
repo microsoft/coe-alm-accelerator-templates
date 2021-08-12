@@ -73,10 +73,10 @@ steps:
         $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&sort=created&direction=asc&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
         foreach($issue in $issueResponse){
-            Write-Host "CloseIssue: ${{ parameters.closeIssues }}"
-            Write-Host "TrueValue: $true"
             if(${{ parameters.closeIssues }}) {
+                Write-Host "CloseIssue: ${{ parameters.closeIssues }}"
                 if('${{ parameters.issueClosingComment }}' -ne '') {
+                    Write-Host "Here"
                     # Add the comment to the issue
                     # /repos/{owner}/{repo}/issues/{issue_number}/comments
                     $commentRequestUrl = "${{ parameters.gitHubApiUrl }}/issues/" + $issue.number + "/comments"
