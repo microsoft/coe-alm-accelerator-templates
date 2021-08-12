@@ -74,9 +74,7 @@ steps:
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
         foreach($issue in $issueResponse){
             if("${{ parameters.closeIssues }}" -eq "True") {
-                Write-Host "CloseIssue: ${{ parameters.closeIssues }}"
                 if('${{ parameters.issueClosingComment }}' -ne '') {
-                    Write-Host "Here"
                     # Add the comment to the issue
                     # /repos/{owner}/{repo}/issues/{issue_number}/comments
                     $commentRequestUrl = "${{ parameters.gitHubApiUrl }}/issues/" + $issue.number + "/comments"
@@ -95,12 +93,7 @@ steps:
             }
             $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
         }
-        Write-Host "Updating new release notes file"
-
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
-
-        Write-Host "Release notes updated $fullReleaseNotesPath"
-
         exit 0
     }
   displayName: Build Release Notes from Milestone
