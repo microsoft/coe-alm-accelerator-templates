@@ -75,7 +75,7 @@ steps:
         foreach($issue in $issueResponse){
             Write-Host "CloseIssue: ${{ parameters.closeIssues }}"
             Write-Host "TrueValue: $true"
-            if("${{ parameters.closeIssues }}" -eq "$true"){
+            if(${{ parameters.closeIssues }}) {
                 if('${{ parameters.issueClosingComment }}' -ne '') {
                     # Add the comment to the issue
                     # /repos/{owner}/{repo}/issues/{issue_number}/comments
