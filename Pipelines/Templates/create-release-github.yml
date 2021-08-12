@@ -42,7 +42,14 @@ steps:
         $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
     }
     else {
-        New-Item $fullReleaseNotesPath
+        $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES.md'
+        if(Test-Path $fullReleaseNotesPath) {
+            $releaseNotes = Get-Content $fullReleaseNotesPath -Raw
+        }
+        else
+        {
+            New-Item $fullReleaseNotesPath
+        }
     }
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
