@@ -14,11 +14,11 @@ parameters:
   type: string
 - name: releaseNotesPath
   type: string
+- name: closeIssues
+  type: string
 - name: issueClosingComment
   type: string
   default: ''
-- name: closeIssues
-  type: boolean
 - name: isPreRelease
   type: boolean
   default: false
@@ -73,7 +73,7 @@ steps:
         $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&sort=created&direction=asc&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
         $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
         foreach($issue in $issueResponse){
-            if(${{ parameters.closeIssues }}) {
+            if("${{ parameters.closeIssues }}" -eq "True") {
                 Write-Host "CloseIssue: ${{ parameters.closeIssues }}"
                 if('${{ parameters.issueClosingComment }}' -ne '') {
                     Write-Host "Here"
