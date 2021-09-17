@@ -189,6 +189,8 @@ steps:
         }
       }
     }
+    $deploymentConfig = Get-Content $(DeploymentSettingsPath) -Raw
+    Write-Host $deploymentConfig
   name: setTriggerSolutionUpgrade
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
