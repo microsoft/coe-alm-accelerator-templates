@@ -28,7 +28,6 @@ steps:
     #        "ownerEmail": "username@yourdomain.com"
     #    }
     #]
-    Write-Host '${{parameters.solutionComponentOwnershipConfiguration}}'
     $config = ConvertFrom-Json '${{parameters.solutionComponentOwnershipConfiguration}}'
     #$config = ConvertFrom-Json '[{"solutionComponentType": 29,"solutionComponentUniqueName": "bd40f612-41ff-ea11-a815-000d3a1abe26","ownerEmail": "jonis@pplatform.onmicrosoft.com"}]'
     
