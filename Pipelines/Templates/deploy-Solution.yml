@@ -78,6 +78,7 @@ steps:
     targetFiles: '*deploymentSettings*.json'
     actionOnMissing: 'silently continue'
     encoding: 'utf-8'
+    defaultValue: ''
   condition: and(succeeded(), or(ne(variables['DeploymentSettingsPath'], ''), ne(variables['CustomDeploymentSettingsPath'], '')))
   enabled: true
 
