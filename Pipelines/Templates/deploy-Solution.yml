@@ -190,6 +190,8 @@ steps:
       }
     }
     $deploymentConfig = Get-Content $(DeploymentSettingsPath) -Raw
+    $deploymentConfig = $deploymentConfig.replace(/^\uFEFF/, '');
+    Set-Content $(DeploymentSettingsPath) $deploymentConfig
     Write-Host $deploymentConfig
   name: setTriggerSolutionUpgrade
   env:
