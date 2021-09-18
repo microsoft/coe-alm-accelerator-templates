@@ -190,8 +190,8 @@ steps:
       }
     }
     $deploymentConfig = Get-Content $(DeploymentSettingsPath) -Raw
-    $deploymentConfig = $deploymentConfig.replace(/^\uFEFF/, '');
-    Set-Content $(DeploymentSettingsPath) $deploymentConfig
+    $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+    [System.IO.File]::WriteAllLines($(DeploymentSettingsPath), $deploymentConfig, $Utf8NoBomEncoding)
     Write-Host $deploymentConfig
   name: setTriggerSolutionUpgrade
   env:
