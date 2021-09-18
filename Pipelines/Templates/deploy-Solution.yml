@@ -61,6 +61,11 @@ steps:
     environmentName: $(EnvironmentName)
 
 - powershell: |
+    Invoke-WebRequest -Uri https://github.com/stedolan/jq/releases/download/jq-1.6/jq-win64.exe -OutFile  jq.exe
+    $formatted = .\jq.exe . $(DeploymentSettingsPath) --sort-keys
+    $formatted | Out-File $(DeploymentSettingsPath) -Encoding UTF8
+    del jq.exe
+
     $deploymentConfig = Get-Content $(DeploymentSettingsPath) -Raw
     $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
     [System.IO.File]::WriteAllLines('$(DeploymentSettingsPath)', $deploymentConfig, $Utf8NoBomEncoding)
