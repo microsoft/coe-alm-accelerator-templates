@@ -3,7 +3,7 @@ parameters:
   type: string
 - name: serviceConnection
   type: string
-- name: solutionComponentactivateConfiguration
+- name: solutionComponentOwnershipConfiguration
   type: string
 - name: connectionReferences
   type: string
@@ -119,7 +119,7 @@ steps:
   parameters:
     displayName: 'Activate Flows for Component Owners'
     serviceConnection: '${{parameters.serviceConnection}}'
-    solutionComponentactivateConfiguration: '${{parameters.solutionComponentactivateConfiguration}}'
+    solutionComponentOwnershipConfiguration: '${{parameters.solutionComponentOwnershipConfiguration}}'
     enableFlows: '$(EnableFlows)'
     updateComponentOnwership: 'false'
 
