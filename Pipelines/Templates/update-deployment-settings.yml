@@ -218,7 +218,7 @@ steps:
     Set-Content -Path $customDeploymentSettingsFilePath -Value $json
     #If configuration data was passed in use this to set the pipeline variable values
     $newConfigurationData = [System.Collections.ArrayList]@()
-    if(-Not [string]::IsNullOrWhiteSpace('${{parameters.configurationData}}') -and '${{parameters.configurationData}}' -ne '$(Data)') {
+    if(-Not [string]::IsNullOrWhiteSpace('${{parameters.configurationData}}') -and Test-Json '${{parameters.configurationData}}') {
         #The configuration data will point to the records in Dataverse that store the JSON to set pipeline variables
         $configCriterias = ConvertFrom-Json '${{parameters.configurationData}}'
         $settingsConn = Get-CrmConnection -ConnectionString "$(CdsBaseConnectionString)$($configCriterias.EnvironmentUrl)"
