@@ -60,15 +60,6 @@ steps:
     configPath: $(ArtifactDropPath)
     environmentName: $(EnvironmentName)
 
-# Update any deploymentSettings.json via FileTransform task. This task will replace values in a JSON file based on their path. See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/transforms-variable-substitution?view=azure-devops&tabs=Classic#jsonvarsubs
-- task: FileTransform@1
-  displayName: 'File Transformation: deploymentSettings.json'
-  inputs:
-    folderPath: '$(ArtifactDropPath)'
-    targetFiles: '*deploymentSettings*.json'
-    fileType: json
-  condition: and(succeeded(), or(ne(variables['DeploymentSettingsPath'], ''), ne(variables['CustomDeploymentSettingsPath'], '')))
-
 # Third party task to replace tokens in files. The FileTransform above replaces JSON tokens based on their path as opposed to replacing text tokens in a file which can be more error prone in some cases.
 # If you aren't using this task it can be safely removed or disabled by setting enabled: false. Sample token: #{VariableNameToReplace}#
 - task: qetza.replacetokens.replacetokens-task.replacetokens@3
