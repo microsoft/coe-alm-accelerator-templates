@@ -58,8 +58,7 @@ steps:
                     try {
                         Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -StateCode Activated -StatusCode Activated
                     }
-                    catch
-                    {
+                    catch {
                         Write-Host "##vso[task.logissue type=error]Failed to enable $($workflow.category) $($workflow.name)"
                     }
                 }
@@ -126,12 +125,10 @@ steps:
                                     if($workflow.clientdata.Contains($connectionRefConfig.LogicalName) -and $workflow.statecode -ne "Activated"){
                                       Write-Host "Enabling $($workflow.category) $($workflow.name) as $($systemusers.CrmRecords[0].FullName) ($($systemusers.CrmRecords[0].systemuserid))"
                                       Set-CrmConnectionCallerId -conn $impersonationConn -CallerId $impersonationCallerId
-                                      try 
-                                      {
+                                      try {
                                           Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $solutionComponent.objectid -StateCode Activated -StatusCode Activated
                                       }
-                                      catch
-                                      {
+                                      catch {
                                           Write-Host "##vso[task.logissue type=error]Failed to enable $($workflow.category) $($workflow.name): $($_.Exception.Message)"
                                       }
                                     }

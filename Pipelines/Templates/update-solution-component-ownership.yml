@@ -62,7 +62,6 @@ steps:
                 $workflow.statecode = "Draft"
             }
             Set-CrmRecordOwner -conn $conn $workflow $systemUserId
-
           }
 
           #Activate the workflow using the owner.
@@ -74,8 +73,7 @@ steps:
             try {
                 Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $ownershipConfig.solutionComponentUniqueName -StateCode Activated -StatusCode Activated
             }
-            catch
-            {
+            catch {
                 Write-Host "##vso[task.logissue type=error]Failed to enable $($workflow.category) $($workflow.name): $($_.Exception.Message)"
             }
           }
