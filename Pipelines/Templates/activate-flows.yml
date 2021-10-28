@@ -40,6 +40,7 @@ steps:
     # Currently only implementing workflow ownership change until we indentify real usage scenarios for other solution components needing ownership change post import.
     # See https://docs.microsoft.com/en-us/dynamics365/customer-engagement/web-api/solutioncomponent?view=dynamics-ce-odata-9
     # ...for solutionComponentType values 29=Workflow (including Flow), 300=Canvas App, etc 
+    Write-Host "##[group]Activating Solution Components"
     foreach ($activateConfig in $config){
         if($activateConfig.activateAsUser -ne '' -and $activateConfig.solutionComponentUniqueName -ne ''){
             $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -Fields clientdata,category,statecode,name
@@ -51,13 +52,21 @@ steps:
                 if($workflow.statecode -ne "Activated"){
                     $impersonationConn = Get-CrmConnection -ConnectionString "$(CdsBaseConnectionString)${{parameters.serviceConnection}}"
                     $impersonationCallerId = $systemUserId
-                    $impersonationConn.OrganizationWebProxyClient.CallerId = $impersonationCallerId 
-                    Write-Host "Enabling Flows"
-                    Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -StateCode Activated -StatusCode Activated
+                    Write-Host "Enabling $($workflow.category) $($workflow.name) as $($systemusers.CrmRecords[0].FullName) ($($systemusers.CrmRecords[0].systemuserid))"
+                    Set-CrmConnectionCallerId -conn $impersonationConn -CallerId $impersonationCallerId
+                    Write-Host "Enabling $($workflow.category) $($workflow.name)"
+                    try {
+                        Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -StateCode Activated -StatusCode Activated
+                    }
+                    catch
+                    {
+                        Write-Host "##vso[task.logissue type=error]Failed to enable $($workflow.category) $($workflow.name)"
+                    }
                 }
             }
         }
     }
+    Write-Host "##[endgroup]"
   displayName: 'Activate Flows for Configuration'
   condition: and(succeeded(), ne(variables['EnableFlows'], 'false'), ne('$(outActivateFlows.outActivateFlows)', ''))
 
@@ -90,6 +99,7 @@ steps:
             $solutionComponents = $result.CrmRecords
 
             $config = ConvertFrom-Json '${{parameters.connectionReferences}}'
+            Write-Host "##[group]Activating Solution Components"
             foreach ($connectionRefConfig in $config) {
                 if($connectionRefConfig.LogicalName -ne '' -and $connectionRefConfig.ConnectionId -ne '') {
                     # Get the connection reference to update
@@ -112,11 +122,18 @@ steps:
 
                             foreach ($solutionComponent in $solutionComponents){
                                 if ($solutionComponent.componenttype -eq "Workflow"){
-                                    $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $solutionComponent.objectid -Fields clientdata,category,statecode
+                                    $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $solutionComponent.objectid -Fields clientdata,category,statecode,name
                                     if($workflow.clientdata.Contains($connectionRefConfig.LogicalName) -and $workflow.statecode -ne "Activated"){
-                                        Write-Host "Enabling Flows"
-                                        $impersonationConn.OrganizationWebProxyClient.CallerId = $impersonationCallerId 
-                                        Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $solutionComponent.objectid -StateCode Activated -StatusCode Activated
+                                      Write-Host "Enabling $($workflow.category) $($workflow.name) as $($systemusers.CrmRecords[0].FullName) ($($systemusers.CrmRecords[0].systemuserid))"
+                                      Set-CrmConnectionCallerId -conn $impersonationConn -CallerId $impersonationCallerId
+                                      try 
+                                      {
+                                          Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $solutionComponent.objectid -StateCode Activated -StatusCode Activated
+                                      }
+                                      catch
+                                      {
+                                          Write-Host "##vso[task.logissue type=error]Failed to enable $($workflow.category) $($workflow.name): $($_.Exception.Message)"
+                                      }
                                     }
                                 }
                             }
@@ -126,6 +143,7 @@ steps:
             }
         }
     }
+    Write-Host "##[endgroup]"
   displayName: 'Activate Flows for Connection References'
   condition: and(succeeded(), ne(variables['EnableFlows'], 'false'), ne('$(outConnectionReferences.outConnectionReferences)', ''))
 
