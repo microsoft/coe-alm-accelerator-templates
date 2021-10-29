@@ -41,6 +41,7 @@ steps:
     # See https://docs.microsoft.com/en-us/dynamics365/customer-engagement/web-api/solutioncomponent?view=dynamics-ce-odata-9
     # ...for solutionComponentType values 29=Workflow (including Flow), 300=Canvas App, etc 
     Write-Host "##[group]Activating Solution Components"
+    $isException = $false
     foreach ($activateConfig in $config){
         if($activateConfig.activateAsUser -ne '' -and $activateConfig.solutionComponentUniqueName -ne ''){
             $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -Fields clientdata,category,statecode,name
@@ -60,12 +61,16 @@ steps:
                     }
                     catch {
                         Write-Host "##vso[task.logissue type=error]Failed to enable $($workflow.category) $($workflow.name)"
+                        $isException = $true
                     }
                 }
             }
         }
     }
     Write-Host "##[endgroup]"
+    if($isException) {
+      throw "Failed to enable one or more workflows"
+    }
   displayName: 'Activate Flows for Configuration'
   condition: and(succeeded(), ne(variables['EnableFlows'], 'false'), ne('$(outActivateFlows.outActivateFlows)', ''))
 
@@ -99,6 +104,7 @@ steps:
 
             $config = ConvertFrom-Json '${{parameters.connectionReferences}}'
             Write-Host "##[group]Activating Solution Components"
+            $isException = $false
             foreach ($connectionRefConfig in $config) {
                 if($connectionRefConfig.LogicalName -ne '' -and $connectionRefConfig.ConnectionId -ne '') {
                     # Get the connection reference to update
@@ -130,6 +136,7 @@ steps:
                                       }
                                       catch {
                                           Write-Host "##vso[task.logissue type=error]Failed to enable $($workflow.category) $($workflow.name): $($_.Exception.Message)"
+                                          $isException = $true
                                       }
                                     }
                                 }
@@ -141,6 +148,9 @@ steps:
         }
     }
     Write-Host "##[endgroup]"
+    if($isException) {
+      throw "Failed to enable one or more workflows"
+    }    
   displayName: 'Activate Flows for Connection References'
   condition: and(succeeded(), ne(variables['EnableFlows'], 'false'), ne('$(outConnectionReferences.outConnectionReferences)', ''))
 

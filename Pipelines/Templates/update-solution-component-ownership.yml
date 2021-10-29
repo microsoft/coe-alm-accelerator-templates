@@ -37,6 +37,7 @@ steps:
     # See https://docs.microsoft.com/en-us/dynamics365/customer-engagement/web-api/solutioncomponent?view=dynamics-ce-odata-9
     # ...for solutionComponentType values 29=Workflow (including Flow), 300=Canvas App, etc 
     Write-Host "##[group]Reassigning Ownership of components"
+    $isException = $false
     foreach ($ownershipConfig in $config){
       if($ownershipConfig.ownerEmail -ne '' -and $ownershipConfig.solutionComponentType -ne '' -and $ownershipConfig.solutionComponentUniqueName -ne ''){
           switch ($ownershipConfig.solutionComponentType){
@@ -75,11 +76,14 @@ steps:
             }
             catch {
                 Write-Host "##vso[task.logissue type=error]Failed to enable $($workflow.category) $($workflow.name): $($_.Exception.Message)"
+                $isException = $true
             }
           }
       }
     }
     Write-Host "##[endgroup]"
-    
+    if($isException) {
+      throw "Failed to enable one or more workflows"
+    }
   displayName: '${{parameters.displayName}}'
   condition: and(succeeded(), ne('${{parameters.solutionComponentOwnershipConfiguration}}', ''))
