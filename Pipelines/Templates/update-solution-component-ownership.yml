@@ -60,11 +60,12 @@ steps:
                 Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $ownershipConfig.solutionComponentUniqueName -StateCode Draft -StatusCode Draft
                 $workflow.statecode = "Draft"
             }
-            Set-CrmRecordOwner -conn $conn $workflow $systemUserId
-
           }
+          
+          # Set the ownership of the workflow based on the specifed ownerEmailId.
+          Set-CrmRecordOwner -conn $conn $workflow $systemUserId
 
-          #Activate the workflow using the owner.
+          # Activate the workflow using the owner.
           if($workflow.statecode -ne "Activated" -and '${{parameters.enableFlows}}' -ne "false"){
             $impersonationConn = Get-CrmConnection -ConnectionString "$(CdsBaseConnectionString)${{parameters.serviceConnection}}"
             $impersonationCallerId = $systemUserId
