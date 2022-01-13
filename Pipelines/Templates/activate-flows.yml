@@ -106,7 +106,8 @@ steps:
       
                         # Get connection
                         $connections = Get-AdminPowerAppConnection -EnvironmentName $environmentName -Filter $connectionRefConfig.ConnectionId
-                        if($connections.Count -gt 0) {
+                        #connections doesn't have a count property and causes an error trying to activate the flowws
+                        if($null -ne $connections) {
                             # Get Dataverse systemuserid for the system user that maps to the aad user guid that created the connection 
                             $systemusers = Get-CrmRecords -conn $conn -EntityLogicalName systemuser -FilterAttribute "azureactivedirectoryobjectid" -FilterOperator "eq" -FilterValue $connections[0].CreatedBy.id
                             if($systemusers.Count -gt 0) {
