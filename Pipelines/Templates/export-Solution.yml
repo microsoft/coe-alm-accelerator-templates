@@ -127,7 +127,7 @@ steps:
 - powershell: |
     #Set variable to continue on unpack error for use in the next two steps
     if('$(ContinueOnCanvasUnpackError)'.Contains("ContinueOnCanvasUnpackError")) {
-        Write-Host "##vso[task.setvariable variable=ContinueOnCanvasUnpackError]true"
+        Write-Host "##vso[task.setvariable variable=ContinueOnCanvasUnpackError]false"
     }
   displayName: Check for Continue on Canvas Unpack Error
 
