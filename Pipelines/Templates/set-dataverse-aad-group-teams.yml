@@ -22,11 +22,12 @@ steps:
     #   },
     # [
     #   {
-    #     "aadGroupTeamName":"name-ofa-aad-group-team-to-create-or-update-2",
+    #     "aadGroupTeamName":"name-of-aad-group-team-to-create-or-update-2",
     #     "aadSecurityGroupId":"guid-of-security-group-from-aad-2",
     #     "dataverseSecurityRoleNames":["dataverse-security-role-name-3","dataverse-security-role-name-4"]
     #   }
     # ]
+    Write-Host '${{parameters.aadGroupTeamConfiguration}}'
     $config = ConvertFrom-Json '${{parameters.aadGroupTeamConfiguration}}'
 
     foreach ($c in $config){

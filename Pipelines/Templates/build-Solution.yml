@@ -62,10 +62,10 @@ steps:
      $unpackedPath = $_.FullName
      $packedFileName = $unpackedPath.Replace("_msapp_src", ".msapp")
      if(!(Test-Path $packedFileName)) {
-        # Temporarily reverting to PASOPA instead of PAC CLI to better control versioning of canvas unpack in our pipelines
-        #$(Agent.BuildDirectory)\PipelineUtils\CanvasUnpack\pasopa.exe -pack $packedFileName $unpackedPath
-        Write-Host "Packing via Power Platform CLI"
-        $(Agent.BuildDirectory)\PipelineUtils\PowerPlatformCLI\pac.exe canvas pack --sources $unpackedPath --msapp $packedFileName     
+        #Temporarily unpacking with latest version of Power Apps Language Tooling
+        Write-Host "Packing via PowerShell"
+        . "$env:POWERSHELLPATH/canvas-unpack-pack.ps1"
+        Invoke-CanvasUnpackPack "pack" $unpackedPath $packedFileName
      }
      else {
         Write-Host "$packedFileName already exists. Skipping packing of the app."
@@ -73,6 +73,7 @@ steps:
      Remove-Item -Path $unpackedPath -Recurse
    }
   displayName: 'pack msapp files'
+  workingDirectory: $(PowerShellPath)
   enabled: true
   
 # Set paths to deployment settings
