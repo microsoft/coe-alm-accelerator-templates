@@ -188,12 +188,6 @@ steps:
     }
   displayName: 'Archive Configuration Migration Data'
 
-- task: PublishPipelineArtifact@1
-  displayName: 'Publish Artifacts'
-  inputs:
-    targetPath: '$(Build.ArtifactStagingDirectory)'
-    artifact: drop
-
 #Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@0
   displayName: 'Run Solution Checker'
@@ -203,3 +197,9 @@ steps:
     FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\$(SolutionName)_$(Build.BuildNumber).zip'
     RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
   condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
+
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Artifacts'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: drop
