@@ -184,8 +184,12 @@ steps:
   enabled: true
 
 - powershell: |
-   del $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip
-   del $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip
+    if (Test-Path $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip) {
+        Remove-Item $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip
+    }
+    if (Test-Path $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip) {
+        Remove-Item $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip
+    }
   displayName: 'Delete solution zip files'
   enabled: true
   
@@ -202,8 +206,6 @@ steps:
        $formatted | Out-File $_.FullName -Encoding UTF8
      }
    }
-   del $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip
-   del $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip
   displayName: 'Format JSON files'
   enabled: true
   
