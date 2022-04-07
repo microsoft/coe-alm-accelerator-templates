@@ -3,7 +3,7 @@
     Write-Host (ConvertTo-Json -Depth 10 $configurationDataJson)
     #Generate Deployment Settings
     Write-Host "Update Deployment Settings"
-	Remove-CurrentDeploymentSettingsConfiguration $buildSourceDirectory $repo $solutionName
+    Remove-CurrentDeploymentSettingsConfiguration $buildSourceDirectory $repo $solutionName
     $customDeploymentSettingsFilePath = "$buildSourceDirectory\$repo\$solutionName\config\customDeploymentSettings.json"
     $deploymentSettingsFilePath = "$buildSourceDirectory\$repo\$solutionName\config\deploymentSettings.json"
     if(!(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\")) {
@@ -313,8 +313,8 @@ function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $r
 function Remove-CurrentDeploymentSettingsConfiguration($buildSourceDirectory, $repo, $solutionName)
 {
     if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\") {
-	    Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\**\customDeploymentSettings.json" -Recurse -Force
-	    Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\**\deploymentSettings.json" -Recurse -Force
+        Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\**\customDeploymentSettings.json" -Recurse -Force
+        Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\**\deploymentSettings.json" -Recurse -Force
     }
 }
 
