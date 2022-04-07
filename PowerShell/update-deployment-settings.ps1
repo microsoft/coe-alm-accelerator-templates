@@ -312,9 +312,10 @@ function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $r
 
 function Remove-CurrentDeploymentSettingsConfiguration($buildSourceDirectory, $repo, $solutionName)
 {
-	
-	Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\**\customDeploymentSettings.json" -Recurse -Force
-	Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\**\deploymentSettings.json" -Recurse -Force
+    if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\") {
+	    Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\**\customDeploymentSettings.json" -Recurse -Force
+	    Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\**\deploymentSettings.json" -Recurse -Force
+    }
 }
 
 function Set-BuildDefinitionVariables($orgUrl, $projectId, $azdoAuthType, $buildDefinitionResult, $definitionId, $newBuildDefinitionVariables) {
