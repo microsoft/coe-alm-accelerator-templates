@@ -230,6 +230,36 @@ steps:
      }
   displayName: 'Fix unset GUIDs in new Business Rules'
 
+# TEMPORARY: There's currently a bug in the platform that causes the XML in AppModules to output in a 
+# random order.  This causes dirty diffs. We resolve this here by searching for any AppModules and 
+# ordering in them.
+- powershell: |
+    $appModulesFolder = Join-Path $solutionfolder "AppModules"
+    Write-Host "Scanning for AppModules in $solutionfolder"
+
+    Get-ChildItem -Path "$appModulesFolder" -Recurse -File -Filter AppModule*.xml | ForEach-Object {
+      $fileToFix = $_.FullName
+
+      Write-Host "Re-ordering XML in" $fileToFix
+
+      [xml]$xmlDoc = Get-Content $fileToFix
+      $components = $xmlDoc.AppModule.AppModuleComponents
+
+      # Sort the AppModuleComponents
+      $orderedComponents = $components.AppModuleComponent | Sort-Object type,schemaName,id
+
+      # Remove existing AppModuleComponents elements.
+      # Assumes that only AppModuleComponent elements exist below the parent AppModuleComponents element
+      $components.RemoveAll()
+
+      # Append sorted AppModuleComponent elements
+      $orderedComponents | ForEach-Object { $components.AppendChild($_) } | Out-Null
+
+      # Save the updated Appmodule XML file
+      $xmlDoc.Save($fileToFix)
+    }  
+  displayName: 'Fix AppModuleComponents order'
+
 - powershell: |
    Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\environmentvariabledefinitions" -Recurse -Filter environmentvariablevalues.json | Remove-Item
   displayName: 'Verify Environment Variable Current Value Not Exported'
