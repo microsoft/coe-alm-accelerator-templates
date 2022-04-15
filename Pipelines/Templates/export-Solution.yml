@@ -234,7 +234,7 @@ steps:
 # random order.  This causes dirty diffs. We resolve this here by searching for any AppModules and 
 # ordering in them.
 - powershell: |
-    $appModulesFolder = Join-Path $solutionfolder "AppModules"
+    $appModulesFolder = Join-Path $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage "AppModules"
     Write-Host "Scanning for AppModules in $solutionfolder"
 
     Get-ChildItem -Path "$appModulesFolder" -Recurse -File -Filter AppModule*.xml | ForEach-Object {
