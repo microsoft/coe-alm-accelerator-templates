@@ -189,6 +189,8 @@ steps:
           $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
           $headers.Add("Accept", "application/vnd.github.groot-preview+json")
           $headers.Add("Authorization", "Bearer $(GitHubPAT)")
+          
+          Write-Host "Build.SourceVersion is $(Build.SourceVersion)"
 
           $pullsRequest = "https://api.github.com/repos/$(GitHubRepo)/commits/$(Build.SourceVersion)/pulls"
           
