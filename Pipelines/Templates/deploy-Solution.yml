@@ -311,7 +311,7 @@ steps:
 
 - template: activate-flows.yml
   parameters:
-    displayName: 'Activate Flows'
+    solutionName: '$(SolutionName)'
     serviceConnection: '${{parameters.serviceConnection}}'
     connectionReferences: '$(outConnectionReferences)'
     solutionComponentOwnershipConfiguration: '$(outSolutionComponentOwnershipConfiguration)'

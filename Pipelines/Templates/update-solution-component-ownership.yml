@@ -35,7 +35,8 @@ steps:
     if('${{parameters.enableFlows}}' -ne "false") {
         # Retrieve the activation config to use when activating flows for owners
         $activationConfigs = ConvertFrom-Json '${{parameters.activateFlowConfiguration}}'
-        $activationConfigs | Sort-Object [int]sortOrder
+        $activationConfigs | % { $_.sortOrder = [int]$_.sortOrder }
+        $activationConfigs | Sort-Object sortOrder
 
         $flowsToActivate = [System.Collections.ArrayList]@()
     }
@@ -101,7 +102,8 @@ steps:
     if('${{parameters.enableFlows}}' -ne "false") {
 
         #Activate any flows added to the collection based on sort order
-        $flowsToActivate | Sort-Object [int]sortOrder
+        $flowsToActivate | % { $_.sortOrder = [int]$_.sortOrder }
+        $flowsToActivate | Sort-Object sortOrder
         foreach($flowToActivate in $flowsToActivate) {
             Write-Host "Activating Flow: " $flowToActivate.solutionComponent.name
             $impersonationConn.OrganizationWebProxyClient.CallerId = $flowToActivate.impersonationCallerId 
