@@ -83,34 +83,7 @@ steps:
           else {
             Write-Host "##vso[task.logissue type=warning]A specified user record was not found in the target environment. Verify your deployment configuration and try again."
           }
-          #Activate the workflow using the owner.
-          if(($workflow.statecode_Property.Value -ne 1 -or $workflowDeactivated) -and '${{parameters.enableFlows}}' -ne "false"){
-
-            Write-Host "Retrieving activation config"
-            $activationConfig = $activationConfigs | Where-Object { $_.solutionComponentUniqueName -eq $ownershipConfig.solutionComponentUniqueName } | Select-Object -First 1
-            if($activationConfig.activate -ne 'false') {
-                Write-Host "Adding flow " $ownershipConfig.solutionComponentName " to activation collection"
-                $flowActivation = [PSCustomObject]@{}
-                $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
-                $flowActivation | Add-Member -MemberType NoteProperty -Name 'impersonationCallerId' -Value $systemUserId
-                $flowActivation | Add-Member -MemberType NoteProperty -Name 'sortOrder' -Value $activationConfig.sortOrder
-                $flowsToActivate.Add($flowActivation)
-            }
-          }
       }
     }
-    if('${{parameters.enableFlows}}' -ne "false") {
-
-        #Activate any flows added to the collection based on sort order
-        $flowsToActivate | % { $_.sortOrder = [int]$_.sortOrder }
-        $flowsToActivate | Sort-Object sortOrder
-        foreach($flowToActivate in $flowsToActivate) {
-            Write-Host "Activating Flow: " $flowToActivate.solutionComponent.name
-            $impersonationConn.OrganizationWebProxyClient.CallerId = $flowToActivate.impersonationCallerId 
-            Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $flowToActivate.solutionComponent.workflowid -StateCode 1 -StatusCode 2
-        }
-    }
-
-    
   displayName: '${{parameters.displayName}}'
   condition: and(succeeded(), ne('${{parameters.solutionComponentOwnershipConfiguration}}', ''))
