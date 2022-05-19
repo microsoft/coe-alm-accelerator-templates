@@ -32,14 +32,6 @@ steps:
     #    }
     #]
     $config = ConvertFrom-Json '${{parameters.solutionComponentOwnershipConfiguration}}'
-    if('${{parameters.enableFlows}}' -ne "false") {
-        # Retrieve the activation config to use when activating flows for owners
-        $activationConfigs = ConvertFrom-Json '${{parameters.activateFlowConfiguration}}'
-        $activationConfigs | % { $_.sortOrder = [int]$_.sortOrder }
-        $activationConfigs | Sort-Object sortOrder
-
-        $flowsToActivate = [System.Collections.ArrayList]@()
-    }
     # Workflows of type Modern Flow might need an interactive user owner.
     # One example is where you want the Flow that runs to use that users license entitlements.
     # Currently only implementing workflow ownership change until we indentify real usage scenarios for other solution components needing ownership change post import.
