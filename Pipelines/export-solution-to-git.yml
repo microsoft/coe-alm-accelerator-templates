@@ -22,8 +22,6 @@ parameters:
 - name: BranchToCreate
   type: string
   default: ""
-- name: BuildDefinitionId
-  type: string
 - name: CommitMessage
   type: string
   default: ""
@@ -35,13 +33,13 @@ parameters:
   default: ""
 - name: Project
   type: string
-  default: "coe-starter-kit-azdo"
+  default: ""
 - name: Repo
   type: string
-  default: "coe-starter-kit-azdo"
+  default: ""
 - name: ServiceConnection
   type: string
-  default: "https://contosocoedev.crm.dynamics.com/"
+  default: ""
 - name: SolutionName
   type: string
   default: "ALMAcceleratorSampleSolution"
