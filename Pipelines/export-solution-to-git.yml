@@ -15,10 +15,45 @@
 # SolutionName: The name of the solution being exported (i.e. Not the Display Name).
 # UserName: The Display name of the user performing the commit.
 # Data: Additional Data (e.g. JSON Payload) for the export to configure deployment pipelines
+# Pipeline to create a Github release for the CoE Starter Kit solution
+parameters:
+- name: Branch
+  type: string
+- name: BranchToCreate
+  type: string
+  default: ""
+- name: BuildDefinitionId
+  type: string
+- name: CommitMessage
+  type: string
+  default: ""
+- name: Data
+  type: string
+  default: "[]"
+- name: Email
+  type: string
+  default: ""
+- name: Project
+  type: string
+  default: "coe-starter-kit-azdo"
+- name: Repo
+  type: string
+  default: "coe-starter-kit-azdo"
+- name: ServiceConnection
+  type: string
+  default: "https://contosocoedev.crm.dynamics.com/"
+- name: SolutionName
+  type: string
+  default: "ALMAcceleratorSampleSolution"
+- name: UserName
+  type: string
+  default: "Johanna Lorenz"
+
+
 trigger: none
 pr: none
 
-name: export-$(SolutionName)-to-git-branch
+name: export-${{parameters.SolutionName}}-to-git-branch
 
 variables:
 - group: alm-accelerator-variable-group
@@ -40,19 +75,19 @@ stages:
       displayName: 'Checkout Pipeline Branch'
 
     # Checkout our Branch
-    - checkout: git://$(Project)/$(Repo)@$(Branch)
+    - checkout: git://${{parameters.Project}}/${{parameters.Repo}}@${{parameters.Branch}}
       displayName: 'Checkout Source Branch'
 
     # Other tasks, which use the PowerApps PowerShell cmdlets, need the environment guid.  Setting it for future use.
     - template: Templates\export-Solution.yml
       parameters:
-        project: $(Project)
-        repo: $(Repo)
-        branch: $(Branch)
-        branchToCreate: $(BranchToCreate)
-        commitMessage: $(CommitMessage)
-        email: $(Email)
-        serviceConnection: $(ServiceConnection)
-        solutionName: $(SolutionName)
-        userName: $(UserName)
-        configurationData: $(Data)
+        project: ${{parameters.Project}}
+        repo: ${{parameters.Repo}}
+        branch: ${{parameters.Branch}}
+        branchToCreate: ${{parameters.BranchToCreate}}
+        commitMessage: ${{parameters.CommitMessage}}
+        email: ${{parameters.Email}}
+        serviceConnection: ${{parameters.ServiceConnection}}
+        solutionName: ${{parameters.SolutionName}}
+        userName: ${{parameters.UserName}}
+        configurationData: ${{parameters.Data}}

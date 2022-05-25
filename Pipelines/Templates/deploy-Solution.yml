@@ -121,87 +121,10 @@ steps:
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
 
 - powershell: |    
-    echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]false"
+    #. "$env:POWERSHELLPATH/set-trigger-solution-upgrade.ps1"
+    #Set-TriggerSolutionUpgrade '$(TriggerSolutionUpgrade)' '$(System.TeamFoundationCollectionUri)' '$(System.TeamProjectId)' '$(Build.Repository.Name)' '$(Build.Repository.Provider)' '$(Build.SourceVersion)' '$(Build.Reason)' '$(System.AccessToken)' $testConfig.gitHubRepo $testConfig.gitHubPat
 
-    $solutionUpgradeLabel = "solution-upgrade"
-
-    $triggerSolutionUpgrade = '$(TriggerSolutionUpgrade)'
-    $triggerSolutionUpgradeVariableSupplied = !$triggerSolutionUpgrade.Contains("TriggerSolutionUpgrade")
-
-    # If the TriggerSolutionUpgrade variable is set at queue time, then override the logic to determine solution upgrade based on PR label of solution-upgrade
-    if ($triggerSolutionUpgradeVariableSupplied) {
-      echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
-    }
-    else {
-      # In order to determine if we need to perform a Solution Upgrade, we see if the Pull Request has a label of solution-upgrade on it.
-      # The only way we know how to determine if the PR that created the commit for the branch had a label is to use the REST API
-
-      if ("$(Build.Reason)" -ne "PullRequest") { 
-        Write-Host "Build.Repository.Provider is $(Build.Repository.Provider)"
-
-        if("$(Build.Repository.Provider)" -eq "TfsGit") {      
-          $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-          $headers.Add("Authorization", "Bearer $env:SYSTEM_ACCESSTOKEN")
-          $headers.Add("Content-Type", "application/json")
-
-          $buildSourceVersion = "$(Build.SourceVersion)"        
-
-          $pullrequestqueryBody = "{
-          `n  `"queries`": [
-          `n    {
-          `n      `"type`": `"lastMergeCommit`",
-          `n      `"items`": [ `"$buildSourceVersion`" ]
-          `n    }
-          `n  ]
-          `n}"
-
-          $pullrequestqueryBodyResourceUrl = "$(System.TeamFoundationCollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.Name)/pullrequestquery?api-version=6.0"
-          $pullrequestqueryResponse = Invoke-RestMethod $pullrequestqueryBodyResourceUrl -Method 'POST' -Headers $headers -Body $pullrequestqueryBody 
-          $pullrequestqueryResponseResults = $pullrequestqueryResponse.results
-          $pullRequestId = $pullrequestqueryResponseResults.$buildSourceVersion.pullRequestId
-          if (-not [string]::IsNullOrEmpty($pullRequestId)) {
-            $pullRequestLabelQuery = "$(System.TeamFoundationCollectionUri)$(System.TeamProjectId)/_apis/git/repositories/$(Build.Repository.Name)/pullRequests/$pullRequestId/labels?api-version=6.0"
-            
-            $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method Get -Headers @{
-              Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
-            }
-
-            $pullRequestLabelQueryResponseValue = $pullRequestLabelQueryResponse.value
-
-            if ($pullRequestLabelQueryResponseValue.Count -gt 0) {
-              $triggerSolutionUpgrade = $pullRequestLabelQueryResponseValue.name.Contains($solutionUpgradeLabel).ToString().ToLower()
-              echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
-            }
-          }
-        }
-        
-        if("$(Build.Repository.Provider)" -eq "GitHub") {
-          $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-          $headers.Add("Accept", "application/vnd.github.groot-preview+json")
-          $headers.Add("Authorization", "Bearer $(GitHubPAT)")
-          
-          Write-Host "Build.SourceVersion is $(Build.SourceVersion)"
-
-          $pullsRequest = "https://api.github.com/repos/$(GitHubRepo)/commits/$(Build.SourceVersion)/pulls"
-          
-          $pullsResponse = Invoke-RestMethod $pullsRequest -Method 'GET' -Headers $headers
-          
-          if ($pullsResponse.Count -gt 0) {
-            $pullNumber = $pullsResponse[0].number
-            $issuesRequest = "https://api.github.com/repos/$(GitHubRepo)/issues/$pullNumber"
-            $issuesResponse = Invoke-RestMethod $issuesRequest -Method 'GET' -Headers $headers 
-            
-            if ($issuesResponse.labels.Count -gt 0) {
-              $triggerSolutionUpgrade = $issuesResponse.labels.name.Contains($solutionUpgradeLabel).ToString().ToLower()
-              echo "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]$triggerSolutionUpgrade"
-            }
-          }
-        }
-      }
-    }
   name: setTriggerSolutionUpgrade
-  env:
-    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
   displayName: 'Set TriggerSolutionUpgrade Variable'
 
@@ -253,7 +176,7 @@ steps:
   condition: and(succeeded(), eq('${{parameters.importUnmanaged}}', 'true'))
   # Only publish customizations for when importing unmanaged solutions into a dev environment.
 
-# Set deployment variable for Activate Flow Configuration
+# Set deployment variables
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outActivateFlows'
@@ -261,18 +184,12 @@ steps:
     deploymentSettingsNode: 'ActivateFlowConfiguration'
     displayName: 'Retrieve Flow Activation Config for Deploy'
 
-# Set deployment variable for AAD Group Team Configuration
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outAadGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'AadGroupTeamConfiguration'
     displayName: 'Retrieve AAD Group Team Config for Deploy'
-
-- template: set-dataverse-aad-group-teams.yml
-  parameters:
-    serviceConnection: '${{parameters.serviceConnection}}'
-    aadGroupTeamConfiguration: '$(outAadGroupTeamConfiguration)'
 
 - template: set-deployment-variable.yml
   parameters:
@@ -281,26 +198,12 @@ steps:
     deploymentSettingsNode: 'AadGroupCanvasConfiguration'
     displayName: 'Retrieve AAD Group Canvas Config for Deploy'
 
-- template: share-canvas-app-with-aad-group.yml
-  parameters:
-    serviceConnection: '${{parameters.serviceConnection}}'
-    aadGroupCanvasConfiguration: '$(outAadGroupCanvasConfiguration)'
-
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outSolutionComponentOwnershipConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'SolutionComponentOwnershipConfiguration'
     displayName: 'Retrieve Solution Component Onwership Config for Deploy'
-
-- template: update-solution-component-ownership.yml
-  parameters:
-    displayName: 'Update Solution Component Ownwership'
-    serviceConnection: '${{parameters.serviceConnection}}'
-    solutionComponentOwnershipConfiguration: '$(outSolutionComponentOwnershipConfiguration)'
-    activateFlowConfiguration: '$(outActivateFlows)'
-    enableFlows: 'false'
-    updateComponentOnwership: 'true'
 
 - template: set-deployment-variable.yml
   parameters:
@@ -309,14 +212,6 @@ steps:
     deploymentSettingsNode: 'ConnectionReferences'
     displayName: 'Retrieve Connection Reference Config for Deploy'
 
-- template: activate-flows.yml
-  parameters:
-    displayName: 'Activate Flows'
-    serviceConnection: '${{parameters.serviceConnection}}'
-    connectionReferences: '$(outConnectionReferences)'
-    solutionComponentOwnershipConfiguration: '$(outSolutionComponentOwnershipConfiguration)'
-    activateFlowConfiguration: '$(outActivateFlows)'
-
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outFlowShareWithGroupTeamConfiguration'
@@ -324,17 +219,40 @@ steps:
     deploymentSettingsNode: 'FlowShareWithGroupTeamConfiguration'
     displayName: 'Retrieve Flow Share with Group Team Configuration for Deploy'
 
-- template: share-flows-with-group-team.yml
-  parameters:
-    serviceConnection: '${{parameters.serviceConnection}}'
-    flowShareWithGroupTeamConfiguration: '$(outFlowShareWithGroupTeamConfiguration)'
-
 - template: set-deployment-variable.yml
   parameters:
     variableName: 'outConnectorShareWithGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'ConnectorShareWithGroupTeamConfiguration'
     displayName: 'Retrieve Connector Share with Group Team Configuration for Deploy'
+
+- template: set-dataverse-aad-group-teams.yml
+  parameters:
+    serviceConnection: '${{parameters.serviceConnection}}'
+    aadGroupTeamConfiguration: '$(outAadGroupTeamConfiguration)'
+
+- template: share-canvas-app-with-aad-group.yml
+  parameters:
+    serviceConnection: '${{parameters.serviceConnection}}'
+    aadGroupCanvasConfiguration: '$(outAadGroupCanvasConfiguration)'
+
+- template: update-solution-component-ownership.yml
+  parameters:
+    serviceConnection: '${{parameters.serviceConnection}}'
+    solutionComponentOwnershipConfiguration: '$(outSolutionComponentOwnershipConfiguration)'
+
+- template: activate-flows.yml
+  parameters:
+    solutionName: '$(SolutionName)'
+    serviceConnection: '${{parameters.serviceConnection}}'
+    connectionReferences: '$(outConnectionReferences)'
+    solutionComponentOwnershipConfiguration: '$(outSolutionComponentOwnershipConfiguration)'
+    activateFlowConfiguration: '$(outActivateFlows)'
+
+- template: share-flows-with-group-team.yml
+  parameters:
+    serviceConnection: '${{parameters.serviceConnection}}'
+    flowShareWithGroupTeamConfiguration: '$(outFlowShareWithGroupTeamConfiguration)'
 
 - template: share-connectors-with-group-team.yml
   parameters:
