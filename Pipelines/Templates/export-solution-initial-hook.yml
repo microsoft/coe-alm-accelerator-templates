@@ -1,0 +1,2 @@
+steps:
+- template: 'Hook Templates\output-environment-variables.yml'
