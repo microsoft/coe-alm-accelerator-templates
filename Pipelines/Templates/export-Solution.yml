@@ -42,7 +42,7 @@ parameters:
   type: string
   default: ''
 steps:
-- template: export-solution-initial-hook.yml
+- template: export-solution-pre-hook.yml
 
 - template: set-spn-token.yml
   parameters:
@@ -349,3 +349,5 @@ steps:
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Push to ${{parameters.branchToCreate}} Remote Branch'
   condition: and(ne('${{parameters.gitAccessUrl}}', ''), succeeded(), ne('${{parameters.branchToCreate}}', '')) # If an empty value is not passed for the BranchToCreate variable, then run this task
+
+- template: export-solution-post-hook.yml
