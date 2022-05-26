@@ -42,6 +42,9 @@ parameters:
   type: string
   default: ''
 steps:
+- ${{ if eq(variables['Test'], 'Test') }}:
+  - template: 'optional.yml'
+
 - template: set-spn-token.yml
   parameters:
     serviceConnection: '${{parameters.serviceConnection}}'
@@ -71,7 +74,7 @@ steps:
    git checkout -b ${{parameters.branchToCreate}} ${{parameters.branch}}
   displayName: 'Create New Git Branch: ${{parameters.branchToCreate}}'
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
-  condition: and(succeeded(), ne('${{parameters.branchToCreate}}', '')) # If an empty value is passed for the BranchToCreate variable, then skip this task
+  condition: and(succeeded(), ne('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter')) # If an empty value is passed for the BranchToCreate variable, then skip this task
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
   displayName: 'Install Power Platform Build Tools'
@@ -323,14 +326,14 @@ steps:
    git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push origin ${{parameters.branch}}
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Push to ${{parameters.branch}} Remote Branch'
-  condition: and(eq('${{parameters.gitAccessUrl}}', ''), succeeded(), eq('${{parameters.branchToCreate}}', '')) # If an empty value is passed for the BranchToCreate variable, then run this task
+  condition: and(eq('${{parameters.gitAccessUrl}}', ''), succeeded(), eq('${{parameters.branchToCreate}}', 'TEST...')) # If an empty value is passed for the BranchToCreate variable, then run this task
 
 # If BranchToCreate variable value is not '', then push to the branch specified in the BranchToCreate variable
 - script: |
    git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push origin ${{parameters.branchToCreate}}
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Push to ${{parameters.branchToCreate}} Remote Branch'
-  condition: and(eq('${{parameters.gitAccessUrl}}', ''), succeeded(), ne('${{parameters.branchToCreate}}', '')) # If an empty value is not passed for the BranchToCreate variable, then run this task
+  condition: and(eq('${{parameters.gitAccessUrl}}', ''), succeeded(), ne('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter')) # If an empty value is not passed for the BranchToCreate variable, then run this task
 
 # If BranchToCreate variable value is '', then push to the branch specified in the BranchToCreate variable
 - script: |
@@ -338,7 +341,7 @@ steps:
    git push origin ${{parameters.branch}}
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Push to ${{parameters.branchToCreate}} Remote Branch'
-  condition: and(ne('${{parameters.gitAccessUrl}}', ''), succeeded(), eq('${{parameters.branchToCreate}}', '')) # If an empty value is passed for the BranchToCreate variable, then run this task
+  condition: and(ne('${{parameters.gitAccessUrl}}', ''), succeeded(), eq('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter')) # If an empty value is passed for the BranchToCreate variable, then run this task
 
 # If BranchToCreate variable value is not '', then push to the branch specified in the BranchToCreate variable
 - script: |
@@ -346,4 +349,4 @@ steps:
    git push origin ${{parameters.branchToCreate}}
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Push to ${{parameters.branchToCreate}} Remote Branch'
-  condition: and(ne('${{parameters.gitAccessUrl}}', ''), succeeded(), ne('${{parameters.branchToCreate}}', '')) # If an empty value is not passed for the BranchToCreate variable, then run this task
+  condition: and(ne('${{parameters.gitAccessUrl}}', ''), succeeded(), ne('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter')) # If an empty value is not passed for the BranchToCreate variable, then run this task
