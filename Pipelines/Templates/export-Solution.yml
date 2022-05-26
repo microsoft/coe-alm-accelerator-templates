@@ -105,6 +105,8 @@ steps:
     SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip'
     Managed: true
 
+- template: export-solution-unpack-pre-hook.yml
+
 # Unpack contents of solution to make the contents source control friendly 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.unpack-solution.PowerPlatformUnpackSolution@0
   displayName: 'Power Platform Unpack Solution'
@@ -112,6 +114,8 @@ steps:
     SolutionInputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip'
     SolutionTargetFolder: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage'
     SolutionType: Both
+
+- template: export-solution-manipulate-pre-hook.yml
 
 - pwsh: |
    Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\**\Solution.xml" | 
@@ -300,6 +304,8 @@ steps:
     }
   displayName: 'Verify Default Environment Variables Are Set'
   condition: and(succeeded(), eq(variables.VerifyDefaultEnvironmentVariableValues, 'true'))
+
+- template: export-solution-commit-pre-hook.yml
 
 - powershell: |
     git add --all
