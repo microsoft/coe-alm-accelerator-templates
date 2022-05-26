@@ -42,6 +42,8 @@ parameters:
   type: string
   default: ''
 steps:
+- template: export-solution-initial-hook.yml
+
 - template: set-spn-token.yml
   parameters:
     serviceConnection: '${{parameters.serviceConnection}}'
