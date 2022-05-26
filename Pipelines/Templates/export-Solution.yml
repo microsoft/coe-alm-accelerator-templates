@@ -246,7 +246,9 @@ steps:
   parameters:
     configPath: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\config\'
     environmentName: ''
- 
+
+- template: export-solution-update-deploymentsettings-pre-hook.yml
+
 # Update deployment settings configuration
 - template: update-deployment-settings.yml
   parameters:
