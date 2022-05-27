@@ -18,6 +18,8 @@ parameters:
   default: 'true'
 
 steps:
+- template: Hooks\deploy-solution-pre-hook.yml
+
 - template: set-spn-token.yml
   parameters:
     serviceConnection: '$(ServiceConnection)'
@@ -92,6 +94,7 @@ steps:
   condition: and(succeeded(), or(ne(variables['DeploymentSettingsPath'], ''), ne(variables['CustomDeploymentSettingsPath'], '')))
   enabled: true
 
+- template: Hooks\deploy-solution-import-pre-hook.yml
 
 # If called from import-unmanaged-to-dev-environment.yml, this task will run to deploy an unmanaged solution
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
@@ -225,6 +228,8 @@ steps:
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'ConnectorShareWithGroupTeamConfiguration'
     displayName: 'Retrieve Connector Share with Group Team Configuration for Deploy'
+
+- template: Hooks\deploy-solutions-configure-pre-hook.yml
 
 - template: set-dataverse-aad-group-teams.yml
   parameters:

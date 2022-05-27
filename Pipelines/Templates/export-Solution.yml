@@ -42,7 +42,7 @@ parameters:
   type: string
   default: ''
 steps:
-- template: export-solution-pre-hook.yml
+- template: Hooks\export-solution-pre-hook.yml
 
 - template: set-spn-token.yml
   parameters:
@@ -105,7 +105,7 @@ steps:
     SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip'
     Managed: true
 
-- template: export-solution-unpack-pre-hook.yml
+- template: Hooks\export-solution-unpack-pre-hook.yml
 
 # Unpack contents of solution to make the contents source control friendly 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.unpack-solution.PowerPlatformUnpackSolution@0
@@ -115,7 +115,7 @@ steps:
     SolutionTargetFolder: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage'
     SolutionType: Both
 
-- template: export-solution-manipulate-pre-hook.yml
+- template: Hooks\export-solution-manipulate-pre-hook.yml
 
 - pwsh: |
    Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\**\Solution.xml" | 
@@ -247,7 +247,7 @@ steps:
     configPath: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\config\'
     environmentName: ''
 
-- template: export-solution-update-deploymentsettings-pre-hook.yml
+- template: Hooks\export-solution-update-deploymentsettings-pre-hook.yml
 
 # Update deployment settings configuration
 - template: update-deployment-settings.yml
@@ -307,7 +307,7 @@ steps:
   displayName: 'Verify Default Environment Variables Are Set'
   condition: and(succeeded(), eq(variables.VerifyDefaultEnvironmentVariableValues, 'true'))
 
-- template: export-solution-commit-pre-hook.yml
+- template: Hooks\export-solution-commit-pre-hook.yml
 
 - powershell: |
     git add --all
@@ -358,4 +358,4 @@ steps:
   displayName: 'Push to ${{parameters.branchToCreate}} Remote Branch'
   condition: and(ne('${{parameters.gitAccessUrl}}', ''), succeeded(), ne('${{parameters.branchToCreate}}', '')) # If an empty value is not passed for the BranchToCreate variable, then run this task
 
-- template: export-solution-post-hook.yml
+- template: Hooks\export-solution-post-hook.yml

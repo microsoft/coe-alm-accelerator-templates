@@ -1,4 +1,0 @@
-steps:
-- pwsh:
-    Get-ChildItem -Path Env:\ | Format-List
-  displayName: 'Output Environment Variables'

@@ -9,6 +9,8 @@ parameters:
   default: 'Both'
 
 steps:  
+- template: Hooks\build-solution-pre-hook.yml
+
 - template: set-spn-token.yml
   parameters:
     serviceConnection: '$(ServiceConnection)'
@@ -25,6 +27,8 @@ steps:
     Write-Host "##vso[task.setvariable variable=RepoName]$repoName"
   displayName: 'Set Source Repo Name'
   condition: and(succeeded(), ne('${{parameters.buildType}}', 'Unmanaged'))
+
+- template: Hooks\build-solution-manipulate-source-pre-hook.yml
 
 # Solution version in source control is not used.  Instead, create version at build time from the current build number.
 - pwsh: |
@@ -49,7 +53,7 @@ steps:
     }
   displayName: 'Flatten JSON files'
   enabled: true
-  
+
 - powershell: |
     $manifestVersion = ''
     $manifestPaths = Get-ChildItem -Path "$(Build.SourcesDirectory)\$(RepoName)\$(SolutionName)" -Recurse -Filter *CanvasManifest.json
@@ -142,6 +146,8 @@ steps:
     disableAllFlows: 'false'
     activateFlowConfiguration: '$(outActivateFlows)'
 
+- template: Hooks\build-solution-pack-pre-hook.yml
+
 #Pack the solution based on the build type parameter (Unmanaged, Managed or Both)
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.pack-solution.PowerPlatformPackSolution@0
   displayName: 'Pack Solutions (Unmanaged and/or Managed)'
@@ -166,3 +172,5 @@ steps:
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)'
     artifact: drop
+
+- template: Hooks\build-solution-post-hook.yml

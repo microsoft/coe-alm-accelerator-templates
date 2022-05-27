@@ -1,2 +1,0 @@
-steps:
-- template: 'Custom\output-environment-variables.yml'
