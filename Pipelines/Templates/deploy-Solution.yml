@@ -229,7 +229,7 @@ steps:
     deploymentSettingsNode: 'ConnectorShareWithGroupTeamConfiguration'
     displayName: 'Retrieve Connector Share with Group Team Configuration for Deploy'
 
-- template: Hooks\deploy-solutions-configure-pre-hook.yml
+- template: Hooks\deploy-solution-configure-pre-hook.yml
 
 - template: set-dataverse-aad-group-teams.yml
   parameters:
