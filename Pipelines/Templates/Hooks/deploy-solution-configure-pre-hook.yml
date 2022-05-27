@@ -1,4 +1,4 @@
 steps:
-  - script: echo Deploy Solution Import Pre Hook
-    displayName: 'Deploy Solution Import Pre Hook'
+  - script: echo Deploy Solution Configure Pre Hook
+    displayName: 'Deploy Solution Configure Pre Hook'
     enabled: false
