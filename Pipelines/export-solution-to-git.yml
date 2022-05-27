@@ -21,32 +21,24 @@ parameters:
   type: string
 - name: BranchToCreate
   type: string
-  default: ""
+  default: "Commit to existing branch specified in Branch parameter"
 - name: CommitMessage
   type: string
-  default: ""
 - name: Data
   type: string
   default: "[]"
 - name: Email
   type: string
-  default: ""
 - name: Project
   type: string
-  default: ""
 - name: Repo
   type: string
-  default: ""
 - name: ServiceConnection
   type: string
-  default: ""
 - name: SolutionName
   type: string
-  default: "ALMAcceleratorSampleSolution"
 - name: UserName
   type: string
-  default: "Johanna Lorenz"
-
 
 trigger: none
 pr: none
