@@ -44,6 +44,9 @@ parameters:
 steps:
 - template: Hooks\export-solution-pre-hook.yml
 
+- ${{ if eq(variables['Test'], 'Test') }}:
+  - template: 'optional.yml'
+
 - template: set-spn-token.yml
   parameters:
     serviceConnection: '${{parameters.serviceConnection}}'
