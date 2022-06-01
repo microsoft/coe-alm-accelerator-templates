@@ -1,4 +1,4 @@
-function Invoke-ActivateFlows($cdsBaseConnectionString, $serviceConnection, $xrmDataPowerShellVersion, $microsoftXrmDataPowerShellModule, $microsoftPowerAppsAdministrationPowerShellModule, $powerAppsAdminModuleVersion, $tenantId, $clientId, $clientSecret, $solutionName, $environmentId, $solutionComponentOwnershipConfiguration, $connectionReferences, $activateFlowConfiguration) {
+function Invoke-ActivateFlows($cdsBaseConnectionString, $serviceConnection, $microsoftXrmDataPowerShellModule, $xrmDataPowerShellVersion, $microsoftPowerAppsAdministrationPowerShellModule, $powerAppsAdminModuleVersion, $tenantId, $clientId, $clientSecret, $solutionName, $environmentId, $solutionComponentOwnershipConfiguration, $connectionReferences, $activateFlowConfiguration) {
     Write-Host "Importing PowerShell Module: $microsoftPowerAppsAdministrationPowerShellModule - $powerAppsAdminModuleVersion"
     Import-Module $microsoftPowerAppsAdministrationPowerShellModule -Force -RequiredVersion $powerAppsAdminModuleVersion -ArgumentList @{ NonInteractive = $true }
 
@@ -40,45 +40,53 @@ function Invoke-ActivateFlows($cdsBaseConnectionString, $serviceConnection, $xrm
         }
     } while ($flowsActivatedThisPass)
 
-    if($throwOnComplete) {
+    if ($throwOnComplete) {
         throw
     }
 }
 
+function Get-ActivationConfigurations($activateFlowConfiguration) {
+    $activationConfigs = $null
+    if ($activateFlowConfiguration -ne "") {
+        $activationConfigs = ConvertFrom-Json $activateFlowConfiguration
+        $activationConfigs | ForEach-Object { if ($_.sortOrder -match '^\d+$') { $_.sortOrder = [int]$_.sortOrder } else { $_.sortOrder = [int]::MaxValue } }
+    }
+    return $activationConfigs
+}
 function Get-UserConfiguredFlowActivations($activateFlowConfiguration, $conn, $flowsToActivate) {
-    $activationConfigs = ConvertFrom-Json $activateFlowConfiguration
-
-    $activationConfigs | ForEach-Object { if ($_.sortOrder -match '^\d+$') { $_.sortOrder = [int]$_.sortOrder } else { $_.sortOrder = [int]::MaxValue } }
+    $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
 
     # Turn on specified list of flows using a specified user.
     # This should be an ordered list of flows that must be turned on before any other dependent (parent) flows can be turned on.
-    foreach ($activateConfig in $activationConfigs) {
-        if ($activateConfig.activateAsUser -ne '' -and $activateConfig.solutionComponentUniqueName -ne '' -and $activateConfig.activate -ne 'false') {
-            $existingActivation = $flowsToActivate | Where-Object { $_.solutionComponentUniqueName -eq $activateConfig.solutionComponentUniqueName } | Select-Object -First 1
-            if ($null -eq $existingActivation) {
-                $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -Fields clientdata, category, statecode, name
-                $systemUserResult = Get-CrmRecords -conn $conn -EntityLogicalName systemuser -FilterAttribute "internalemailaddress" -FilterOperator "eq" -FilterValue $activateConfig.activateAsUser -Fields systemuserid
-                if ($systemUserResult.Count -gt 0) {
-                    $impersonationCallerId = $systemUserResult.CrmRecords[0].systemuserid
+    if ($null -ne $activationConfigs) {
+        foreach ($activateConfig in $activationConfigs) {
+            if ($activateConfig.activateAsUser -ne '' -and $activateConfig.solutionComponentUniqueName -ne '' -and $activateConfig.activate -ne 'false') {
+                $existingActivation = $flowsToActivate | Where-Object { $_.solutionComponentUniqueName -eq $activateConfig.solutionComponentUniqueName } | Select-Object -First 1
+                if ($null -eq $existingActivation) {
+                    $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -Fields clientdata, category, statecode, name
+                    $systemUserResult = Get-CrmRecords -conn $conn -EntityLogicalName systemuser -FilterAttribute "internalemailaddress" -FilterOperator "eq" -FilterValue $activateConfig.activateAsUser -Fields systemuserid
+                    if ($systemUserResult.Count -gt 0) {
+                        $impersonationCallerId = $systemUserResult.CrmRecords[0].systemuserid
 
-                    #Activate the workflow using the specified user.
-                    if ($workflow.statecode_Property.Value -ne 1) {
-                        if ($activateConfig.activate -ne 'false') {
-                            Write-Host "Adding flow " $activateConfig.solutionComponentName " to activation collection"
-                            $flowActivation = [PSCustomObject]@{}
-                            $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $activateConfig.solutionComponentUniqueName
-                            $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
-                            $flowActivation | Add-Member -MemberType NoteProperty -Name 'impersonationCallerId' -Value $impersonationCallerId
-                            $flowActivation | Add-Member -MemberType NoteProperty -Name 'sortOrder' -Value $activateConfig.sortOrder
-                            $flowsToActivate.Add($flowActivation)
-                        }
-                        else {
-                            Write-Host "Excluding flow " $activationConfig.solutionComponentName "from activation collection"
+                        #Activate the workflow using the specified user.
+                        if ($workflow.statecode_Property.Value -ne 1) {
+                            if ($activateConfig.activate -ne 'false') {
+                                Write-Host "Adding flow " $activateConfig.solutionComponentName " to activation collection"
+                                $flowActivation = [PSCustomObject]@{}
+                                $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $activateConfig.solutionComponentUniqueName
+                                $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
+                                $flowActivation | Add-Member -MemberType NoteProperty -Name 'impersonationCallerId' -Value $impersonationCallerId
+                                $flowActivation | Add-Member -MemberType NoteProperty -Name 'sortOrder' -Value $activateConfig.sortOrder
+                                $flowsToActivate.Add($flowActivation)
+                            }
+                            else {
+                                Write-Host "Excluding flow " $activationConfig.solutionComponentName "from activation collection"
+                            }
                         }
                     }
-                }
-                else {
-                    Write-Host "##vso[task.logissue type=warning]A specified user record was not found in the target environment. Verify your deployment configuration and try again."
+                    else {
+                        Write-Host "##vso[task.logissue type=warning]A specified user record was not found in the target environment. Verify your deployment configuration and try again."
+                    }
                 }
             }
         }
@@ -94,8 +102,7 @@ function Get-ConnectionReferenceFlowActivations($connectionReferences, $activate
         $result = Get-CrmRecords -conn $conn -EntityLogicalName solutioncomponent -FilterAttribute "solutionid" -FilterOperator "eq" -FilterValue $solutionId -Fields objectid, componenttype
         $solutionComponents = $result.CrmRecords
 
-        $activationConfigs = ConvertFrom-Json $activateFlowConfiguration
-        $activationConfigs | ForEach-Object { if ($_.sortOrder -match '^\d+$') { $_.sortOrder = [int]$_.sortOrder } else { $_.sortOrder = [int]::MaxValue } }
+        $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
         $config = ConvertFrom-Json $connectionReferences
 
         foreach ($connectionRefConfig in $config) {
@@ -139,14 +146,23 @@ function Get-ConnectionReferenceFlowActivations($connectionReferences, $activate
                                     if ($null -eq $existingActivation) {
                                         if ($null -ne $workflow -and $null -ne $workflow.clientdata -and $workflow.clientdata.Contains($connectionRefConfig.LogicalName) -and $workflow.statecode_Property.Value -ne 1) {
                                             Write-Host "Retrieving activation config"
-                                            $activationConfig = $activationConfigs | Where-Object { $_.solutionComponentUniqueName -eq $solutionComponent.objectid } | Select-Object -First 1
-                                            if ($null -ne $activationConfig -and $activationConfig.activate -ne 'false') {
+                                            $sortOrder = [int]::MaxValue
+                                            $activateFlow = 'true'
+                                            if ($null -ne $activationConfigs) {
+                                                $activationConfig = $activationConfigs | Where-Object { $_.solutionComponentUniqueName -eq $solutionComponent.objectid } | Select-Object -First 1
+                                                if ($null -ne $activationConfig) {
+                                                    $sortOrder = $activationConfig.sortOrder
+                                                    $activateFlow = $activationConfig.activate
+                                                }
+                                            }
+
+                                            if ($activateFlow -ne 'false') {
                                                 Write-Host "Adding flow " $workflow.name " to activation collection"
                                                 $flowActivation = [PSCustomObject]@{}
                                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $solutionComponent.objectid
                                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
                                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'impersonationCallerId' -Value $impersonationCallerId
-                                                $flowActivation | Add-Member -MemberType NoteProperty -Name 'sortOrder' -Value $activationConfig.sortOrder
+                                                $flowActivation | Add-Member -MemberType NoteProperty -Name 'sortOrder' -Value $sortOrder
                                                 $flowsToActivate.Add($flowActivation)
                                             }
                                             else {
@@ -172,8 +188,7 @@ function Get-ConnectionReferenceFlowActivations($connectionReferences, $activate
 
 function Get-OwnerFlowActivations($solutionComponentOwnershipConfiguration, $activateFlowConfiguration, $conn, $flowsToActivate) {
     $config = ConvertFrom-Json $solutionComponentOwnershipConfiguration
-    $activationConfigs = ConvertFrom-Json $activateFlowConfiguration
-    $activationConfigs | ForEach-Object { if ($_.sortOrder -match '^\d+$') { $_.sortOrder = [int]$_.sortOrder } else { $_.sortOrder = [int]::MaxValue } }
+    $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
 
     foreach ($ownershipConfig in $config) {
         $existingActivation = $flowsToActivate | Where-Object { $_.solutionComponentUniqueName -eq $ownershipConfig.solutionComponentUniqueName } | Select-Object -First 1
@@ -191,21 +206,30 @@ function Get-OwnerFlowActivations($solutionComponentOwnershipConfiguration, $act
                     }      
                 }
 
-                if($null -ne $workflow) {
+                if ($null -ne $workflow) {
                     $systemuserResult = Get-CrmRecords -conn $conn -EntityLogicalName systemuser -FilterAttribute "internalemailaddress" -FilterOperator "eq" -FilterValue $ownershipConfig.ownerEmail -Fields systemuserid
                     if ($systemuserResult.Count -gt 0) {
                         $systemUserId = $systemuserResult.CrmRecords[0].systemuserid
                         #Activate the workflow using the owner.
-                        Write-Host "Retrieving activation config"
-                        $activationConfig = $activationConfigs | Where-Object { $_.solutionComponentUniqueName -eq $ownershipConfig.solutionComponentUniqueName } | Select-Object -First 1
-                        if ($activationConfig.activate -ne 'false') {
+                        $sortOrder = [int]::MaxValue
+                        $activateFlow = 'true'
+                        if ($null -ne $activationConfigs) {
+                            Write-Host "Retrieving activation config"
+                            $activationConfig = $activationConfigs | Where-Object { $_.solutionComponentUniqueName -eq $solutionComponent.objectid } | Select-Object -First 1
+                            if ($null -ne $activationConfig) {
+                                $sortOrder = $activationConfig.sortOrder
+                                $activateFlow = $activationConfig.activate
+                            }
+                        }
+
+                        if ($activateFlow -ne 'false') {
                             Write-Host "Adding flow " $ownershipConfig.solutionComponentName " to activation collection"
                             $flowActivation = [PSCustomObject]@{}
     
                             $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $ownershipConfig.solutionComponentUniqueName
                             $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
                             $flowActivation | Add-Member -MemberType NoteProperty -Name 'impersonationCallerId' -Value $systemUserId
-                            $flowActivation | Add-Member -MemberType NoteProperty -Name 'sortOrder' -Value $activationConfig.sortOrder
+                            $flowActivation | Add-Member -MemberType NoteProperty -Name 'sortOrder' -Value $sortOrder
                             $flowsToActivate.Add($flowActivation)
                         }
                     }

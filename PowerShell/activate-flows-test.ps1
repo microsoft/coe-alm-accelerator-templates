@@ -6,6 +6,8 @@
     Install-Module $testConfig.microsoftXrmDataPowerShellModule -RequiredVersion $testConfig.xrmDataPowerShellVersion -Force -AllowClobber
     Install-Module $testConfig.microsoftPowerAppsAdministrationPowerShellModule -RequiredVersion $testConfig.powerAppsAdminModuleVersion -Force -AllowClobber
 
+	. .\utilities-test.ps1
+
     $activationConfig = Invoke-SetDeploymentVariable ".\TestData\Solutions\coe-starter-kit-azdo\ALMAcceleratorSampleSolution\config\customDeploymentSettings.json" "ActivateFlowConfiguration"
     $componentOwnerConfig = Invoke-SetDeploymentVariable ".\TestData\Solutions\coe-starter-kit-azdo\ALMAcceleratorSampleSolution\config\customDeploymentSettings.json" "SolutionComponentOwnershipConfiguration"
     $connectionReferenceConfig = Invoke-SetDeploymentVariable ".\TestData\Solutions\coe-starter-kit-azdo\ALMAcceleratorSampleSolution\config\deploymentSettings.json" "ConnectionReferences"
@@ -24,19 +26,7 @@
             Set-CrmRecordState -conn $conn -EntityLogicalName workflow -Id $workflow.workflowid -StateCode 0 -StatusCode 1
         }
     }
-    Invoke-ActivateFlows $testConfig.cdsBaseConnectionString $testConfig.serviceConnection $testConfig.xrmDataPowerShellVersion $testConfig.microsoftXrmDataPowerShellModule $testConfig.microsoftPowerAppsAdministrationPowerShellModule $testConfig.powerAppsAdminModuleVersion $testConfig.tenantId $testConfig.clientId $testConfig.clientSecret $testConfig.solutionName $testConfig.environmentId $componentOwnerConfig $connectionReferenceConfig $activationConfig
+    Invoke-ActivateFlows $testConfig.cdsBaseConnectionString $testConfig.serviceConnection $testConfig.microsoftXrmDataPowerShellModule $testConfig.xrmDataPowerShellVersion $testConfig.microsoftPowerAppsAdministrationPowerShellModule $testConfig.powerAppsAdminModuleVersion $testConfig.tenantId $testConfig.clientId $testConfig.clientSecret $testConfig.solutionName $testConfig.environmentId $componentOwnerConfig $connectionReferenceConfig $activationConfig
 }
 
-function Invoke-SetDeploymentVariable($deploymentSettingsPath, $deploymentSettingsNode)
-{
-    if($deploymentSettingsPath -ne '')
-    {
-        $deploymentSettings = Get-Content $deploymentSettingsPath | ConvertFrom-Json
-        $settingsNode = $deploymentSettings.$deploymentSettingsNode
-        $settingsJson = ConvertTo-Json($settingsNode) -Compress
-        if ($settingsJson) {
-            return $settingsJson
-        }
-    }
-}
 Invoke-ActivateFlows-Test
