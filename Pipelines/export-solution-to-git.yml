@@ -39,6 +39,12 @@ parameters:
   type: string
 - name: UserName
   type: string
+- name: EnvironmentName
+  type: string
+- name: BuildDefinitionId
+  type: string
+- name: ImportUnmanaged
+  type: string
 
 trigger: none
 pr: none
