@@ -9,3 +9,5 @@ steps:
 - template: build-Solution.yml
   parameters:
     buildType: 'Both'
+    serviceConnection: $(ServiceConnection)
+    solutionName: $(SolutionName)

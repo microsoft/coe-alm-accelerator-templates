@@ -1,4 +1,4 @@
-﻿function Set-DeploymentSettingsConfiguration($buildSourceDirectory, $buildRepositoryName, $cdsBaseConnectionString, $xrmDataPowerShellVersion, $microsoftXrmDataPowerShellModule, $orgUrl, $projectId, $projectName, $repo, $azdoAuthType, $serviceConnection, $solutionName, $profileEnvironmentUrl, $profileId, $configurationDataJson, $generateEnvironmentVariables, $generateConnectionReferences, $generateFlowConfig, $generateCanvasSharingConfig, $generateAADGroupTeamConfig, $generateCustomConnectorConfig)
+﻿function Set-DeploymentSettingsConfiguration($buildSourceDirectory, $buildRepositoryName, $cdsBaseConnectionString, $xrmDataPowerShellVersion, $microsoftXrmDataPowerShellModule, $orgUrl, $projectId, $projectName, $repo, $azdoAuthType, $serviceConnection, $solutionName, $configurationDataJson, $generateEnvironmentVariables, $generateConnectionReferences, $generateFlowConfig, $generateCanvasSharingConfig, $generateAADGroupTeamConfig, $generateCustomConnectorConfig)
 {
     Write-Host (ConvertTo-Json -Depth 10 $configurationDataJson)
     #Generate Deployment Settings
@@ -35,29 +35,24 @@
         #If configuration data was passed in use this to set the pipeline variable values
         $newConfigurationData = [System.Collections.ArrayList]@()
 
-        $settingsConn = Get-CrmConnection -ConnectionString "$cdsBaseConnectionString$profileEnvironmentUrl"
         #The configuration data will point to the records in Dataverse that store the JSON to set pipeline variables. Try/Catch for invalid json
         $configurationData = ConvertFrom-Json $configurationDataJson
 
         if($configurationData.length -gt 0) {
-            $userSettings = $configurationData.UserSettingId
-            #Add the cat_usersetting records to an array
-            foreach($configCriteria in $userSettings) {
-                $userSetting = Get-CrmRecord -conn $settingsConn -EntityLogicalName cat_usersetting -Id $configCriteria.cat_usersettingid -Fields cat_data
-                $newConfigurationData.Add($userSetting)
-            }
-
-            if($null -ne $newConfigurationData) {
-                foreach($newEnvironmentConfig in $newConfigurationData) {
-                    foreach($variableConfigurationJson in $newEnvironmentConfig.cat_data) {
-                        #Convert the JSON in the cat_data field to an object
+            $userSettings = $configurationData.UserSettings
+            Write-Host ConvertTo-Json -Depth 10 $userSettings
+            if($null -ne $userSettings) {
+                foreach($newEnvironmentConfig in $userSettings) {
+                    foreach($variableConfigurationJson in $newEnvironmentConfig.DeploymentConfiguration) {
+                        Write-Host ConvertTo-Json -Depth 10 $newEnvironmentConfig.DeploymentConfiguration
+                        #Convert the JSON in the DeploymentConfiguration field to an object
                         $variableConfiguration = ConvertFrom-Json $variableConfigurationJson
                         $deploymentConfigurationData.AddRange($variableConfiguration)
                     }
                 }
             }
         }
-
+        
         $solutionComponentDefinitionsResults =  Get-CrmRecords -conn $conn -EntityLogicalName solutioncomponentdefinition -FilterAttribute "primaryentityname" -FilterOperator "eq" -FilterValue "connectionreference" -Fields objecttypecode
         #There are extra characters being introduced in specific locales. The regex replace on the objecttypecode below is to remove it.
         $connectionReferenceTypeCode = [int] ($solutionComponentDefinitionsResults.CrmRecords[0].objecttypecode -replace '\D','')
@@ -214,7 +209,7 @@
             Set-EnvironmentDeploymentSettingsConfiguration $buildSourceDirectory $repo $solutionName $newCustomConfiguration $newConfigurationData
         }
         #Update / Create Deployment Pipelines
-        New-DeploymentPipelines "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" $settingsConn "$solutionName" "$profileId"
+        New-DeploymentPipelines "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$solutionName" $configurationData
 
         $buildDefinitionResourceUrl = "$orgUrl$projectId/_apis/build/definitions?name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"
 
@@ -263,11 +258,10 @@
     }
 }
 
-function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $repo, $azdoAuthType, $settingsConn, $solutionName, $profileId)
+function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $repo, $azdoAuthType, $solutionName, $configurationData)
 {
-    if($null -ne $profileId) {
-        $deploymentSteps = Get-CrmRecords -conn $settingsConn -EntityLogicalName cat_deploymentstep -FilterAttribute "cat_deploymentprofileid" -FilterOperator "eq" -FilterValue $profileId -Fields cat_deploymentenvironmentid,cat_name
-        Write-Host "Retrieved " $deploymentSteps.Count " deployment steps for " $profileId
+    if($null -ne $configurationData -and $configurationData.length -gt 0) {
+        Write-Host "Retrieved " $deploymentEnvironments.Count " deployment environments"
         #Update / Create Deployment Pipelines
         $buildDefinitionResourceUrl = "$orgUrl$projectId/_apis/build/definitions?name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"
         Write-Host $buildDefinitionResourceUrl
@@ -277,7 +271,7 @@ function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $r
         $buildDefinitionResponseResults = $fullBuildDefinitionResponse.value
         Write-Host "Retrieved " $buildDefinitionResponseResults.length " builds" $env:SYSTEM_ACCESSTOKEN
 
-        if($buildDefinitionResponseResults.length -lt $deploymentSteps.Count) {
+        if($buildDefinitionResponseResults.length -lt $configurationData.length) {
             $currentPath = Get-Location
             if(Test-Path -Path "../coe-starter-kit-source") {
                 Remove-Item "../coe-starter-kit-source" -Force -Recurse
@@ -290,14 +284,13 @@ function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $r
             npm run build
             npm link
             $environments = ""
-            foreach($deploymentStep in $deploymentSteps.CrmRecords) {
+            foreach($deploymentEnvironment in $configurationData) {
                 if(-Not [string]::IsNullOrWhiteSpace($environments)) {
                     $environments = $environments + ","
                 }
-                $environment = Get-CrmRecord -conn $settingsConn -EntityLogicalName cat_deploymentenvironment -Id $deploymentStep.cat_deploymentenvironmentid_Property.Value.Id -Fields cat_url
 
-                if(-Not [string]::IsNullOrWhiteSpace($environment.cat_url) -and -Not [string]::IsNullOrWhiteSpace($deploymentStep.cat_name)) {
-                    $environments = $environments + $deploymentStep.cat_name.ToLower() + "=" + $environment.cat_url
+                if(-Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentUrl) -and -Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentName)) {
+                    $environments = $environments + $deploymentEnvironment.DeploymentEnvironmentName.ToLower() + "=" + $deploymentEnvironment.DeploymentEnvironmentUrl
                 }
             }
             if(-Not [string]::IsNullOrWhiteSpace($environments)) {
@@ -322,21 +315,11 @@ function Set-BuildDefinitionVariables($orgUrl, $projectId, $azdoAuthType, $build
     Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
 }
 function Set-EnvironmentDeploymentSettingsConfiguration($buildSourceDirectory, $repo, $solutionName, $newCustomConfiguration, $newConfigurationData) {
-    Write-Host "Creating deployment configuration for group teams..."
-    #"AadGroupTeamConfiguration": [
-    #{
-    #    "aadGroupTeamName": "alm-accelerator-sample-solution",
-    #    "aadSecurityGroupId": "#{team.aadSecurityGroupId}#",
-    #    "dataverseSecurityRoleNames": [
-    #    "ALM Accelerator Sample Role"
-    #    ]
-    #}
-    #]
     foreach($newEnvironmentConfig in $newConfigurationData) {
         $groupTeams = [System.Collections.ArrayList]@()
         $environmentName = ""
-        foreach($variableConfigurationJson in $newEnvironmentConfig.cat_data) {
-            #Convert the JSON in the cat_data field to an object
+        foreach($variableConfigurationJson in $newEnvironmentConfig.DeploymentConfiguration) {
+            #Convert the JSON in the DeploymentConfiguration field to an object
             $variableConfiguration = ConvertFrom-Json $variableConfigurationJson
             foreach($variable in $variableConfiguration) {
                 $environmentName = $variable.Environment

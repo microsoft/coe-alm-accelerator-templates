@@ -1,6 +1,8 @@
 parameters:
 - name: serviceConnection
   type: string
+- name: solutionName
+  type: string
 
 steps:
 # TEMPORARY WORKAROUND: Currently Canvas Apps cannot be owned by an app user, so we have to set an interactive user owner.  
@@ -19,7 +21,7 @@ steps:
 
         $azureactivedirectoryobjectid = $systemusers.CrmRecords[0].azureactivedirectoryobjectid
 
-        $solutions = Get-CrmRecords -conn $conn -EntityLogicalName solution -FilterAttribute "uniquename" -FilterOperator "eq" -FilterValue "$(SolutionName)" -Fields solutionid
+        $solutions = Get-CrmRecords -conn $conn -EntityLogicalName solution -FilterAttribute "uniquename" -FilterOperator "eq" -FilterValue "${{parameters.solutionName}}" -Fields solutionid
         if($solutions.Count -gt 0) {
             $solutionId = $solutions.CrmRecords[0].solutionid
 

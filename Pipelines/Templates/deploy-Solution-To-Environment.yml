@@ -17,6 +17,8 @@ stages:
           - template: deploy-Solution.yml
             parameters:
               serviceConnection: '$(ServiceConnection)'
+              environmentName: '$(EnvironmentName)'
+              solutionName: '$(ServiceConnection)'
               overwriteUnmanagedCustomizations: $(OverwriteUnmanagedCustomizations)
               importUnmanaged: '$(ImportUnmanaged)'
               cacheEnabled: 'false'

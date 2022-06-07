@@ -15,6 +15,43 @@
 # SolutionName: The name of the solution being exported (i.e. Not the Display Name).
 # UserName: The Display name of the user performing the commit.
 # Data: Additional Data (e.g. JSON Payload) for the export to configure deployment pipelines
+# PipelineId to create a Github release for the CoE Starter Kit solution
+parameters:
+- name: Branch
+  type: string
+- name: BranchToCreate
+  type: string
+  default: "Commit to existing branch specified in Branch parameter"
+- name: CommitMessage
+  type: string
+- name: Data
+  type: string
+  default: "[]"
+- name: Email
+  type: string
+- name: Project
+  type: string
+- name: Repo
+  type: string
+- name: ServiceConnection
+  type: string
+- name: SolutionName
+  type: string
+- name: UserName
+  type: string
+- name: PipelineId
+  type: string
+  default: "NA"
+- name: EnvironmentName
+  type: string
+  default: "NA"
+- name: BuildDefinitionId
+  type: string
+  default: "NA"
+- name: ImportUnmanaged
+  type: string
+  default: "NA"
+
 trigger: none
 pr: none
 
@@ -54,8 +91,8 @@ steps:
     branchToCreate: $(BranchToCreate)
     commitMessage: $(CommitMessage)
     email: $(Email)
-    serviceConnection: $(ServiceConnection)
-    solutionName: $(SolutionName)
+    serviceConnection: ${{parameters.ServiceConnection}}
+    solutionName: ${{parameters.SolutionName}}
     userName: $(UserName)    
     configurationData: $(Data)
 
