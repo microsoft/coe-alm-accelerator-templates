@@ -109,5 +109,5 @@ steps:
    git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" push --set-upstream origin ${{parameters.BranchToCreate}}
   workingDirectory: $(Pipeline.Workspace)\DevopsSource
   displayName: 'Push to Azure DevOps ${{parameters.BranchToCreate}} Remote Branch'
-  condition: and(succeeded(), ne('${{parameters.BranchToCreate}}', ''), ne('${{parameters.BranchToCreate}}', variables.SolutionName)) # If an empty value is not passed for the BranchToCreate variable, then run this task
+  condition: and(succeeded(), ne('${{parameters.BranchToCreate}}', 'Commit to existing branch specified in Branch parameter'), ne('${{parameters.BranchToCreate}}', variables.SolutionName)) # If an empty value is not passed for the BranchToCreate variable, then run this task
     
