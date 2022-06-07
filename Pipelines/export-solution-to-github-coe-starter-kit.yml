@@ -55,7 +55,7 @@ parameters:
 trigger: none
 pr: none
 
-name: export-$(SolutionName)-to-git-branch
+name: export-${{parameters.SolutionName}}-to-git-branch
 
 resources:
   repositories:
@@ -85,16 +85,16 @@ steps:
 - template: Templates\export-Solution.yml
   parameters:
     gitAccessUrl: $(GitAccessUrl)
-    project: $(Project)
-    repo: $(Repo)
-    branch: $(Branch)
-    branchToCreate: $(BranchToCreate)
-    commitMessage: $(CommitMessage)
-    email: $(Email)
+    project: ${{parameters.Project}}
+    repo: ${{parameters.Repo}}
+    branch: ${{parameters.Branch}}
+    branchToCreate: ${{parameters.BranchToCreate}}
+    commitMessage: ${{parameters.CommitMessage}}
+    email: ${{parameters.Email}}
     serviceConnection: ${{parameters.ServiceConnection}}
     solutionName: ${{parameters.SolutionName}}
-    userName: $(UserName)    
-    configurationData: $(Data)
+    userName: ${{parameters.UserName}}
+    configurationData: ${{parameters.Data}}
 
 # Checkout our Azure DevOps Branch
 - checkout: git://$(Project)/$(Repo)@$(Branch)
