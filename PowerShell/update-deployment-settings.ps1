@@ -261,7 +261,7 @@
 function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $repo, $azdoAuthType, $solutionName, $configurationData)
 {
     if($null -ne $configurationData -and $configurationData.length -gt 0) {
-        Write-Host "Retrieved " $deploymentEnvironments.Count " deployment environments"
+        Write-Host "Retrieved " $configurationData.length " deployment environments"
         #Update / Create Deployment Pipelines
         $buildDefinitionResourceUrl = "$orgUrl$projectId/_apis/build/definitions?name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"
         Write-Host $buildDefinitionResourceUrl
