@@ -1,6 +1,7 @@
-﻿function Set-DeploymentSettingsConfiguration($buildSourceDirectory, $buildRepositoryName, $cdsBaseConnectionString, $xrmDataPowerShellVersion, $microsoftXrmDataPowerShellModule, $orgUrl, $projectId, $projectName, $repo, $azdoAuthType, $serviceConnection, $solutionName, $configurationDataJson, $generateEnvironmentVariables, $generateConnectionReferences, $generateFlowConfig, $generateCanvasSharingConfig, $generateAADGroupTeamConfig, $generateCustomConnectorConfig)
+﻿function Set-DeploymentSettingsConfiguration($buildSourceDirectory, $buildRepositoryName, $cdsBaseConnectionString, $xrmDataPowerShellVersion, $microsoftXrmDataPowerShellModule, $orgUrl, $projectId, $projectName, $repo, $azdoAuthType, $serviceConnection, $solutionName, $generateEnvironmentVariables, $generateConnectionReferences, $generateFlowConfig, $generateCanvasSharingConfig, $generateAADGroupTeamConfig, $generateCustomConnectorConfig)
 {
-    Write-Host (ConvertTo-Json -Depth 10 $configurationDataJson)
+    $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
+    Write-Host (ConvertTo-Json -Depth 10 $configurationData)
     #Generate Deployment Settings
     Write-Host "Update Deployment Settings"
     $customDeploymentSettingsFilePath = "$buildSourceDirectory\$repo\$solutionName\config\customDeploymentSettings.json"
@@ -36,7 +37,6 @@
         $newConfigurationData = [System.Collections.ArrayList]@()
 
         #The configuration data will point to the records in Dataverse that store the JSON to set pipeline variables. Try/Catch for invalid json
-        $configurationData = ConvertFrom-Json $configurationDataJson
 
         if($configurationData.length -gt 0) {
             $userSettings = $configurationData.UserSettings
