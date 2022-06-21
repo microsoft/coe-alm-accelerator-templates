@@ -21,6 +21,7 @@ function Set-TriggerSolutionUpgrade($triggerSolutionUpgrade, $orgUrl, $projectid
         $headers.Add("Authorization", "Bearer $systemAccessToken")
         $headers.Add("Content-Type", "application/json")
 
+        <#
         $pullrequestqueryBody = "{
           `n  `"queries`": [
           `n    {
@@ -29,6 +30,18 @@ function Set-TriggerSolutionUpgrade($triggerSolutionUpgrade, $orgUrl, $projectid
           `n    }
           `n  ]
           `n}"
+          #>
+
+        $pullrequestqueryBody = @"
+        {
+            "queries": [{
+                "items": [
+                    "$buildSourceVersion"
+                ],
+                "type": "lastMergeCommit"
+            }]
+        }
+"@ 
 
         $pullrequestqueryBodyResourceUrl = "$orgUrl$projectid/_apis/git/repositories/$buildRepositoryName/pullrequestquery?api-version=6.0"
         $pullrequestqueryResponse = Invoke-RestMethod $pullrequestqueryBodyResourceUrl -Method 'POST' -Headers $headers -Body $pullrequestqueryBody 
@@ -36,10 +49,13 @@ function Set-TriggerSolutionUpgrade($triggerSolutionUpgrade, $orgUrl, $projectid
         $pullRequestId = $pullrequestqueryResponseResults.$buildSourceVersion.pullRequestId
         if (-not [string]::IsNullOrEmpty($pullRequestId)) {
           $pullRequestLabelQuery = "$orgUrl$projectid/_apis/git/repositories/$buildRepositoryName/pullRequests/$pullRequestId/labels?api-version=6.0"
-            
-          $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method Get -Headers @{
+        
+        <#   
+        $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method Get -Headers @{
             Authorization = "Bearer $systemAccessToken"
-          }
+        }
+        #>  
+        $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method Get -Headers $headers
 
           $pullRequestLabelQueryResponseValue = $pullRequestLabelQueryResponse.value
 
