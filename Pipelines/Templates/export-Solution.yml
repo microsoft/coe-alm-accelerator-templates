@@ -73,7 +73,7 @@ steps:
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   condition: and(succeeded(), ne(variables.BranchToCreate, '')) # If an empty value is passed for the BranchToCreate variable, then skip this task
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.tool-installer.PowerPlatformToolInstaller@0
   displayName: 'Install Power Platform Build Tools'
   inputs:
     DefaultVersion: false
@@ -82,14 +82,14 @@ steps:
 - template: install-powershell-modules.yml
 
 # Before exporting the solution, publish solution customizations to ensure all the changes are exported
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.publish-customizations.PowerPlatformPublishCustomizations@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.publish-customizations.PowerPlatformPublishCustomizations@0
   displayName: 'Publish Customizations'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnection}}'
 
 # Export both unmanaged and managed to put into source control
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.export-solution.PowerPlatformExportSolution@0
   displayName: 'Export Unmanaged Solution'
   inputs:
     authenticationType: PowerPlatformSPN
@@ -97,7 +97,7 @@ steps:
     SolutionName: '${{parameters.solutionName}}'
     SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip'
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.export-solution.PowerPlatformExportSolution@0
   displayName: 'Export Managed Solution'
   inputs:
     authenticationType: PowerPlatformSPN
@@ -107,7 +107,7 @@ steps:
     Managed: true
 
 # Unpack contents of solution to make the contents source control friendly 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.unpack-solution.PowerPlatformUnpackSolution@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.unpack-solution.PowerPlatformUnpackSolution@0
   displayName: 'Power Platform Unpack Solution'
   inputs:
     SolutionInputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip'

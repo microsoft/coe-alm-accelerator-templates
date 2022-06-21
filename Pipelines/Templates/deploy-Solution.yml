@@ -34,7 +34,7 @@ steps:
     cacheHitVar: powerPlatformToolsPath_IsCached
   condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.tool-installer.PowerPlatformToolInstaller@0
   displayName: 'Install Power Platform Build Tools'
   condition: and(succeeded(), eq('${{parameters.skipBuildToolsInstaller}}', 'false'))
 
@@ -94,7 +94,7 @@ steps:
 
 
 # If called from import-unmanaged-to-dev-environment.yml, this task will run to deploy an unmanaged solution
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.import-solution.PowerPlatformImportSolution@0
   displayName: 'Import Unmanaged Solution'
   inputs:
     authenticationType: PowerPlatformSPN
@@ -206,7 +206,7 @@ steps:
   displayName: 'Set TriggerSolutionUpgrade Variable'
 
 # If the TriggerSolutionUpgrade variable is false, then import the solution as an Update
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.import-solution.PowerPlatformImportSolution@0
   displayName: 'Import Managed Solution as Update'
   inputs:
     authenticationType: PowerPlatformSPN
@@ -220,7 +220,7 @@ steps:
 
 # If the TriggerSolutionUpgrade variable is true, then import the solution as an Upgrade, staging it as a holding solution, so we can apply a solution Upgrade.
 # Doing this will ensure that items removed from the solution in development are also removed from the solution in the target environment after the Upgrade is applied.
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.import-solution.PowerPlatformImportSolution@0
   displayName: 'Import Managed Solution as Upgrade'
   inputs:
     authenticationType: PowerPlatformSPN
@@ -237,7 +237,7 @@ steps:
 # You would add steps to your pipeline here to accomplish this. 
 
 # If the TriggerSolutionUpgrade variable is true,then apply the solution Upgrade.
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.apply-solution-upgrade.PowerPlatformApplySolutionUpgrade@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.apply-solution-upgrade.PowerPlatformApplySolutionUpgrade@0
   inputs:
     authenticationType: 'PowerPlatformSPN'
     PowerPlatformSPN: '${{parameters.serviceConnection}}'
@@ -245,7 +245,7 @@ steps:
     AsyncOperation: true
   condition: and(succeeded(), eq(variables['setTriggerSolutionUpgrade.TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.publish-customizations.PowerPlatformPublishCustomizations@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools-DEV.publish-customizations.PowerPlatformPublishCustomizations@0
   displayName: 'Power Platform Publish Customizations '
   inputs:
     authenticationType: PowerPlatformSPN
