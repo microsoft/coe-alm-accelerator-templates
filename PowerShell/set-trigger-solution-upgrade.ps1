@@ -55,7 +55,7 @@ function Set-TriggerSolutionUpgrade($triggerSolutionUpgrade, $orgUrl, $projectid
             Authorization = "Bearer $systemAccessToken"
         }
         #>  
-        $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method Get -Headers $headers
+        $pullRequestLabelQueryResponse = Invoke-RestMethod -Uri $pullRequestLabelQuery -Method 'GET' -Headers $headers
 
           $pullRequestLabelQueryResponseValue = $pullRequestLabelQueryResponse.value
 
