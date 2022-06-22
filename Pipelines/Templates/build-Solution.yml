@@ -195,6 +195,16 @@ steps:
     disableAllFlows: 'false'
     activateFlowConfiguration: '$(outActivateFlows)'
 
+- pwsh: |
+    # Default to true when no variable is set on the pipeline
+    if ('$(ProcessCanvasApps)'.Contains('$')){
+      echo '##vso[task.setvariable variable=localProcessCanvasApps]true'
+    }
+    else {
+      echo '##vso[task.setvariable variable=localProcessCanvasApps]$(ProcessCanvasApps)'
+    }    
+  displayName: 'Set localProcessCanvasApps variable'
+
 #Pack the solution based on the build type parameter (Unmanaged, Managed or Both)
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.pack-solution.PowerPlatformPackSolution@0
   displayName: 'Pack Solutions (Unmanaged and/or Managed)'
@@ -202,9 +212,7 @@ steps:
     SolutionSourceFolder: $(Build.SourcesDirectory)\$(RepoName)\$(SolutionName)\SolutionPackage
     SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\$(SolutionName)_$(Build.BuildNumber).zip'
     SolutionType: ${{parameters.buildType}}
-    ProcessCanvasApps: true
-
-
+    ProcessCanvasApps: $(localProcessCanvasApps)
 
 #Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@0

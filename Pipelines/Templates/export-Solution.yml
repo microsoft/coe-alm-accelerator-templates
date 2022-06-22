@@ -103,6 +103,16 @@ steps:
     SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip'
     Managed: true
 
+- pwsh: |
+    # Default to true when no variable is set on the pipeline
+    if ('$(ProcessCanvasApps)'.Contains('$')){
+      echo '##vso[task.setvariable variable=localProcessCanvasApps]true'
+    }
+    else {
+      echo '##vso[task.setvariable variable=localProcessCanvasApps]$(ProcessCanvasApps)'
+    }    
+  displayName: 'Set localProcessCanvasApps variable'
+
 # Unpack contents of solution to make the contents source control friendly 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.unpack-solution.PowerPlatformUnpackSolution@0
   displayName: 'Power Platform Unpack Solution'
@@ -111,7 +121,7 @@ steps:
     SolutionTargetFolder: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage'
     SolutionType: Both
     OverwriteFiles: true
-    ProcessCanvasApps: true
+    ProcessCanvasApps: $(localProcessCanvasApps)
 
 - pwsh: |
    Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\**\Solution.xml" | 
