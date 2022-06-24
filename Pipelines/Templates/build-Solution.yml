@@ -50,21 +50,6 @@ steps:
   displayName: 'Flatten JSON files'
   enabled: true
   
-# - powershell: |
-#     $manifestVersion = ''
-#     $manifestPaths = Get-ChildItem -Path "$(Build.SourcesDirectory)\$(RepoName)\$(SolutionName)" -Recurse -Filter *CanvasManifest.json
-#     foreach($manifestPath in $manifestPaths) {
-#         $manifest = Get-Content $manifestPath.FullName | ConvertFrom-Json
-#         if($manifest.FormatVersion -ne '') {
-#             $manifestVersion = $manifest.FormatVersion
-#             break
-#         }
-#     }
-#     Write-Host "##vso[task.setvariable variable=ManifestVersion]$manifestVersion"
-#     Write-Host "Version: $manifestVersion"
-#   displayName: 'Get Unpacked Version'
-#   condition: succeeded()
-
 # Pack canvas app source files into msapp
 - pwsh: |
     $agentOS = "$(Agent.OS)"
