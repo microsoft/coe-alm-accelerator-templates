@@ -6,8 +6,8 @@
 
 # TODO: 
 # Complete inner/outer tests
-# -Get latest from main into dev environment (delete unmanaged from dev then import unmanaged from main)
 # -PR into main from solution/vnext branch and detect whether prod deployment pipeline succeeded
+# -Test solution ugrade
 # -Add test for brand new solution
 # Document how to setup inner loop / personal files for local testing in the PowerShell/Ignore folder
 # Add a gh workflow to the template repo to run the e2e tests on all template code PRs
