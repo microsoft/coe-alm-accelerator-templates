@@ -5,12 +5,11 @@
 # So I wrote Invoke-ExportToGit function using the REST API
 
 # TODO: 
-# Complete inner/outer tests
+# Complete inner/outer loop tests
 # -PR into main from solution/vnext branch and detect whether prod deployment pipeline succeeded
-# -Test solution ugrade
+#   -Test solution ugrade
 # -Add test for brand new solution
 # Document how to setup inner loop / personal files for local testing in the PowerShell/Ignore folder
-# Add a gh workflow to the template repo to run the e2e tests on all template code PRs
 
 # param(
 #     $Org, $Project, $BranchToTest, $SourceBranch, $BranchToCreate, $CommitMessage, $Data, 
@@ -82,7 +81,9 @@ BeforeAll {
 }
 
 Describe 'E2E-Pipeline-Test' {
-    It 'ImportUnamanagedToDevEnvironment' {
+    # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
+    # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
+    It 'ImportUnamanagedToDevEnvironment' -Tag 'ImportUnamanagedToDevEnvironment' {
         [Helper]::WriteTestMessageToHost('ImportUnamanagedToDevEnvironment')
         
         # hacky/brittle
@@ -107,7 +108,9 @@ Describe 'E2E-Pipeline-Test' {
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
     }
 
-    It 'ExportToGitNewBranch' {
+    # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
+    # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
+    It 'ExportToGitNewBranch' -Tag 'ExportToGitNewBranch' {
         [Helper]::WriteTestMessageToHost('ExportToGitNewBranch')        
 
         $body = @{
@@ -136,7 +139,9 @@ Describe 'E2E-Pipeline-Test' {
         [Helper]::ExportToGitNewBranchSucceeded | Should -BeTrue
     }    
 
-    It 'ExportToGitExistingBranch' {
+    # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
+    # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
+    It 'ExportToGitExistingBranch' -Tag 'ExportToGitExistingBranch' {
         if ([Helper]::ExportToGitNewBranchSucceeded -ne $true) {
             Set-ItResult -Skipped -Because "ExportToGitNewBranchSucceeded did not succeed"
         }
@@ -172,7 +177,9 @@ Describe 'E2E-Pipeline-Test' {
         [Helper]::ExportToGitExistingBranchSucceeded | Should -BeTrue
     }
     
-    It 'CreatePullRequestForUATWaitForPRValidationToSucceedApproveAndMerge' {
+    # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
+    # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
+    It 'CreatePullRequestForUATWaitForPRValidationToSucceedApproveAndMerge' -Tag 'CreatePullRequestForUATWaitForPRValidationToSucceedApproveAndMerge' {
         if ([Helper]::ExportToGitExistingBranchSucceeded -ne $true) {
             Set-ItResult -Skipped -Because "ExportToGitExistingBranchSucceeded did not succeed"
         }
@@ -210,7 +217,9 @@ Describe 'E2E-Pipeline-Test' {
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
     }
     
-    It 'DeleteUnamangedSolutionAndComponents' {
+    # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
+    # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
+    It 'DeleteUnamangedSolutionAndComponents' -Tag 'DeleteUnamangedSolutionAndComponents' {
         [Helper]::WriteTestMessageToHost('DeleteUnamangedSolutionAndComponents')
         
         $result = az pipelines run --org $Org --project $Project --branch $BranchToTest `
