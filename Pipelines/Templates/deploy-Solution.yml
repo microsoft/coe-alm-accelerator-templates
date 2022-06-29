@@ -122,7 +122,9 @@ steps:
 
 - powershell: |    
     . "$env:POWERSHELLPATH/set-trigger-solution-upgrade.ps1"
-    Set-TriggerSolutionUpgrade '$(TriggerSolutionUpgrade)' '$(System.TeamFoundationCollectionUri)' '$(System.TeamProjectId)' '$(Build.Repository.Name)' '$(Build.Repository.Provider)' '$(Build.SourceVersion)' '$(Build.Reason)' '$(System.AccessToken)' $testConfig.gitHubRepo $testConfig.gitHubPat
+    Set-TriggerSolutionUpgrade '$(TriggerSolutionUpgrade)' '$(System.TeamFoundationCollectionUri)' '$(System.TeamProjectId)' '$(Build.Repository.Name)' '$(Build.Repository.Provider)' '$(Build.SourceVersion)' '$(Build.Reason)' $testConfig.gitHubRepo $testConfig.gitHubPat
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
   name: setTriggerSolutionUpgrade
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
   displayName: 'Set TriggerSolutionUpgrade Variable'

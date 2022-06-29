@@ -1,4 +1,4 @@
-function Set-TriggerSolutionUpgrade($triggerSolutionUpgrade, $orgUrl, $projectid, $buildRepositoryName, $buildRepositoryProvider, $buildSourceVersion, $buildReason, $systemAccessToken, $gitHubRepo, $gitHubPat)
+function Set-TriggerSolutionUpgrade($triggerSolutionUpgrade, $orgUrl, $projectid, $buildRepositoryName, $buildRepositoryProvider, $buildSourceVersion, $buildReason, $gitHubRepo, $gitHubPat)
 {
   Write-Output "##vso[task.setvariable variable=TriggerSolutionUpgrade;isOutput=true]false"
   $solutionUpgradeLabel = "solution-upgrade"
@@ -17,7 +17,7 @@ function Set-TriggerSolutionUpgrade($triggerSolutionUpgrade, $orgUrl, $projectid
 
       if ("$buildRepositoryProvider" -eq "TfsGit") {      
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-        $headers.Add("Authorization", "Bearer $systemAccessToken")
+        $headers.Add("Authorization", "Bearer $env:SYSTEM_ACCESSTOKEN")
         $headers.Add("Content-Type", "application/json")
 
         $pullrequestqueryBody = @"
