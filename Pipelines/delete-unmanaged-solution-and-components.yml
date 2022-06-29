@@ -25,7 +25,9 @@ parameters:
   type: string
 - name: Repo
   type: string
-- name: ServiceConnection
+- name: ServiceConnectionName
+  type: string
+- name: ServiceConnectionUrl
   type: string
 - name: SolutionName
   type: string
@@ -46,7 +48,7 @@ parameters:
 trigger: none
 pr: none
 
-name: delete-unmanaged-${{parameters.SolutionName}}-and-components-from-environment
+name: delete-unmanaged-$(SolutionName)-and-components-from-environment
 
 variables:
 - group: alm-accelerator-variable-group
@@ -62,6 +64,11 @@ stages:
       steps:
       - checkout: none
 
+      - template: Templates\set-service-connection-url.yml
+        parameters:
+          serviceConnectionName: ${{parameters.ServiceConnectionName}}
+          serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
+      
       # Set pipeline vars for tools paths.
       - template: Templates\set-tools-paths.yml
 
@@ -72,7 +79,7 @@ stages:
         displayName: 'Export Solution as Managed'
         inputs:
           authenticationType: PowerPlatformSPN
-          PowerPlatformSPN: ${{parameters.ServiceConnection}}
+          PowerPlatformSPN: ${{parameters.ServiceConnectionName}}
           SolutionName: ${{parameters.SolutionName}}
           Managed: true
           SolutionOutputFile: '$(Pipeline.Workspace)\exported\${{parameters.SolutionName}}.zip'
@@ -87,7 +94,7 @@ stages:
         displayName: 'Power Platform Delete Unmanaged Solution (DOES NOT DELETE SOLUTION COMPONENTS)'
         inputs:
           authenticationType: PowerPlatformSPN
-          PowerPlatformSPN: ${{parameters.ServiceConnection}}
+          PowerPlatformSPN: ${{parameters.ServiceConnectionName}}
           SolutionName: ${{parameters.SolutionName}}
 
 # If the import failed, we can't continue with the cleanup process. 
@@ -120,7 +127,7 @@ stages:
         displayName: 'Import Managed Solution'
         inputs:
           authenticationType: PowerPlatformSPN
-          PowerPlatformSPN: ${{parameters.ServiceConnection}}
+          PowerPlatformSPN: ${{parameters.ServiceConnectionName}}
           SolutionInputFile: '$(Pipeline.Workspace)\${{parameters.SolutionName}}.zip'
           OverwriteUnmanagedCustomizations: true
           PublishWorkflows: false
@@ -139,5 +146,5 @@ stages:
         displayName: 'Power Platform Delete Managed Solution'
         inputs:
           authenticationType: PowerPlatformSPN
-          PowerPlatformSPN: ${{parameters.ServiceConnection}}
+          PowerPlatformSPN: ${{parameters.ServiceConnectionName}}
           SolutionName: ${{parameters.SolutionName}}

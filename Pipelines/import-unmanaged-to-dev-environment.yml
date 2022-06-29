@@ -24,7 +24,9 @@ parameters:
   type: string
 - name: Repo
   type: string
-- name: ServiceConnection
+- name: ServiceConnectionName
+  type: string
+- name: ServiceConnectionUrl
   type: string
 - name: SolutionName
   type: string
@@ -61,6 +63,11 @@ stages:
       vmImage: 'windows-2022'
 
     steps:
+    - template: Templates\set-service-connection-url.yml
+      parameters:
+        serviceConnectionName: ${{parameters.ServiceConnectionName}}
+        serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
+
     - powershell: |
         Write-Host "##vso[task.setvariable variable=RepoName]${{parameters.Repo}}"
       displayName: 'Set Source Repo Name'
@@ -70,18 +77,20 @@ stages:
         project: ${{parameters.Project}}
         repo: ${{parameters.Repo}}
         branch: ${{parameters.Branch}}
-        serviceConnection: ${{parameters.ServiceConnection}}
+        serviceConnectionName: ${{parameters.ServiceConnectionName}}
+        serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
         solutionName: ${{parameters.SolutionName}}
 
     - template: Templates\deploy-Solution.yml
       parameters:
         environmentName: ${{parameters.EnvironmentName}}
-        serviceConnection: ${{parameters.ServiceConnection}}
+        serviceConnectionName: ${{parameters.ServiceConnectionName}}
+        serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
         solutionName: ${{parameters.SolutionName}}
         importUnmanaged: 'true'
         skipBuildToolsInstaller: 'true'
         
     - template: Templates\update-canvas-app-ownership.yml
       parameters:
-        serviceConnection: ${{parameters.ServiceConnection}}
+        serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
         solutionName: ${{parameters.SolutionName}}

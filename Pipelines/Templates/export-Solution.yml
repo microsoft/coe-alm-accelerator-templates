@@ -29,7 +29,10 @@ parameters:
 - name: email
   type: string
   default: ''
-- name: serviceConnection
+- name: serviceConnectionName
+  type: string
+  default: ''
+- name: serviceConnectionUrl
   type: string
   default: ''
 - name: solutionName
@@ -44,9 +47,14 @@ parameters:
 steps:
 - template: Hooks\export-solution-pre-hook.yml
 
+- template: set-service-connection-url.yml
+  parameters:
+    serviceConnectionName: '${{parameters.serviceConnectionName}}'
+    serviceConnectionUrl: '${{parameters.serviceConnectionUrl}}'
+
 - template: set-spn-token.yml
   parameters:
-    serviceConnection: '${{parameters.serviceConnection}}'
+    serviceConnection: '${{parameters.serviceConnectionUrl}}'
 # Set pipeline vars for tools paths.
 - template: set-tools-paths.yml
 
@@ -85,14 +93,14 @@ steps:
   displayName: 'Publish Customizations'
   inputs:
     authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '${{parameters.serviceConnection}}'
+    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
 
 # Export both unmanaged and managed to put into source control
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@0
   displayName: 'Export Unmanaged Solution'
   inputs:
     authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '${{parameters.serviceConnection}}'
+    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
     SolutionName: '${{parameters.solutionName}}'
     SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip'
 
@@ -100,7 +108,7 @@ steps:
   displayName: 'Export Managed Solution'
   inputs:
     authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '${{parameters.serviceConnection}}'
+    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
     SolutionName: '${{parameters.solutionName}}'
     SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip'
     Managed: true
@@ -255,7 +263,7 @@ steps:
     orgUrl: '$(System.TeamFoundationCollectionUri)'
     projectName: '${{parameters.project}}'
     repo: '${{parameters.repo}}'
-    serviceConnection: '${{parameters.serviceConnection}}'
+    serviceConnection: '${{parameters.serviceConnectionUrl}}'
     solutionName: '${{parameters.solutionName}}'
     configurationData: '${{parameters.configurationData}}'
     generateEnvironmentVariables: $(DeploymentSettings.GenerateEnvironmentVariables)

@@ -283,18 +283,60 @@ function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $r
             npm install
             npm run build
             npm link
-            $environments = ""
+            $settings= ""
             foreach($deploymentEnvironment in $configurationData) {
-                if(-Not [string]::IsNullOrWhiteSpace($environments)) {
-                    $environments = $environments + ","
+                if(-Not [string]::IsNullOrWhiteSpace($settings)) {
+                    $settings = $settings + ","
                 }
 
                 if(-Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentUrl) -and -Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentName)) {
-                    $environments = $environments + $deploymentEnvironment.DeploymentEnvironmentName.ToLower() + "=" + $deploymentEnvironment.DeploymentEnvironmentUrl
+                    $settings = $settings + $deploymentEnvironment.DeploymentEnvironmentName.ToLower() + "=" + $deploymentEnvironment.DeploymentEnvironmentUrl
                 }
+
+
+                if(-Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.ServiceConnectionName) -and -Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentName)) {
+                    if(-Not [string]::IsNullOrWhiteSpace($settings)) {
+                        $settings = $settings + ","
+                    }
+                    $settings = $settings + $deploymentEnvironment.DeploymentEnvironmentName.ToLower() + "-scname=" + $deploymentEnvironment.ServiceConnectionName
+                }
+
+
+                if(-Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.TenantId) -and -Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentName)) {
+                    if(-Not [string]::IsNullOrWhiteSpace($settings)) {
+                        $settings = $settings + ","
+                    }
+
+                    $settings = $settings + $deploymentEnvironment.DeploymentEnvironmentName.ToLower() + "-tenantid=" + $deploymentEnvironment.TenantId
+                }
+
+
+                if(-Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.ClientId) -and -Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentName)) {
+                    if(-Not [string]::IsNullOrWhiteSpace($settings)) {
+                        $settings = $settings + ","
+                }
+                    $settings = $settings + $deploymentEnvironment.DeploymentEnvironmentName.ToLower() + "-clientid=" + $deploymentEnvironment.ClientId
+                }
+
+                if(-Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.ClientSecret) -and -Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentName)) {
+                    if(-Not [string]::IsNullOrWhiteSpace($settings)) {
+                        $settings = $settings + ","
+                    }
+                    $settings = $settings + $deploymentEnvironment.DeploymentEnvironmentName.ToLower() + "-clientsecret=" + $deploymentEnvironment.ClientSecret
+                }
+
+                if(-Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.VariableGroup) -and -Not [string]::IsNullOrWhiteSpace($deploymentEnvironment.DeploymentEnvironmentName)) {
+                    if(-Not [string]::IsNullOrWhiteSpace($settings)) {
+                        $settings = $settings + ","
+                }
+                    $settings = $settings + $deploymentEnvironment.DeploymentEnvironmentName.ToLower() + "-variablegroup=" + $deploymentEnvironment.VariableGroup
+                }
+
+
             }
-            if(-Not [string]::IsNullOrWhiteSpace($environments)) {
-                coe alm branch --pipelineRepository $buildRepositoryName -o $orgUrl -p "$projectName" -r "$repo" -d "$solutionName" -a  $env:SYSTEM_ACCESSTOKEN -s $environments
+            if(-Not [string]::IsNullOrWhiteSpace($settings)) {
+                Write-Host "Environments: " $settings
+                coe alm branch --pipelineRepository $buildRepositoryName -o $orgUrl -p "$projectName" -r "$repo" -d "$solutionName" -a  $env:SYSTEM_ACCESSTOKEN -s $settings
             }
 
             Set-Location $currentPath

@@ -2,5 +2,3 @@ steps:
 - script: echo Export Solution Pre Hook
   displayName: 'Export Solution Pre Hook'
   enabled: false
-
-- template: 'CustomTemplates\output-environment-variables.yml'

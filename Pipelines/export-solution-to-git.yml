@@ -11,7 +11,8 @@
 # BranchToCreate: The name of the new Azure DevOps Branch to create in the Repo above to which we are exporting our solution (Optional).
 # CommitMessage: The commit message for this commit.
 # Email: The email of the user performing the commit.
-# ServiceConnection: The name of the service connection to Power Platform from which we'll be pulling the solution.
+# ServiceConnectionUrl: The url of the service connection to Power Platform from which we'll be pulling the solution.
+# ServiceConnectionName: The name of the service connection to Power Platform from which we'll be pulling the solution.
 # SolutionName: The name of the solution being exported (i.e. Not the Display Name).
 # UserName: The Display name of the user performing the commit.
 # Data: Additional Data (e.g. JSON Payload) for the export to configure deployment pipelines
@@ -33,7 +34,9 @@ parameters:
   type: string
 - name: Repo
   type: string
-- name: ServiceConnection
+- name: ServiceConnectionName
+  type: string
+- name: ServiceConnectionUrl
   type: string
 - name: SolutionName
   type: string
@@ -79,7 +82,7 @@ stages:
     # Checkout our Branch
     - checkout: git://${{parameters.Project}}/${{parameters.Repo}}@${{parameters.Branch}}
       displayName: 'Checkout Source Branch'
-
+    
     # Other tasks, which use the PowerApps PowerShell cmdlets, need the environment guid.  Setting it for future use.
     - template: Templates\export-Solution.yml
       parameters:
@@ -89,7 +92,8 @@ stages:
         branchToCreate: ${{parameters.BranchToCreate}}
         commitMessage: ${{parameters.CommitMessage}}
         email: ${{parameters.Email}}
-        serviceConnection: ${{parameters.ServiceConnection}}
+        serviceConnectionName: ${{parameters.ServiceConnectionName}}
+        serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
         solutionName: ${{parameters.SolutionName}}
         userName: ${{parameters.UserName}}
         configurationData: ${{parameters.Data}}

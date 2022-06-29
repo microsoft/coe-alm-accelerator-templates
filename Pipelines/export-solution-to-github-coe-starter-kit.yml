@@ -33,7 +33,9 @@ parameters:
   type: string
 - name: Repo
   type: string
-- name: ServiceConnection
+- name: ServiceConnectionName
+  type: string
+- name: ServiceConnectionUrl
   type: string
 - name: SolutionName
   type: string
@@ -91,7 +93,8 @@ steps:
     branchToCreate: ${{parameters.BranchToCreate}}
     commitMessage: ${{parameters.CommitMessage}}
     email: ${{parameters.Email}}
-    serviceConnection: ${{parameters.ServiceConnection}}
+    serviceConnectionName: ${{parameters.ServiceConnectionName}}
+    serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
     solutionName: ${{parameters.SolutionName}}
     userName: ${{parameters.UserName}}
     configurationData: ${{parameters.Data}}

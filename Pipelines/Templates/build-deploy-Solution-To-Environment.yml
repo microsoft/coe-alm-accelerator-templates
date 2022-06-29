@@ -10,14 +10,13 @@ stages:
     pool: 
       vmImage: 'windows-2022'
     steps:
+      
     - template: build-unmanaged-managed-Solution.yml
-      parameters:
-        serviceConnection: $(ServiceConnection)
-        solutionName: $(SolutionName)
 
     - template: deploy-Solution.yml
       parameters:
-        serviceConnection: $(ServiceConnection)
+        serviceConnectionName: $(ServiceConnection)
+        serviceConnectionUrl: $(ServiceConnectionUrl)
         solutionName: $(SolutionName)
         environmentName: $(EnvironmentName)
         importUnmanaged: ${{parameters.ImportUnmanaged}}

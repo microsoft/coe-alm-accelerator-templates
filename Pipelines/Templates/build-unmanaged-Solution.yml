@@ -5,7 +5,9 @@ parameters:
   type: string
 - name: repo
   type: string
-- name: serviceConnection
+- name: serviceConnectionName
+  type: string
+- name: serviceConnectionUrl
   type: string
 - name: solutionName
   type: string
@@ -24,7 +26,8 @@ steps:
 - template: build-Solution.yml
   parameters:
     buildType: 'Unmanaged'
-    serviceConnection: ${{parameters.serviceConnection}}
+    serviceConnectionName: ${{parameters.serviceConnectionName}}
+    serviceConnectionUrl: ${{parameters.serviceConnectionUrl}}
     solutionName: ${{parameters.solutionName}}
 
 - powershell: |
