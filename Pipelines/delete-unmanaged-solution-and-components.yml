@@ -48,7 +48,7 @@ parameters:
 trigger: none
 pr: none
 
-name: delete-unmanaged-$(SolutionName)-and-components-from-environment
+name: delete-unmanaged-${{parameters.SolutionName}}-and-components-from-environment
 
 variables:
 - group: alm-accelerator-variable-group
