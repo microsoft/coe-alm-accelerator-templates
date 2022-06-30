@@ -2,8 +2,8 @@ name: pr-loop
 
 on:
   workflow_dispatch:
-  # pull_request:
-  #   branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 jobs:
   pr-loop:
     runs-on: ubuntu-latest
@@ -25,7 +25,7 @@ jobs:
           $data = @{
               Org                   = $env:AZDO_ORG
               Project               = $env:AZDO_PROJECT
-              BranchToTest          = 'mochs-aa4pp-2177' #$env:GITHUB_REF_NAME
+              BranchToTest          = $env:GITHUB_REF_NAME
               SourceBranch          = 'ALMAcceleratorSampleSolution'
               BranchToCreate        = 'pr-loop-e2e-test-' + (New-Guid).Guid
               CommitMessage         = 'pr-loop-e2e-test'
