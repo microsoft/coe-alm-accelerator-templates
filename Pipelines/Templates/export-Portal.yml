@@ -1,0 +1,43 @@
+#We are going to set websiteId as a pipeline variable only if there is a portal in the Dataverse
+
+parameters:
+- name: websiteId
+  type: string
+- name: repo
+  type: string
+- name: serviceConnectionUrl
+  type: string
+- name: serviceConnectionName
+  type: string
+  #In case of exporting portal, we expect that the solution unique name will be the same as the portal name
+- name: solutionName
+  type: string
+
+steps:
+- powershell: | 
+   $websiteId = '${{parameters.websiteId}}'
+   Write-Host "WebsiteId: $websiteId"
+   if ($websiteId -eq $null -or $websiteId -eq '') {
+      Write-Host 'No WebsiteId found'
+      return
+   }
+  displayName: 'Validate WebsiteId Variable'
+
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
+  displayName: 'Power Platform Tool Installer'
+ 
+#TODO Because the override flag is not exposed yet in tools, so we need to clear the folder manually
+- powershell: |
+    if(Test-Path $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\Portals\${{parameters.solutionName}}){
+      Remove-Item $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\Portals\${{parameters.solutionName}}\* -Recurse -Force
+    }
+  displayName: 'Clear Download Folder'
+
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.download-paportal.PowerPlatformDownloadPaportal@0
+  displayName: 'Export Portal ${{parameters.solutionName}} from ${{parameters.serviceConnectionUrl}}'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
+    Environment: '${{parameters.serviceConnectionUrl}}'
+    DownloadPath: $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\Portals\
+    WebsiteId: ${{parameters.websiteId}}

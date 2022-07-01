@@ -1,0 +1,38 @@
+#We are going to set websiteId as a pipeline variable only if there is a portal in the Dataverse
+
+parameters:
+- name: serviceConnectionUrl
+  type: string
+  #In case of exporting portal, we expect that the solution unique name will be the same as the portal name
+- name: solutionName
+  type: string
+
+steps:
+- powershell: | 
+    $websiteId = ${env:WEBSITEID}
+    if ($websiteId -ne $null -and $websiteId -ne '') {
+      #WebsiteId is set in the pipeline variable. We don't need to do anything.
+      exit 0
+    }
+
+    # load PowerShell files into memory
+    . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+    $dataverseHost = Get-HostFromUrl "${{parameters.serviceConnectionUrl}}"
+    $odataQuery = "adx_websites?`$filter=adx_name eq '${{parameters.solutionName}}'"    
+
+    try{
+      $response = Invoke-DataverseHttpGet $env:SPNTOKEN $dataverseHost $odataQuery
+    }
+    catch{
+      #Write-Host "Error: $($_.Exception.Message)"
+      # if portal' solutions are not installed in Dataverse. adx_websites table will not be created.
+      exit 0
+    }
+    if($null -eq $response.value -or $response.value.count -eq 0){
+      # portal with the given name is not found in Dataverse.
+      exit 0
+    }
+    $websiteId = $response.value[0].adx_websiteid
+    #Write-Host "WebsiteId: $($websiteId)"
+    echo "##vso[task.setvariable variable=WebsiteId]$websiteId"
+  displayName: 'Set Website Variable'
