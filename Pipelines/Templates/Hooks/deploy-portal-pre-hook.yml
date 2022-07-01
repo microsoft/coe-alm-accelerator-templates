@@ -1,0 +1,4 @@
+steps:
+  - script: echo Deploy Portal Pre Hook
+    displayName: 'Deploy Portal Pre Hook'
+    enabled: false

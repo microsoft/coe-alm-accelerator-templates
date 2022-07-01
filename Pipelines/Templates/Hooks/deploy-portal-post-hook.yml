@@ -1,0 +1,4 @@
+steps:
+  - script: echo Deploy Portal Post Hook
+    displayName: 'Deploy Portal Post Hook'
+    enabled: false

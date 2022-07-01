@@ -286,10 +286,14 @@ steps:
     makerPortalUrl: '$(TestAutomationMakerPortalUrl)'
     loginMethod: '$(TestAutomationLoginMethod)'
 
+- template: Hooks\deploy-portal-pre-hook.yml
+
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.upload-paportal.PowerPlatformUploadPaportal@0
   displayName: 'Upload Portal ${{parameters.solutionName}}'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
-    UploadPath: $(ArtifactDropPath)\Portals\aaa
+    UploadPath: $(ArtifactDropPath)\Portals\${{parameters.solutionName}}
     Environment: '${{parameters.serviceConnectionUrl}}'
+
+- template: Hooks\deploy-portal-post-hook.yml
