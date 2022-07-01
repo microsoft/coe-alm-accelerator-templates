@@ -291,5 +291,5 @@ steps:
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
-    UploadPath: $(ArtifactDropPath)\Portals\${{parameters.solutionName}}
+    UploadPath: $(ArtifactDropPath)\Portals\aaa
     Environment: '${{parameters.serviceConnectionUrl}}'
