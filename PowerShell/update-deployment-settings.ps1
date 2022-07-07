@@ -31,23 +31,9 @@
         $json = ConvertTo-Json -Depth 10 $newCustomConfiguration
         Set-Content -Path $customDeploymentSettingsFilePath -Value $json
 
-        Write-Host "Retrieving maker deployment configuration data..."
-        $deploymentConfigurationData = [System.Collections.ArrayList]@()
         #If configuration data was passed in use this to set the pipeline variable values
         $newConfigurationData = [System.Collections.ArrayList]@()
 
-        #The configuration data will point to the records in Dataverse that store the JSON to set pipeline variables. Try/Catch for invalid json
-
-        if($configurationData.length -gt 0) {
-            Write-Host "Configuration Data"
-            Write-Host ConvertTo-Json -Depth 10 $configurationData
-            if($null -ne $configurationData) {
-                foreach($newEnvironmentConfig in $configurationData) {
-                    $deploymentConfigurationData.AddRange($newEnvironmentConfig.UserSettings)
-                }
-            }
-        }
-        
         $solutionComponentDefinitionsResults =  Get-CrmRecords -conn $conn -EntityLogicalName solutioncomponentdefinition -FilterAttribute "primaryentityname" -FilterOperator "eq" -FilterValue "connectionreference" -Fields objecttypecode
         #There are extra characters being introduced in specific locales. The regex replace on the objecttypecode below is to remove it.
         $connectionReferenceTypeCode = [int] ($solutionComponentDefinitionsResults.CrmRecords[0].objecttypecode -replace '\D','')
@@ -238,13 +224,20 @@
                     $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name $configurationVariable -Value @{value = ''}
                 }
 
-                $variable = $deploymentConfigurationData | Where-Object { $_.Build -eq $buildDefinitionResult.name -and $_.Name -eq $configurationVariable } | Select-Object -First 1
-                # Set the value to the value passed in on the configuration data
-                if($null -eq $variable -or $null -eq $variable.Value -or [string]::IsNullOrWhiteSpace($variable.Value)) {
-                    $newBuildDefinitionVariables.$configurationVariable.value = ''
-                }
-                else {
-                    $newBuildDefinitionVariables.$configurationVariable.value = $variable.Value
+                if($configurationData.length -gt 0) {
+                    if($null -ne $configurationData) {
+                        $configurationDataEnvironment = $configurationData | Where-Object { $_.BuildName -eq $buildDefinitionResult.name } | Select-Object -First 1
+                        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
+                            $variable = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq $configurationVariable } | Select-Object -First 1
+                            # Set the value to the value passed in on the configuration data
+                            if($null -eq $variable -or $null -eq $variable.Value -or [string]::IsNullOrWhiteSpace($variable.Value)) {
+                                $newBuildDefinitionVariables.$configurationVariable.value = ''
+                            }
+                            else {
+                                $newBuildDefinitionVariables.$configurationVariable.value = $variable.Value
+                            }
+                        }
+                    }
                 }
             }
 
@@ -351,13 +344,12 @@ function Set-BuildDefinitionVariables($orgUrl, $projectId, $azdoAuthType, $build
     $body = $body -replace "`t", ""
     Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
 }
+
 function Set-EnvironmentDeploymentSettingsConfiguration($buildSourceDirectory, $repo, $solutionName, $newCustomConfiguration, $configurationData) {
     foreach($newEnvironmentConfig in $configurationData) {
         $groupTeams = [System.Collections.ArrayList]@()
-        $environmentName = ""
+        $environmentName = $newEnvironmentConfig.DeploymentEnvironmentName
         foreach($variableConfiguration in $newEnvironmentConfig.UserSettings) {
-            #Convert the JSON in the DeploymentConfiguration field to an object
-            $environmentName = $variableConfiguration.Environment
             if(-Not [string]::IsNullOrWhiteSpace($environmentName)) {
                 if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName") {
                     Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName" -Recurse -Force
@@ -383,7 +375,6 @@ function Set-EnvironmentDeploymentSettingsConfiguration($buildSourceDirectory, $
                 if(!(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName")) {
                     New-Item "$buildSourceDirectory\$repo\$solutionName\config" -Name "$environmentName" -ItemType "directory"
                 }
-        
 
                 #Convert the updated configuration to json and store in customDeploymentSettings.json
                 $json = ConvertTo-Json -Depth 10 $newCustomConfiguration
