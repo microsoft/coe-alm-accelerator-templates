@@ -39,16 +39,11 @@
         #The configuration data will point to the records in Dataverse that store the JSON to set pipeline variables. Try/Catch for invalid json
 
         if($configurationData.length -gt 0) {
-            $userSettings = $configurationData.UserSettings
-            Write-Host ConvertTo-Json -Depth 10 $userSettings
-            if($null -ne $userSettings) {
-                foreach($newEnvironmentConfig in $userSettings) {
-                    foreach($variableConfigurationJson in $newEnvironmentConfig.DeploymentConfiguration) {
-                        Write-Host ConvertTo-Json -Depth 10 $newEnvironmentConfig.DeploymentConfiguration
-                        #Convert the JSON in the DeploymentConfiguration field to an object
-                        $variableConfiguration = ConvertFrom-Json $variableConfigurationJson
-                        $deploymentConfigurationData.AddRange($variableConfiguration)
-                    }
+            Write-Host "Configuration Data"
+            Write-Host ConvertTo-Json -Depth 10 $configurationData
+            if($null -ne $configurationData) {
+                foreach($newEnvironmentConfig in $configurationData) {
+                    $deploymentConfigurationData.AddRange($newEnvironmentConfig.UserSettings)
                 }
             }
         }
@@ -206,7 +201,7 @@
         Set-Content -Path $customDeploymentSettingsFilePath -Value $json
 
         if("$generateAADGroupTeamConfig" -ne "false") {
-            Set-EnvironmentDeploymentSettingsConfiguration $buildSourceDirectory $repo $solutionName $newCustomConfiguration $newConfigurationData
+            Set-EnvironmentDeploymentSettingsConfiguration $buildSourceDirectory $repo $solutionName $newCustomConfiguration $configurationData
         }
         #Update / Create Deployment Pipelines
         New-DeploymentPipelines "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$solutionName" $configurationData
@@ -356,32 +351,29 @@ function Set-BuildDefinitionVariables($orgUrl, $projectId, $azdoAuthType, $build
     $body = $body -replace "`t", ""
     Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
 }
-function Set-EnvironmentDeploymentSettingsConfiguration($buildSourceDirectory, $repo, $solutionName, $newCustomConfiguration, $newConfigurationData) {
-    foreach($newEnvironmentConfig in $newConfigurationData) {
+function Set-EnvironmentDeploymentSettingsConfiguration($buildSourceDirectory, $repo, $solutionName, $newCustomConfiguration, $configurationData) {
+    foreach($newEnvironmentConfig in $configurationData) {
         $groupTeams = [System.Collections.ArrayList]@()
         $environmentName = ""
-        foreach($variableConfigurationJson in $newEnvironmentConfig.DeploymentConfiguration) {
+        foreach($variableConfiguration in $newEnvironmentConfig.UserSettings) {
             #Convert the JSON in the DeploymentConfiguration field to an object
-            $variableConfiguration = ConvertFrom-Json $variableConfigurationJson
-            foreach($variable in $variableConfiguration) {
-                $environmentName = $variable.Environment
-                if(-Not [string]::IsNullOrWhiteSpace($environmentName)) {
-                    if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName") {
-                        Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName" -Recurse -Force
-                    }
+            $environmentName = $variableConfiguration.Environment
+            if(-Not [string]::IsNullOrWhiteSpace($environmentName)) {
+                if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName") {
+                    Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName" -Recurse -Force
                 }
+            }
 
-                $variableName = $variable.Name
-                if($variableName.Contains("groupTeam.")) {
-                    $teamGroupConfigVariable = "#{$variableName}#"
-    
-                    $teamName = $variable.Name.split('.')[-1]
-                    $teamGroupRoles = $variable.Data.split(',')
-    
-                    $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadSecurityGroupId"="$teamGroupConfigVariable"; "dataverseSecurityRoleNames"=@($teamGroupRoles)}
-                    $cofigurationVariables.Add($teamGroupConfigVariable)
-                    $groupTeams.Add($groupTeamConfig)
-                }
+            $variableName = $variableConfiguration.Name
+            if($variableName.Contains("groupTeam.")) {
+                $teamGroupConfigVariable = "#{$variableName}#"
+
+                $teamName = $variableConfiguration.Name.split('.')[-1]
+                $teamGroupRoles = $variableConfiguration.Data.split(',')
+
+                $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadSecurityGroupId"="$teamGroupConfigVariable"; "dataverseSecurityRoleNames"=@($teamGroupRoles)}
+                $cofigurationVariables.Add($teamGroupConfigVariable)
+                $groupTeams.Add($groupTeamConfig)
             }
         }
 
