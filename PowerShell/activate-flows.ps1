@@ -1,4 +1,21 @@
-function Invoke-ActivateFlows($cdsBaseConnectionString, $serviceConnection, $microsoftXrmDataPowerShellModule, $xrmDataPowerShellVersion, $microsoftPowerAppsAdministrationPowerShellModule, $powerAppsAdminModuleVersion, $tenantId, $clientId, $clientSecret, $solutionName, $environmentId, $solutionComponentOwnershipConfiguration, $connectionReferences, $activateFlowConfiguration) {
+function Invoke-ActivateFlows {
+    param (
+        [Parameter(Mandatory)] [String]$cdsBaseConnectionString, 
+        [Parameter(Mandatory)] [String]$serviceConnection,
+        [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule, 
+        [Parameter(Mandatory)] [String]$xrmDataPowerShellVersion,
+        [Parameter(Mandatory)] [String]$microsoftPowerAppsAdministrationPowerShellModule, 
+        [Parameter(Mandatory)] [String]$powerAppsAdminModuleVersion,
+        [Parameter(Mandatory)] [String]$tenantId, 
+        [Parameter(Mandatory)] [String]$clientId,
+        [Parameter(Mandatory)] [String]$clientSecret, 
+        [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter(Mandatory)] [String]$environmentId, 
+        [Parameter(Mandatory)] [String]$solutionComponentOwnershipConfiguration,
+        [Parameter(Mandatory)] [String]$connectionReferences, 
+        [Parameter(Mandatory)] [String]$activateFlowConfiguration
+    )
+
     Write-Host "Importing PowerShell Module: $microsoftPowerAppsAdministrationPowerShellModule - $powerAppsAdminModuleVersion"
     Import-Module $microsoftPowerAppsAdministrationPowerShellModule -Force -RequiredVersion $powerAppsAdminModuleVersion -ArgumentList @{ NonInteractive = $true }
 
@@ -45,7 +62,10 @@ function Invoke-ActivateFlows($cdsBaseConnectionString, $serviceConnection, $mic
     }
 }
 
-function Get-ActivationConfigurations($activateFlowConfiguration) {
+function Get-ActivationConfigurations {
+    param (
+        [Parameter(Mandatory)] [String]$activateFlowConfiguration
+    )
     $activationConfigs = $null
     if ($activateFlowConfiguration -ne "") {
         $activationConfigs = ConvertFrom-Json $activateFlowConfiguration
@@ -53,7 +73,13 @@ function Get-ActivationConfigurations($activateFlowConfiguration) {
     }
     return $activationConfigs
 }
-function Get-UserConfiguredFlowActivations($activateFlowConfiguration, $conn, $flowsToActivate) {
+function Get-UserConfiguredFlowActivations {
+    param (
+        [Parameter(Mandatory)] [String]$activateFlowConfiguration,
+        [Parameter(Mandatory)] [String]$conn,
+        [Parameter(Mandatory)] [String]$flowsToActivate
+    )
+
     $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
 
     # Turn on specified list of flows using a specified user.
@@ -93,7 +119,13 @@ function Get-UserConfiguredFlowActivations($activateFlowConfiguration, $conn, $f
     }
 }
 
-function Get-ConnectionReferenceFlowActivations($connectionReferences, $activateFlowConfiguration, $conn, $flowsToActivate) {
+function Get-ConnectionReferenceFlowActivations {
+    param (
+        [Parameter(Mandatory)] [String]$connectionReferences,
+        [Parameter(Mandatory)] [String]$activateFlowConfiguration,
+        [Parameter(Mandatory)] [String]$conn,
+        [Parameter(Mandatory)] [String]$flowsToActivate
+    )
     $solutions = Get-CrmRecords -conn $conn -EntityLogicalName solution -FilterAttribute "uniquename" -FilterOperator "eq" -FilterValue "$solutionName" -Fields solutionid
     if ($solutions.Count -gt 0) {
 
@@ -186,7 +218,13 @@ function Get-ConnectionReferenceFlowActivations($connectionReferences, $activate
     }
 }
 
-function Get-OwnerFlowActivations($solutionComponentOwnershipConfiguration, $activateFlowConfiguration, $conn, $flowsToActivate) {
+function Get-OwnerFlowActivations {
+    param (
+        [Parameter(Mandatory)] [String]$solutionComponentOwnershipConfiguration,
+        [Parameter(Mandatory)] [String]$activateFlowConfiguration,
+        [Parameter(Mandatory)] [String]$conn,
+        [Parameter(Mandatory)] [String]$flowsToActivate
+    )
     $config = ConvertFrom-Json $solutionComponentOwnershipConfiguration
     $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
 
