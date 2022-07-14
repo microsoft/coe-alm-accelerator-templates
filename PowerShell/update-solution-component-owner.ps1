@@ -1,10 +1,10 @@
 function Invoke-UpdateSolutionComponentOwner {
     param (
-        [Parameter(Mandatory)] [String]$cdsBaseConnectionString,
-        [Parameter(Mandatory)] [String]$serviceConnection,
-        [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule,
-        [Parameter(Mandatory)] [String]$xrmDataPowerShellVersion,
-        [Parameter(Mandatory)] [String]$solutionComponentOwnershipConfiguration
+        [Parameter()] [String]$cdsBaseConnectionString,
+        [Parameter()] [String]$serviceConnection,
+        [Parameter()] [String]$microsoftXrmDataPowerShellModule,
+        [Parameter()] [String]$xrmDataPowerShellVersion,
+        [Parameter()] [String]$solutionComponentOwnershipConfiguration
     )
     Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }

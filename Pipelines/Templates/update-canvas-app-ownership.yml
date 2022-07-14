@@ -6,7 +6,7 @@ parameters:
 
 steps:
 # TEMPORARY WORKAROUND: Currently Canvas Apps cannot be owned by an app user, so we have to set an interactive user owner.  
-- powershell: |
+- pwsh: |
     $microsoftPowerAppsAdministrationPowerShellModule = '$(CoETools_Microsoft_PowerApps_Administration_PowerShell)'
     Import-Module $microsoftPowerAppsAdministrationPowerShellModule -Force -RequiredVersion $(PowerAppsAdminModuleVersion) -ArgumentList @{ NonInteractive = $true }
     Add-PowerAppsAccount -TenantID $(TenantId) -ApplicationId $(ClientId) -ClientSecret $(ClientSecret)

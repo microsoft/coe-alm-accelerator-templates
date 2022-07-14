@@ -64,7 +64,7 @@ function Invoke-ActivateFlows {
 
 function Get-ActivationConfigurations {
     param (
-        [Parameter(Mandatory)] [String]$activateFlowConfiguration
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$activateFlowConfiguration
     )
     $activationConfigs = $null
     if ($activateFlowConfiguration -ne "") {
@@ -75,13 +75,12 @@ function Get-ActivationConfigurations {
 }
 function Get-UserConfiguredFlowActivations {
     param (
-        [Parameter(Mandatory)] [String]$activateFlowConfiguration,
-        [Parameter(Mandatory)] [String]$conn,
-        [Parameter(Mandatory)] [String]$flowsToActivate
+        [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$activateFlowConfiguration,
+        [Parameter(Mandatory)] [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn,
+        [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
 
     $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
-
     # Turn on specified list of flows using a specified user.
     # This should be an ordered list of flows that must be turned on before any other dependent (parent) flows can be turned on.
     if ($null -ne $activationConfigs) {
@@ -123,10 +122,10 @@ function Get-ConnectionReferenceFlowActivations {
     param (
         [Parameter(Mandatory)] [String]$connectionReferences,
         [Parameter(Mandatory)] [String]$activateFlowConfiguration,
-        [Parameter(Mandatory)] [String]$conn,
-        [Parameter(Mandatory)] [String]$flowsToActivate
+        [Parameter(Mandatory)] [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn,
+        [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
-    $solutions = Get-CrmRecords -conn $conn -EntityLogicalName solution -FilterAttribute "uniquename" -FilterOperator "eq" -FilterValue "$solutionName" -Fields solutionid
+    $solutions = Get-CrmRecords -conn ([Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn) -EntityLogicalName solution -FilterAttribute "uniquename" -FilterOperator "eq" -FilterValue "$solutionName" -Fields solutionid
     if ($solutions.Count -gt 0) {
 
         $solutionId = $solutions.CrmRecords[0].solutionid
@@ -220,10 +219,10 @@ function Get-ConnectionReferenceFlowActivations {
 
 function Get-OwnerFlowActivations {
     param (
-        [Parameter(Mandatory)] [String]$solutionComponentOwnershipConfiguration,
-        [Parameter(Mandatory)] [String]$activateFlowConfiguration,
-        [Parameter(Mandatory)] [String]$conn,
-        [Parameter(Mandatory)] [String]$flowsToActivate
+        [Parameter()] [String]$solutionComponentOwnershipConfiguration,
+        [Parameter()] [String] [AllowEmptyString()]$activateFlowConfiguration,
+        [Parameter()] [String]$conn,
+        [Parameter()] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
     $config = ConvertFrom-Json $solutionComponentOwnershipConfiguration
     $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration

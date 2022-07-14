@@ -13,12 +13,12 @@
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$solutionName,
-        [Parameter(Mandatory)] [String]$generateEnvironmentVariables,
-        [Parameter(Mandatory)] [String]$generateConnectionReferences,
-        [Parameter(Mandatory)] [String]$generateFlowConfig,
-        [Parameter(Mandatory)] [String]$generateCanvasSharingConfig,
-        [Parameter(Mandatory)] [String]$generateAADGroupTeamConfig,
-        [Parameter(Mandatory)] [String]$generateCustomConnectorConfig
+        [Parameter()] [String]$generateEnvironmentVariables,
+        [Parameter()] [String]$generateConnectionReferences,
+        [Parameter()] [String]$generateFlowConfig,
+        [Parameter()] [String]$generateCanvasSharingConfig,
+        [Parameter()] [String]$generateAADGroupTeamConfig,
+        [Parameter()] [String]$generateCustomConnectorConfig
     )
 
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
@@ -229,6 +229,7 @@
         if("$generateAADGroupTeamConfig" -ne "false") {
             Set-EnvironmentDeploymentSettingsConfiguration $buildSourceDirectory $repo $solutionName $newCustomConfiguration $newConfigurationData
         }
+
         #Update / Create Deployment Pipelines
         New-DeploymentPipelines "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$solutionName" $configurationData
 
@@ -274,7 +275,7 @@
                 }
             }
 
-            Set-BuildDefinitionVariables $orgUrl $projectId $azdoAuthType $buildDefinitionResult $definitionId $newBuildDefinitionVariables
+           Set-BuildDefinitionVariables $orgUrl $projectId $azdoAuthType $buildDefinitionResult $definitionId $newBuildDefinitionVariables
         }
     }
 }
@@ -288,7 +289,7 @@ function New-DeploymentPipelines
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [String]$solutionName,
-        [Parameter(Mandatory)] [String]$configurationData
+        [Parameter(Mandatory)] [System.Object[]]$configurationData
     )
 
     if($null -ne $configurationData -and $configurationData.length -gt 0) {
@@ -380,12 +381,12 @@ function Set-BuildDefinitionVariables {
         [Parameter(Mandatory)] [String]$orgUrl,
         [Parameter(Mandatory)] [String]$projectId,
         [Parameter(Mandatory)] [String]$azdoAuthType,
-        [Parameter(Mandatory)] [String]$buildDefinitionResult,
+        [Parameter(Mandatory)] [PSCustomObject]$buildDefinitionResult,
         [Parameter(Mandatory)] [String]$definitionId,
-        [Parameter(Mandatory)] [String]$newBuildDefinitionVariables
+        [Parameter(Mandatory)] [PSCustomObject]$newBuildDefinitionVariables
     )
     #Set the build definition variables to the newly created list
-    $buildDefinitionResult.variables = $newBuildDefinitionVariables
+    ([pscustomobject]$buildDefinitionResult.variables) = ([pscustomobject]$newBuildDefinitionVariables)
     $buildDefinitionResourceUrl = "$orgUrl$projectId/_apis/build/definitions/" + $definitionId + "?api-version=6.0"
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
     $headers.Add("Authorization", "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN")
@@ -401,10 +402,10 @@ function Set-EnvironmentDeploymentSettingsConfiguration {
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName,
-        [Parameter(Mandatory)] [String]$newCustomConfiguration,
-        [Parameter(Mandatory)] [String]$newConfigurationData
+        [Parameter()] [PSCustomObject]$newCustomConfiguration,
+        [Parameter()] [PSCustomObject]$newConfigurationData
     )
-    foreach($newEnvironmentConfig in $newConfigurationData) {
+    foreach($newEnvironmentConfig in ([pscustomobject]$newConfigurationData)) {
         $groupTeams = [System.Collections.ArrayList]@()
         $environmentName = ""
         foreach($variableConfigurationJson in $newEnvironmentConfig.DeploymentConfiguration) {
@@ -433,7 +434,7 @@ function Set-EnvironmentDeploymentSettingsConfiguration {
         }
 
         if(-Not [string]::IsNullOrWhiteSpace($environmentName)) {
-            $newCustomConfiguration.AadGroupTeamConfiguration = $groupTeams
+            ([pscustomobject]$newCustomConfiguration.AadGroupTeamConfiguration) = $groupTeams
             if($groupTeams.Count -gt 0) {
                 if(!(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName")) {
                     New-Item "$buildSourceDirectory\$repo\$solutionName\config" -Name "$environmentName" -ItemType "directory"
@@ -441,7 +442,7 @@ function Set-EnvironmentDeploymentSettingsConfiguration {
         
 
                 #Convert the updated configuration to json and store in customDeploymentSettings.json
-                $json = ConvertTo-Json -Depth 10 $newCustomConfiguration
+                $json = ConvertTo-Json -Depth 10 ([pscustomobject]$newCustomConfiguration)
                 Set-Content -Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\customDeploymentSettings.json" -Value $json
             }
         }
