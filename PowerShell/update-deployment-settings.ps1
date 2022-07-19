@@ -1,5 +1,25 @@
-﻿function Set-DeploymentSettingsConfiguration($buildSourceDirectory, $buildRepositoryName, $cdsBaseConnectionString, $xrmDataPowerShellVersion, $microsoftXrmDataPowerShellModule, $orgUrl, $projectId, $projectName, $repo, $azdoAuthType, $serviceConnection, $solutionName, $generateEnvironmentVariables, $generateConnectionReferences, $generateFlowConfig, $generateCanvasSharingConfig, $generateAADGroupTeamConfig, $generateCustomConnectorConfig)
+﻿function Set-DeploymentSettingsConfiguration
 {
+    param (
+        [Parameter(Mandatory)] [String]$buildSourceDirectory,
+        [Parameter(Mandatory)] [String]$buildRepositoryName,
+        [Parameter(Mandatory)] [String]$cdsBaseConnectionString,
+        [Parameter(Mandatory)] [String]$xrmDataPowerShellVersion,
+        [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule,
+        [Parameter(Mandatory)] [String]$orgUrl,
+        [Parameter(Mandatory)] [String]$projectId,
+        [Parameter(Mandatory)] [String]$projectName,
+        [Parameter(Mandatory)] [String]$repo,
+        [Parameter(Mandatory)] [String]$azdoAuthType,
+        [Parameter(Mandatory)] [String]$serviceConnection,
+        [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter()] [String]$generateEnvironmentVariables,
+        [Parameter()] [String]$generateConnectionReferences,
+        [Parameter()] [String]$generateFlowConfig,
+        [Parameter()] [String]$generateCanvasSharingConfig,
+        [Parameter()] [String]$generateAADGroupTeamConfig,
+        [Parameter()] [String]$generateCustomConnectorConfig
+    )
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
     Write-Host (ConvertTo-Json -Depth 10 $configurationData)
     #Generate Deployment Settings
@@ -245,8 +265,18 @@
     }
 }
 
-function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $repo, $azdoAuthType, $solutionName, $configurationData)
+function New-DeploymentPipelines
 {
+    param (
+        [Parameter(Mandatory)] [String]$buildRepositoryName,
+        [Parameter(Mandatory)] [String]$orgUrl,
+        [Parameter(Mandatory)] [String]$projectName,
+        [Parameter(Mandatory)] [String]$repo,
+        [Parameter(Mandatory)] [String]$azdoAuthType,
+        [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter(Mandatory)] [System.Object[]]$configurationData
+    )
+
     if($null -ne $configurationData -and $configurationData.length -gt 0) {
         Write-Host "Retrieved " $configurationData.length " deployment environments"
         #Update / Create Deployment Pipelines
@@ -331,9 +361,17 @@ function New-DeploymentPipelines($buildRepositoryName, $orgUrl, $projectName, $r
     }
 }
 
-function Set-BuildDefinitionVariables($orgUrl, $projectId, $azdoAuthType, $buildDefinitionResult, $definitionId, $newBuildDefinitionVariables) {
+function Set-BuildDefinitionVariables {
+    param (
+        [Parameter(Mandatory)] [String]$orgUrl,
+        [Parameter(Mandatory)] [String]$projectId,
+        [Parameter(Mandatory)] [String]$azdoAuthType,
+        [Parameter(Mandatory)] [PSCustomObject]$buildDefinitionResult,
+        [Parameter(Mandatory)] [String]$definitionId,
+        [Parameter(Mandatory)] [PSCustomObject]$newBuildDefinitionVariables
+    )
     #Set the build definition variables to the newly created list
-    $buildDefinitionResult.variables = $newBuildDefinitionVariables
+    ([pscustomobject]$buildDefinitionResult.variables) = ([pscustomobject]$newBuildDefinitionVariables)
     $buildDefinitionResourceUrl = "$orgUrl$projectId/_apis/build/definitions/" + $definitionId + "?api-version=6.0"
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
     $headers.Add("Authorization", "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN")
@@ -344,7 +382,16 @@ function Set-BuildDefinitionVariables($orgUrl, $projectId, $azdoAuthType, $build
     Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
 }
 
-function Set-EnvironmentDeploymentSettingsConfiguration($buildSourceDirectory, $repo, $solutionName, $newConfiguration, $newCustomConfiguration, $configurationData, $secretEnvironmentVariables) {
+function Set-EnvironmentDeploymentSettingsConfiguration {
+    param (
+        [Parameter(Mandatory)] [String]$buildSourceDirectory,
+        [Parameter(Mandatory)] [String]$repo,
+        [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter()] [PSCustomObject]$newConfiguration,
+        [Parameter()] [PSCustomObject]$newCustomConfiguration,
+        [Parameter()] [PSCustomObject]$configurationData,
+        [Parameter()] [PSCustomObject]$secretEnvironmentVariables
+    )
     foreach($newEnvironmentConfig in $configurationData) {
         $groupTeams = [System.Collections.ArrayList]@()
         $secretsRemoved = [System.Collections.ArrayList]@()
@@ -381,14 +428,14 @@ function Set-EnvironmentDeploymentSettingsConfiguration($buildSourceDirectory, $
 
 
         if(-Not [string]::IsNullOrWhiteSpace($environmentName)) {
-            $newCustomConfiguration.AadGroupTeamConfiguration = $groupTeams
+            ([pscustomobject]$newCustomConfiguration.AadGroupTeamConfiguration) = $groupTeams
             if($groupTeams.Count -gt 0) {
                 if(!(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName")) {
                     New-Item "$buildSourceDirectory\$repo\$solutionName\config" -Name "$environmentName" -ItemType "directory"
                 }
 
                 #Convert the updated configuration to json and store in customDeploymentSettings.json
-                $json = ConvertTo-Json -Depth 10 $newCustomConfiguration
+                $json = ConvertTo-Json -Depth 10 ([pscustomobject]$newCustomConfiguration)
                 Set-Content -Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\customDeploymentSettings.json" -Value $json
             }
             Write-Host "Checking for secrets removed"
