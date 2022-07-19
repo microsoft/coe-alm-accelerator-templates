@@ -11,7 +11,7 @@ function Invoke-ActivateFlows($cdsBaseConnectionString, $serviceConnection, $mic
 
     $flowsToActivate = [System.Collections.ArrayList]@()
 
-    Get-UserConfiguredFlowActivations $activateFlowConfiguration $conn $flowsToActivate
+    Get-UserConfiguredFlowActivations $activateFlowConfiguration $conn $flowsToActivate 
     Get-ConnectionReferenceFlowActivations $connectionReferences $activateFlowConfiguration $conn $flowsToActivate
     Get-OwnerFlowActivations $solutionComponentOwnershipConfiguration $activateFlowConfiguration $conn $flowsToActivate
 
