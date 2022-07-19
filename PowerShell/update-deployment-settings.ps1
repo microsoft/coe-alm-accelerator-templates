@@ -349,7 +349,7 @@ function Set-EnvironmentDeploymentSettingsConfiguration($buildSourceDirectory, $
         $groupTeams = [System.Collections.ArrayList]@()
         $secretsRemoved = [System.Collections.ArrayList]@()
         $environmentName = $newEnvironmentConfig.DeploymentEnvironmentName
-        if(-Not [string]::IsNullOrWhiteSpace($environmentName)) {
+        if(-Not [string]::IsNullOrWhiteSpace($environmentName) -and Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\" ) {
             Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\*eploymentSettings.json" -Force
         }
         foreach($variableConfiguration in $newEnvironmentConfig.UserSettings) {
