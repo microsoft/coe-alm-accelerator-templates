@@ -219,10 +219,10 @@ function Get-ConnectionReferenceFlowActivations {
 
 function Get-OwnerFlowActivations {
     param (
-        [Parameter()] [String]$solutionComponentOwnershipConfiguration,
-        [Parameter()] [String] [AllowEmptyString()]$activateFlowConfiguration,
-        [Parameter()] [String]$conn,
-        [Parameter()] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
+        [Parameter(Mandatory)] [String]$solutionComponentOwnershipConfiguration,
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$activateFlowConfiguration,
+        [Parameter(Mandatory)] [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn,
+        [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
     $config = ConvertFrom-Json $solutionComponentOwnershipConfiguration
     $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
