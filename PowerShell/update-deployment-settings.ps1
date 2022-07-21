@@ -418,7 +418,7 @@ function Set-EnvironmentDeploymentSettingsConfiguration {
         $secretsRemoved = $false
         foreach($secretVariable in $secretEnvironmentVariables) {
             $variable = $newEnvironmentConfig.UserSettings | Where-Object { $_.Name.Contains($secretVariable) } | Select-Object -First 1
-            if($null -eq $variable -or $variable.Value -eq "") {
+            if($null -eq $variable -or $null -eq $variable.Value -or $variable.Value -eq "") {
 
                 $configVariable = $newConfiguration.EnvironmentVariables | Where-Object { $_.SchemaName -eq $secretVariable } | Select-Object -First 1
                 $newConfiguration.EnvironmentVariables.Remove($configVariable)
