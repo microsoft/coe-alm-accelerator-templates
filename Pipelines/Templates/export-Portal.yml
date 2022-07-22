@@ -14,17 +14,9 @@ parameters:
   type: string
 
 steps:
-- powershell: | 
-   $websiteId = '${{parameters.websiteId}}'
-   Write-Host "WebsiteId: $websiteId"
-   if ($websiteId -eq $null -or $websiteId -eq '') {
-      Write-Host 'No WebsiteId found'
-      return
-   }
-  displayName: 'Validate WebsiteId Variable'
-
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
   displayName: 'Power Platform Tool Installer'
+  condition: and(succeeded(), ne(variables['WebsiteId'], ''))
  
 #TODO Because the override flag is not exposed yet in tools, so we need to clear the folder manually
 - powershell: |
@@ -32,6 +24,7 @@ steps:
       Remove-Item $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\Portals\${{parameters.solutionName}}\* -Recurse -Force
     }
   displayName: 'Clear Download Folder'
+  condition: and(succeeded(), ne(variables['WebsiteId'], ''))
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.download-paportal.PowerPlatformDownloadPaportal@0
   displayName: 'Export Portal ${{parameters.solutionName}} from ${{parameters.serviceConnectionUrl}}'
@@ -41,3 +34,4 @@ steps:
     Environment: '${{parameters.serviceConnectionUrl}}'
     DownloadPath: $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\Portals\
     WebsiteId: ${{parameters.websiteId}}
+  condition: and(succeeded(), ne(variables['WebsiteId'], ''))

@@ -170,7 +170,7 @@ steps:
   condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
 
 #Copy portal to artifacts
-- powershell: |
+- pwsh: |
     $source = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\Portals\${{parameters.solutionName}}"
     $dest = "$(Build.ArtifactStagingDirectory)\Portals\${{parameters.solutionName}}"
     if(Test-Path $source) {
