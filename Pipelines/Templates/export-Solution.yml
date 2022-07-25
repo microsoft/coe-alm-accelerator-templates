@@ -318,7 +318,8 @@ steps:
 - template: set-website-variable.yml
   parameters:
    serviceConnectionUrl: '${{parameters.serviceConnectionUrl}}'
-   solutionName: '${{parameters.solutionName}}' 
+   solutionName: '${{parameters.solutionName}}'
+   portalWebSiteId: $(PortalWebsiteId)
 
 - template: Hooks\export-portal-pre-hook.yml
 

@@ -295,5 +295,5 @@ steps:
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
     UploadPath: $(ArtifactDropPath)\Portals\${{parameters.solutionName}}
     Environment: '${{parameters.serviceConnectionUrl}}'
-    
+
 - template: Hooks\deploy-portal-post-hook.yml
