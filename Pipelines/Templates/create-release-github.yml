@@ -19,7 +19,7 @@ parameters:
 - name: issueClosingComment
   type: string
   default: ''
-- name: publishRelease
+- name: isDraft
   type: boolean
   default: true
 - name: isPreRelease
@@ -109,7 +109,7 @@ steps:
     title: '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
     releaseNotesFilePath: '$(ReleaseNotesPath)'
     addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
-    isDraft: not(${{ parameters.publishRelease }})
+    isDraft: not(${{ parameters.isDraft }})
     isPreRelease: ${{ parameters.isPreRelease }}
     assets: |
       $(Pipeline.Workspace)/releaseassets/*.*
