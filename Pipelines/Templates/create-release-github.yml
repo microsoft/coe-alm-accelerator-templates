@@ -109,7 +109,7 @@ steps:
     title: '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
     releaseNotesFilePath: '$(ReleaseNotesPath)'
     addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
-    isDraft: not(${{ parameters.isDraft }})
+    isDraft: ${{ parameters.isDraft }}
     isPreRelease: ${{ parameters.isPreRelease }}
     assets: |
       $(Pipeline.Workspace)/releaseassets/*.*
