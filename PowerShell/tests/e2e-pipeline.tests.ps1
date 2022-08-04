@@ -34,7 +34,7 @@ class Helper {
             $result = $result | ConvertFrom-Json -Depth 10
         }
     
-        return $result.result -eq 'succeeded'
+        return $result.result -eq 'succeeded' -or $result.result -eq 'partiallySucceeded' 
     }
 
     static [void]WriteTestMessageToHost($testName) {
@@ -99,7 +99,8 @@ Describe 'E2E-Pipeline-Test' {
             Email=$Email `
             Project=$Project `
             Repo=$Repo `
-            ServiceConnection=$ServiceConnection `
+            ServiceConnectionName=$ServiceConnection `
+            ServiceConnectionUrl=$ServiceConnection `
             SolutionName=$SolutionName `
             UserName=$UserName `
             EnvironmentName=$environmentName
@@ -122,17 +123,18 @@ Describe 'E2E-Pipeline-Test' {
                 }
             }
             templateParameters = @{
-                Branch            = $SourceBranch
-                BranchToCreate    = $BranchToCreate
-                CommitMessage     = $CommitMessage
-                Data              = $Data
-                Email             = $Email
-                Project           = $Project
-                Repo              = $Repo
-                ServiceConnection = $ServiceConnection
-                SolutionName      = $SolutionName
-                UserName          = $UserName
-                PipelineId        = 0
+                Branch                = $SourceBranch
+                BranchToCreate        = $BranchToCreate
+                CommitMessage         = $CommitMessage
+                Data                  = $Data
+                Email                 = $Email
+                Project               = $Project
+                Repo                  = $Repo
+                ServiceConnectionName = $ServiceConnection
+                ServiceConnectionUrl  = $ServiceConnection
+                SolutionName          = $SolutionName
+                UserName              = $UserName
+                PipelineId            = 0
             } 
         }
         [Helper]::ExportToGitNewBranchSucceeded = [Helper]::QueueExportToGit($Org, $Project, $body)
@@ -160,16 +162,17 @@ Describe 'E2E-Pipeline-Test' {
                 }
             }
             templateParameters = @{
-                Branch            = $branchToUse
-                CommitMessage     = $CommitMessage + " existing branch"
-                Data              = $Data
-                Email             = $Email
-                Project           = $Project
-                Repo              = $Repo
-                ServiceConnection = $ServiceConnection
-                SolutionName      = $SolutionName
-                UserName          = $UserName
-                PipelineId        = 0
+                Branch                = $branchToUse
+                CommitMessage         = $CommitMessage + " existing branch"
+                Data                  = $Data
+                Email                 = $Email
+                Project               = $Project
+                Repo                  = $Repo
+                ServiceConnectionName = $ServiceConnection
+                ServiceConnectionUrl  = $ServiceConnection
+                SolutionName          = $SolutionName
+                UserName              = $UserName
+                PipelineId            = 0
             } 
         }
     
@@ -230,7 +233,8 @@ Describe 'E2E-Pipeline-Test' {
             Email=$Email `
             Project=$Project `
             Repo=$Repo `
-            ServiceConnection=$ServiceConnection `
+            ServiceConnectionName=$ServiceConnection `
+            ServiceConnectionUrl=$ServiceConnection `
             SolutionName=$SolutionName `
             UserName=$UserName
         $result = $result | ConvertFrom-Json -Depth 10

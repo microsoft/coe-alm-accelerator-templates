@@ -5,7 +5,7 @@ parameters:
   type: string
 
 steps:
-- powershell: |
+- pwsh: |
    $path = "$(Pipeline.Workspace)/drop/ConfigurationMigrationData-${{parameters.environmentName}}.zip"
    if(Test-Path $path)
    {
