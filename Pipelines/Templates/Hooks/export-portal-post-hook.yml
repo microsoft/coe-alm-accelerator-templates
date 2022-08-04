@@ -1,4 +1,4 @@
 steps:
-  - script: echo Export Portal Post Hook
-    displayName: 'Export Portal Post Hook'
+  - script: echo Export Power Pages Post Hook
+    displayName: 'Export Power Pages Post Hook'
     enabled: false
