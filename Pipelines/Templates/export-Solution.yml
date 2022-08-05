@@ -321,9 +321,9 @@ steps:
    solutionName: '${{parameters.solutionName}}'
    powerPageWebSiteId: $(PowerPageWebsiteId)
 
-- template: Hooks\export-portal-pre-hook.yml
+- template: Hooks\export-power-page-pre-hook.yml
 
-- template: export-Portal.yml
+- template: export-Power-Page.yml
   parameters:
     websiteId: $(WebsiteId)
     repo: ${{parameters.repo}}
@@ -331,7 +331,7 @@ steps:
     serviceConnectionName: '${{parameters.serviceConnectionName}}'
     solutionName: '${{parameters.solutionName}}'
 
-- template: Hooks\export-portal-post-hook.yml
+- template: Hooks\export-power-page-post-hook.yml
 
 - template: Hooks\export-solution-commit-pre-hook.yml
 
