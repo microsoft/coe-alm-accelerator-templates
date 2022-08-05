@@ -319,7 +319,7 @@ steps:
   parameters:
    serviceConnectionUrl: '${{parameters.serviceConnectionUrl}}'
    solutionName: '${{parameters.solutionName}}'
-   portalWebSiteId: $(PortalWebsiteId)
+   powerPageWebSiteId: $(PowerPageWebsiteId)
 
 - template: Hooks\export-portal-pre-hook.yml
 

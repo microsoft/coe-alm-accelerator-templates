@@ -1,22 +1,22 @@
-#We are going to set websiteId as a pipeline variable only if there is a portal in the Dataverse
+#We are going to set websiteId as a pipeline variable only if there is a Power Page in the Dataverse
 
 parameters:
 - name: serviceConnectionUrl
   type: string
-  #In case of exporting portal, we expect that the solution unique name will be the same as the portal name (name field in a given WebSite record)
+  #In case of exporting Power Page, we expect that the solution unique name will be the same as the Power Page name (name field in a given WebSite record)
 - name: solutionName
   type: string
-- name: portalWebsiteId
-  #This is the websiteId of the portal that can be used to get the portal Website record from Dataverse. If no given, we will try to get it from the solution name
+- name: powerPageWebsiteId
+  #This is the websiteId of the Power Page that can be used to get the website's record from Dataverse. If no given, we will try to get it from the solution name
   type: string
 
 steps:
 - pwsh: | 
     $websiteId = $null
-    if ('${{parameters.portalWebSiteId}}' -ne $null -and '${{parameters.portalWebSiteId}}' -ne '') {
-      #PortalWebsiteId is set globally as pipeline variable. If it is set then we will use it in the rest of the pipeline.
+    if ('${{parameters.powerPageWebsiteId}}' -ne $null -and '${{parameters.powerPageWebsiteId}}' -ne '') {
+      #powerPageWebsiteId is set globally as pipeline variable. If it is set then we will use it in the rest of the pipeline.
       write-host "Setting websiteId using global pipeline variable"
-      $websiteId = '${{parameters.portalWebSiteId}}'
+      $websiteId = '${{parameters.powerPageWebsiteId}}'
     }
     else
     {
@@ -30,7 +30,7 @@ steps:
       }
       catch{
         #Write-Host "Error: $($_.Exception.Message)"
-        # if portal' solutions are not installed in Dataverse. adx_websites table will not be created.
+        # if Power Pages solutions are not installed in Dataverse. adx_websites table will not be created.
       }
       if($null -ne $response.value -and $response.value.count -gt 0){
         write-host "Setting websiteId using Dataverse"

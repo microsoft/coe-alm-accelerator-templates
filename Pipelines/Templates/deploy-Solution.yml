@@ -289,7 +289,7 @@ steps:
 - template: Hooks\deploy-portal-pre-hook.yml
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.upload-paportal.PowerPlatformUploadPaportal@0
-  displayName: 'Upload Portal ${{parameters.solutionName}}'
+  displayName: 'Upload Power Page ${{parameters.solutionName}}'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'

@@ -1,4 +1,4 @@
-#We are going to set websiteId as a pipeline variable only if there is a portal in the Dataverse
+#We are going to set websiteId as a pipeline variable only if there is a Power Page in the Dataverse
 
 parameters:
 - name: websiteId
@@ -9,7 +9,7 @@ parameters:
   type: string
 - name: serviceConnectionName
   type: string
-  #In case of exporting portal, we expect that the solution unique name will be the same as the portal name
+  #In case of exporting Power Page, we expect that the solution unique name will be the same as the Power Page name
 - name: solutionName
   type: string
 
@@ -27,7 +27,7 @@ steps:
   condition: and(succeeded(), ne(variables['WebsiteId'], ''))
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.download-paportal.PowerPlatformDownloadPaportal@0
-  displayName: 'Export Portal ${{parameters.solutionName}} from ${{parameters.serviceConnectionUrl}}'
+  displayName: 'Export Power Page ${{parameters.solutionName}} from ${{parameters.serviceConnectionUrl}}'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'

@@ -1,4 +1,4 @@
 steps:
-  - script: echo Deploy Portal Post Hook
-    displayName: 'Deploy Portal Post Hook'
+  - script: echo Deploy Power Pages Post Hook
+    displayName: 'Deploy Power Page Post Hook'
     enabled: false

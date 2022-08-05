@@ -169,14 +169,14 @@ steps:
     RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
   condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
 
-#Copy portal to artifacts
+#Copy Power Page to artifacts
 - pwsh: |
     $source = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\Portals\${{parameters.solutionName}}"
     $dest = "$(Build.ArtifactStagingDirectory)\Portals\${{parameters.solutionName}}"
     if(Test-Path $source) {
         Copy-Item $source $dest -Recurse -Force
     }
-  displayName: 'Copy Portal to Artifacts'
+  displayName: 'Copy Power Page to Artifacts'
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Artifacts'
   inputs:

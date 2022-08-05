@@ -1,4 +1,4 @@
 steps:
-  - script: echo Deploy Portal Pre Hook
-    displayName: 'Deploy Portal Pre Hook'
+  - script: echo Deploy Power Pages Pre Hook
+    displayName: 'Deploy Power Pages Pre Hook'
     enabled: false
