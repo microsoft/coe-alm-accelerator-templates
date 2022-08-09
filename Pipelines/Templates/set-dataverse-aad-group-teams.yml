@@ -38,7 +38,15 @@ steps:
           $teamTypeValue = New-CrmOptionSetValue -Value 2
 
           $aadGroupTeams = Get-CrmRecords -conn $conn -EntityLogicalName team -FilterAttribute "name" -FilterOperator "eq" -FilterValue $aadGroupTeamName -Fields teamid
-          $fields = @{ "name"=$aadGroupTeamName;"teamtype"=$teamTypeValue;"azureactivedirectoryobjectid"=[guid]$aadId }
+
+          #Get business unit
+          $businessunit = 'Services'
+          $businessunitid = (Get-CrmRecords -conn $conn -EntityLogicalName businessunit -FilterAttribute name -FilterOperator eq -FilterValue $businessunit).CrmRecords[0].businessunitid
+          $lookupObject = New-Object -TypeName Microsoft.Xrm.Sdk.EntityReference;
+          $lookupObject.LogicalName = "businessunit";
+          $lookupObject.Id = "$businessunitid";
+
+          $fields = @{ "name"=$aadGroupTeamName;"teamtype"=$teamTypeValue;"azureactivedirectoryobjectid"=[guid]$aadId;"businessunitid"=$lookupObject }
 
           if ($aadGroupTeams.Count -eq 0){
             $aadGroupTeamId = New-CrmRecord -conn $conn -EntityLogicalName team -Fields $fields
