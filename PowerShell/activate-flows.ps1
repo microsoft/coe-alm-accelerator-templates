@@ -38,6 +38,7 @@ function Invoke-ActivateFlows {
     $flowsActivatedThisPass = $false
     $throwOnComplete = $false
     do {
+        $throwOnComplete = $false
         $flowsActivatedThisPass = $false
         foreach ($flowToActivate in $flowsToActivate) {
             try {

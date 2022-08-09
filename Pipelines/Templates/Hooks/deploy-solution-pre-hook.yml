@@ -7,5 +7,3 @@ steps:
   - script: echo Deploy Solution Pre Hook
     displayName: 'Deploy Solution Pre Hook'
     enabled: false
-  - template: CustomTemplates\output-deploy-parameters.yml
-  - template: CustomTemplates\output-environment-variables.yml

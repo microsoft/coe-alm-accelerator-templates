@@ -7,4 +7,3 @@ steps:
   - script: echo Deploy Solution Post Hook
     displayName: 'Deploy Solution Post Hook'
     enabled: false
-  - template: CustomTemplates\output-environment-variables.yml
