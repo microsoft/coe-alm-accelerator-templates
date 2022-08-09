@@ -39,7 +39,7 @@ steps:
 
           $aadGroupTeams = Get-CrmRecords -conn $conn -EntityLogicalName team -FilterAttribute "name" -FilterOperator "eq" -FilterValue $aadGroupTeamName -Fields teamid
 
-          #Get business unit
+          #Get business unit - business unit is hard coded here but should be passed in from a variable in the ALM Accelerator app
           $businessunit = 'Services'
           $businessunitid = (Get-CrmRecords -conn $conn -EntityLogicalName businessunit -FilterAttribute name -FilterOperator eq -FilterValue $businessunit).CrmRecords[0].businessunitid
           $lookupObject = New-Object -TypeName Microsoft.Xrm.Sdk.EntityReference;
