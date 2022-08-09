@@ -281,6 +281,14 @@ steps:
     generateAADGroupTeamConfig: $(DeploymentSettings.GenerateAADGroupTeam)
     generateCustomConnectorConfig: $(DeploymentSettings.GenerateCustomConnectorConfig)
 
+# Set deployment variable for Activate Flow Configuration
+- template: set-deployment-variable.yml
+  parameters:
+    variableName: 'outActivateFlows'
+    deploymentSettingsPath: $(CustomDeploymentSettingsPath)
+    deploymentSettingsNode: 'ActivateFlowConfiguration'
+    displayName: 'Retrieve Flow Activation Config for Export'
+
 # Enabled or Disable Flows in the Solution based on configuration
 - template: enable-disable-solution-flows.yml
   parameters:
