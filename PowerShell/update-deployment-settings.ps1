@@ -261,7 +261,6 @@
 
             $buildName = $buildDefinitionResult.name.ToLower()
             # Declare Solution Upgrade Tags; By default is 'update'
-            $solutionupgradeVariableName = "SolutionUpgrade"
             $solutionUpgradeInputValue = $false
             $pipelineVariableName =  "TriggerSolutionUpgrade"
             if($null -ne $configurationData) 
@@ -269,13 +268,12 @@
                 foreach($deploymentEnvironment in $configurationData) 
                 {
                     $deploymentBuildName = $deploymentEnvironment.BuildName.ToLower()
-                    Write-Host "deploymentBuildName - " $deploymentBuildName
                     if($deploymentBuildName -eq $buildName)
                     {
-                        $solutionUpgradeTag = $deploymentEnvironment.UserSettings | Where-Object { $_.Name -eq $solutionupgradeVariableName }
+                        $solutionUpgradeTag = $deploymentEnvironment.UserSettings | Where-Object { $_.Name -eq $pipelineVariableName }
                         if($null -ne $solutionUpgradeTag -and $null -ne $solutionUpgradeTag.Value)
                         {
-                            if($solutionUpgradeTag.Value -eq "upgrade")
+                            if($solutionUpgradeTag.Value -eq "true")
                             {
                                 $solutionUpgradeInputValue = $true
                             }
