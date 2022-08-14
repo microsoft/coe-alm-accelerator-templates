@@ -257,12 +257,6 @@ steps:
   displayName: 'Verify Environment Variable Current Value Not Exported'
   condition: and(succeeded(), eq(variables.DoNotExportCurrentEnvironmentVariableValues, 'true'))
 
-# Set paths to deployment settings
-- template: set-deployment-configuration-paths.yml
-  parameters:
-    configPath: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\config\'
-    environmentName: ''
-
 - template: Hooks\export-solution-update-deploymentsettings-pre-hook.yml
 
 # Update deployment settings configuration
@@ -275,6 +269,12 @@ steps:
     solutionName: '${{parameters.solutionName}}'
     configurationData: '${{parameters.configurationData}}'
     useDeploymentSettingsPlaceholders: $(UseDeploymentSettingsPlaceholders)
+
+# Set paths to deployment settings
+- template: set-deployment-configuration-paths.yml
+  parameters:
+    configPath: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\config\'
+    environmentName: ''
 
 # Set deployment variable for Activate Flow Configuration
 - template: set-deployment-variable.yml

@@ -24,4 +24,4 @@ steps:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     DEPLOYMENT_SETTINGS: ${{parameters.configurationData}}
   displayName: 'Update Deployment Settings'
-  condition: succeeded()
+  condition: and(succeeded(), ne(variables.GenerateDeploymentSettings, 'false'))
