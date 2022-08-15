@@ -20,7 +20,7 @@ steps:
 # Set pipeline vars for tools paths.
 - template: set-tools-paths.yml
     
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
   displayName: 'Install Power Platform Build Tools'
 
 - pwsh: |
@@ -151,7 +151,7 @@ steps:
 - template: Hooks\build-solution-pack-pre-hook.yml
 
 #Pack the solution based on the build type parameter (Unmanaged, Managed or Both)
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.pack-solution.PowerPlatformPackSolution@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.pack-solution.PowerPlatformPackSolution@2
   displayName: 'Pack Solutions (Unmanaged and/or Managed)'
   inputs:
     SolutionSourceFolder: $(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage
@@ -160,7 +160,7 @@ steps:
 
 
 #Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
   displayName: 'Run Solution Checker'
   inputs:
     authenticationType: PowerPlatformSPN
