@@ -15,12 +15,6 @@ steps:
 - powershell: |
     # load PowerShell files into memory
     . "$env:POWERSHELLPATH/activate-flows.ps1"
-    try {
-        Invoke-ActivateFlows '$(CdsBaseConnectionString)' '${{parameters.serviceConnection}}' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_PowerApps_Administration_PowerShell)' '$(PowerAppsAdminModuleVersion)' '$(TenantId)' '$(ClientId)' '$(ClientSecret)' '${{parameters.solutionName}}' $(EnvironmentId) '${{parameters.solutionComponentOwnershipConfiguration}}' '${{parameters.connectionReferences}}' '${{parameters.activateFlowConfiguration}}'
-    } catch {
-        Write-Host "##vso[task.logissue type=warning]Errors occurred while activating flows. Please review the log for specific errors and verify your deployment configuration settings."
-        Write-Host $_
-        exit 1;
-    }
+    Invoke-ActivateFlows '$(CdsBaseConnectionString)' '${{parameters.serviceConnection}}' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_PowerApps_Administration_PowerShell)' '$(PowerAppsAdminModuleVersion)' '$(TenantId)' '$(ClientId)' '$(ClientSecret)' '${{parameters.solutionName}}' $(EnvironmentId) '${{parameters.solutionComponentOwnershipConfiguration}}' '${{parameters.connectionReferences}}' '${{parameters.activateFlowConfiguration}}'
   displayName: 'Activate Flows'
   condition: and(succeeded(), ne(variables['EnableFlows'], 'false'))
