@@ -23,5 +23,5 @@ steps:
         }
     }
     # Set the deployment variable for use elsewhere
-    Write-Host '##vso[task.setvariable variable=${{parameters.variableName}}]'$variableValue
+    Write-Host "##vso[task.setvariable variable=${{parameters.variableName}}]$variableValue"
   displayName: ${{parameters.displayName}}
