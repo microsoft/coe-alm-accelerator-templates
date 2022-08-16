@@ -100,8 +100,8 @@ steps:
             Write-Host $issuesRequestUrl
             $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
 
-            if($issueResponse.Length -gt 0 -and -not [string]::IsNullOrWhiteSpace($queryHeadings[$i + 1])) {
-                $releaseNotes = [Environment]::NewLine + $releaseNotes + [Environment]::NewLine + $queryHeadings[$i + 1] + "(" + $issueResponse.Length + ")"
+            if($issueResponse.items.Length -gt 0 -and -not [string]::IsNullOrWhiteSpace($queryHeadings[$i + 1])) {
+                $releaseNotes = [Environment]::NewLine + $releaseNotes + [Environment]::NewLine + $queryHeadings[$i + 1] + " (" + $issueResponse.items.Length + ")"
             }
             foreach($issue in $issueResponse.items){
                 if("${{ parameters.closeIssues }}" -eq "True") {
