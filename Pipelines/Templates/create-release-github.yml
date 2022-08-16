@@ -94,7 +94,6 @@ steps:
         for ($i = 0; $i -lt (($queryHeadings.Length / 2) + 1); $i = $i+2) {
             #Only retrieve closed issues in this milestone
             $issuesRequestUrl = 'https://api.github.com/search/issues?per_page=100&sort=created&order=asc&q=is:issue repo:${{ parameters.gitHubApiUrl }} milestone:"' + $currentMilestone.title + '"'
-            Write-Host $issuesRequestUrl
             if(-not [string]::IsNullOrWhiteSpace($queryHeadings[$i])) {
                 $issuesRequestUrl = $issuesRequestUrl + " " + $queryHeadings[$i]
             }
@@ -104,7 +103,7 @@ steps:
             if($issueResponse.Length -gt 0 -and -not [string]::IsNullOrWhiteSpace($queryHeadings[$i + 1])) {
                 $releaseNotes = [Environment]::NewLine + $releaseNotes + [Environment]::NewLine + $queryHeadings[$i + 1]
             }
-            foreach($issue in $issueResponse){
+            foreach($issue in $issueResponse.items){
                 if("${{ parameters.closeIssues }}" -eq "True") {
                     if('${{ parameters.issueClosingComment }}' -ne '') {
                         # Add the comment to the issue
