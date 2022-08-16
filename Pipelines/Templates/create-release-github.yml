@@ -76,28 +76,38 @@ steps:
     }
 
     if($currentMilestone -ne $null){
-        $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&per_page=100&sort=created&direction=asc&milestone=" + $currentMilestone.number #only retrieve closed issues in this milestone
-        $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
-        foreach($issue in $issueResponse){
-            if("${{ parameters.closeIssues }}" -eq "True") {
-                if('${{ parameters.issueClosingComment }}' -ne '') {
-                    # Add the comment to the issue
-                    # /repos/{owner}/{repo}/issues/{issue_number}/comments
-                    $commentRequestUrl = "${{ parameters.gitHubApiUrl }}/issues/" + $issue.number + "/comments"
-                    $commentFormatted = "@" + $issue.user.login + " ${{ parameters.issueClosingComment }}"
-                    $commentBody = "{`"body`": `"$commentFormatted`"}"
-                    Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
-                }
-
-                # Close the issue if not closed
-                if($issue.state -ne 'closed') {
-                    #/repos/{owner}/{repo}/issues/{issue_number}
-                    $issueRequestClosingUrl = "${{ parameters.gitHubApiUrl }}/issues/" + $issue.number
-                    $closeRequestBody = "{`"state`": `"closed`"}"
-                    Invoke-RestMethod $issueRequestClosingUrl -Method 'PATCH' -Headers $headers -Body $closeRequestBody
-                }
+        $labels = @("coe-starter-kit","alm-accelerator")
+        foreach ($label in $labels) {
+            if($label -eq "coe-starter-kit") {
+                $releaseNotes = $releaseNotes + [Environment]::NewLine + "###CoE Starter Kit"
             }
-            $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
+            else {
+                $releaseNotes = $releaseNotes + [Environment]::NewLine + "###ALM Accelerator"
+            }
+            #Only retrieve closed issues in this milestone
+            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&per_page=100&sort=created&direction=asc&milestone=" + $currentMilestone.number + "&labels=" + label
+            $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
+            foreach($issue in $issueResponse){
+                if("${{ parameters.closeIssues }}" -eq "True") {
+                    if('${{ parameters.issueClosingComment }}' -ne '') {
+                        # Add the comment to the issue
+                        # /repos/{owner}/{repo}/issues/{issue_number}/comments
+                        $commentRequestUrl = "${{ parameters.gitHubApiUrl }}/issues/" + $issue.number + "/comments"
+                        $commentFormatted = "@" + $issue.user.login + " ${{ parameters.issueClosingComment }}"
+                        $commentBody = "{`"body`": `"$commentFormatted`"}"
+                        Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
+                    }
+
+                    # Close the issue if not closed
+                    if($issue.state -ne 'closed') {
+                        #/repos/{owner}/{repo}/issues/{issue_number}
+                        $issueRequestClosingUrl = "${{ parameters.gitHubApiUrl }}/issues/" + $issue.number
+                        $closeRequestBody = "{`"state`": `"closed`"}"
+                        Invoke-RestMethod $issueRequestClosingUrl -Method 'PATCH' -Headers $headers -Body $closeRequestBody
+                    }
+                }
+                $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
+            }
         }
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
 
