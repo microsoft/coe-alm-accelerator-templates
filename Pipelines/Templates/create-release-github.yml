@@ -25,6 +25,9 @@ parameters:
 - name: isPreRelease
   type: boolean
   default: false
+- name: hotfixReleaseNumber
+  type: number
+  default: 0
 
 steps:
 
@@ -97,6 +100,17 @@ steps:
             $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
         }
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
+
+        $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}'
+        $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
+        if(${{parameters.HotfixReleaseNumber}} -ne 0) {
+            $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}-HF${{parameters.HotfixReleaseNumber}}'
+            $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }} - Hotfix ${{parameters.HotfixReleaseNumber}}'
+        }
+
+        Write-Host "##vso[task.setvariable variable=Tag]$tag"
+        Write-Host "##vso[task.setvariable variable=Title]$title"
+
         exit 0
     }
   displayName: Build Release Notes from Milestone
@@ -105,8 +119,8 @@ steps:
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
     tagSource: 'userSpecifiedTag'
-    tag: '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}'
-    title: '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
+    tag: $(Tag)
+    title: $(Title)
     releaseNotesFilePath: '$(ReleaseNotesPath)'
     addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
     isDraft: ${{ parameters.isDraft }}
