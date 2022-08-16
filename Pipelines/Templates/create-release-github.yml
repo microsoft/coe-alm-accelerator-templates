@@ -93,7 +93,7 @@ steps:
         $queryHeadings = "${{parameters.queryHeadingDelimited}}".split('|')
         for ($i = 0; $i -lt (($queryHeadings.Length / 2) + 1); $i = $i+2) {
             if(-not [string]::IsNullOrWhiteSpace($queryHeadings[$i + 1])) {
-                $releaseNotes = $releaseNotes + [Environment]::NewLine + "**" + $queryHeadings[$i + 1] + "**"
+                $releaseNotes = $releaseNotes + [Environment]::NewLine + $queryHeadings[$i + 1]
             }
             #Only retrieve closed issues in this milestone
             $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&per_page=100&sort=created&direction=asc&milestone=" + $currentMilestone.number
