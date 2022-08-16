@@ -28,6 +28,9 @@ parameters:
 - name: hotfixReleaseNumber
   type: number
   default: 0
+- name: labelHeadingDelimited
+  type: string
+  default: "|"
 
 steps:
 
@@ -76,16 +79,16 @@ steps:
     }
 
     if($currentMilestone -ne $null){
-        $labels = @("coe-starter-kit","alm-accelerator")
-        foreach ($label in $labels) {
-            if($label -eq "coe-starter-kit") {
-                $releaseNotes = $releaseNotes + [Environment]::NewLine + "###CoE Starter Kit"
-            }
-            else {
-                $releaseNotes = $releaseNotes + [Environment]::NewLine + "###ALM Accelerator"
+        $labelHeadings = labelHeadingDelimited.split('|')
+        for ($i = 0; $i -lt $labelHeadings.Length / 2; $i = $i+2) {
+            if(-not [string]::IsNullOrWhiteSpace($labelHeadings[$i + 1])) {
+                $releaseNotes = $releaseNotes + [Environment]::NewLine + "###" + $labelHeadings[$i + 1]
             }
             #Only retrieve closed issues in this milestone
-            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&per_page=100&sort=created&direction=asc&milestone=" + $currentMilestone.number + "&labels=" + $label
+            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&per_page=100&sort=created&direction=asc&milestone=" + $currentMilestone.number
+            if(-not [string]::IsNullOrWhiteSpace($labelHeadings[$i])) {
+                $issuesRequestUrl = $issuesRequestUrl + "&labels=" + $labelHeadings[$i]
+            }
             $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
             foreach($issue in $issueResponse){
                 if("${{ parameters.closeIssues }}" -eq "True") {
