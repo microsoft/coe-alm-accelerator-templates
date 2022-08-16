@@ -85,7 +85,7 @@ steps:
                 $releaseNotes = $releaseNotes + [Environment]::NewLine + "###ALM Accelerator"
             }
             #Only retrieve closed issues in this milestone
-            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&per_page=100&sort=created&direction=asc&milestone=" + $currentMilestone.number + "&labels=" + label
+            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&per_page=100&sort=created&direction=asc&milestone=" + $currentMilestone.number + "&labels=" + $label
             $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
             foreach($issue in $issueResponse){
                 if("${{ parameters.closeIssues }}" -eq "True") {
