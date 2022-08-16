@@ -93,9 +93,9 @@ steps:
         $queryHeadings = "${{parameters.queryHeadingDelimited}}".split('|')
         for ($i = 0; $i -lt (($queryHeadings.Length / 2) + 1); $i = $i+2) {
             #Only retrieve closed issues in this milestone
-            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}/issues?state=all&filter=all&per_page=100&sort=created&direction=asc&milestone=" + $currentMilestone.number
+            $issuesRequestUrl = "${{ parameters.gitHubApiUrl }}search/issues?per_page=100&sort=created&order=asc&q=milestone:" + $currentMilestone.number
             if(-not [string]::IsNullOrWhiteSpace($queryHeadings[$i])) {
-                $issuesRequestUrl = $issuesRequestUrl + "&q=" + $queryHeadings[$i]
+                $issuesRequestUrl = $issuesRequestUrl + " " + $queryHeadings[$i]
             }
             Write-Host $issuesRequestUrl
             $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
