@@ -91,12 +91,7 @@ steps:
     #Build the release notes
     if($currentMilestone -ne $null){
         $labelHeadings = "${{parameters.labelHeadingDelimited}}".split('|')
-        Write-Host $labelHeadings[0]
-        Write-Host $labelHeadings[1]
-        Write-Host $labelHeadings[2]
-        Write-Host $labelHeadings[3]
-        Write-Host (($labelHeadings.Length / 2) - 1)
-        for ($i = 0; $i -lt (($labelHeadings.Length / 2) - 1); $i = $i+2) {
+        for ($i = 0; $i -lt (($labelHeadings.Length / 2) + 1); $i = $i+2) {
             Write-Host $labelHeadings[$i + 1]
             if(-not [string]::IsNullOrWhiteSpace($labelHeadings[$i + 1])) {
                 $releaseNotes = $releaseNotes + [Environment]::NewLine + "### " + $labelHeadings[$i + 1]
