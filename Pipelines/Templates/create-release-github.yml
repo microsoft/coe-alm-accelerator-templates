@@ -77,7 +77,18 @@ steps:
             break
         }
     }
+    #Set the tag and title for the release
+    $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}'
+    $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
+    if(${{parameters.HotfixReleaseNumber}} -ne 0) {
+        $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}-HF${{parameters.HotfixReleaseNumber}}'
+        $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }} - Hotfix ${{parameters.HotfixReleaseNumber}}'
+    }
 
+    Write-Host "##vso[task.setvariable variable=Tag]$tag"
+    Write-Host "##vso[task.setvariable variable=Title]$title"
+
+    #Build the release notes
     if($currentMilestone -ne $null){
         $labelHeadings = labelHeadingDelimited.split('|')
         for ($i = 0; $i -lt $labelHeadings.Length / 2; $i = $i+2) {
@@ -113,16 +124,6 @@ steps:
             }
         }
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
-
-        $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}'
-        $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
-        if(${{parameters.HotfixReleaseNumber}} -ne 0) {
-            $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}-HF${{parameters.HotfixReleaseNumber}}'
-            $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }} - Hotfix ${{parameters.HotfixReleaseNumber}}'
-        }
-
-        Write-Host "##vso[task.setvariable variable=Tag]$tag"
-        Write-Host "##vso[task.setvariable variable=Title]$title"
 
         exit 0
     }
