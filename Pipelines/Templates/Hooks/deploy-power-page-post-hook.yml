@@ -1,0 +1,4 @@
+steps:
+  - script: echo Deploy Power Pages Post Hook
+    displayName: 'Deploy Power Page Post Hook'
+    enabled: false
