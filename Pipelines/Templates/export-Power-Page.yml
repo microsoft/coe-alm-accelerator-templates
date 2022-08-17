@@ -26,7 +26,7 @@ steps:
   displayName: 'Clear Download Folder'
   condition: and(succeeded(), ne(variables['WebsiteId'], ''))
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.download-paportal.PowerPlatformDownloadPaportal@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.download-paportal.PowerPlatformDownloadPaportal@2
   displayName: 'Export Power Page ${{parameters.solutionName}} from ${{parameters.serviceConnectionUrl}}'
   inputs:
     authenticationType: PowerPlatformSPN

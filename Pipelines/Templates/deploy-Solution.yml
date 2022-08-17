@@ -297,7 +297,7 @@ steps:
 
 - template: Hooks\deploy-power-page-pre-hook.yml
 
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.upload-paportal.PowerPlatformUploadPaportal@0
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.upload-paportal.PowerPlatformUploadPaportal@2
   displayName: 'Upload Power Page ${{parameters.solutionName}}'
   inputs:
     authenticationType: PowerPlatformSPN
