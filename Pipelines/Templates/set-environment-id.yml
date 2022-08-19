@@ -3,11 +3,8 @@ parameters:
   type: string
 
 steps:
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
-  displayName: 'Install Power Platform Build Tools'
-
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.whoami.PowerPlatformWhoAmi@2
-  name: "Set EnvironmentId"
+  displayName: "Set EnvironmentId"
   inputs:
     authenticationType: 'PowerPlatformSPN'
     PowerPlatformSPN: '${{parameters.serviceConnection}}'
