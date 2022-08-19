@@ -46,4 +46,4 @@ steps:
         }
     }
   displayName: 'Share Canvas App with AAD Group'
-  condition: and(succeeded(), ne('${{parameters.aadGroupCanvasConfiguration}}', ''))
+  condition: and(succeeded(), not(contains('${{parameters.aadGroupCanvasConfiguration}}', '$(')))
