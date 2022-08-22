@@ -288,7 +288,7 @@ function New-DeploymentPipelines
             }
             New-Item -ItemType "directory" -Name "../cli"
             Set-Location ../cli
-            git clone -b "mochs-aa4pp-3212" "https://github.com/microsoft/coe-starter-kit.git"
+            git clone -b "main" "https://github.com/microsoft/coe-starter-kit.git"
             Set-Location coe-starter-kit\coe-cli
             npm install
             npm run build
