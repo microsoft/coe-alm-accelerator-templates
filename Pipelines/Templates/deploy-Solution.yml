@@ -28,7 +28,7 @@ steps:
 
 - pwsh: |
     . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
-    Write-Deploy-Pipeline-Parameters "$(Agent.BuildDirectory)\deploy-pipeline-parameters.json" '${{ parameters.serviceConnectionName }}' '${{ parameters.serviceConnectionUrl }}' '${{ parameters.environmentName }}' '${{ parameters.solutionName }}' '${{ parameters.importUnmanaged }}' '${{ parameters.overwriteUnmanagedCustomizations }}' '${{ parameters.skipBuildToolsInstaller }}' '${{ parameters.cacheEnabled }}'
+    Write-Deploy-Pipeline-Parameters "$(Agent.BuildDirectory)\deploy-pipeline-parameters.json" "${{ parameters.serviceConnectionName }}" "${{ parameters.serviceConnectionUrl }}" "${{ parameters.environmentName }}" "${{ parameters.solutionName }}" "${{ parameters.importUnmanaged }}" "${{ parameters.overwriteUnmanagedCustomizations }}" "${{ parameters.skipBuildToolsInstaller }}" "${{ parameters.cacheEnabled }}"
   displayName: 'Saving Deploy Pipeline Parameters'
 
 - template: Hooks\deploy-solution-pre-hook.yml
@@ -55,7 +55,7 @@ steps:
 # Other tasks, which use the PowerApps PowerShell cmdlets, need the environment guid.  Setting it for future use.
 - template: set-environment-id.yml
   parameters:
-    serviceConnection: '${{parameters.serviceConnectionUrl}}'
+    serviceConnection: '${{parameters.serviceConnectionName}}'
 
 # Other tasks, in this pipeline need to know if the solution already exists. Setting it for future use.
 - template: set-solution-exists.yml
