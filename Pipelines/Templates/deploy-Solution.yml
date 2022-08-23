@@ -134,18 +134,18 @@ steps:
   displayName: 'Get managed solution zip path'
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
 
-- pwsh: |    
-    # If Solution Upgrade was not set at Canvas App Deployment Settings screen, check whether PR has Tag.
-    if("$(TriggerSolutionUpgrade)".Contains("TriggerSolutionUpgrade"))
-    {
-        . "$env:POWERSHELLPATH/set-trigger-solution-upgrade.ps1"
-        Set-TriggerSolutionUpgrade '$(TriggerSolutionUpgrade)' '$(System.TeamFoundationCollectionUri)' '$(System.TeamProjectId)' '$(Build.Repository.Name)' '$(Build.Repository.Provider)' '$(Build.SourceVersion)' '$(Build.Reason)' '$(GitHubRepo)' '$(GitHubPAT)'
-    }
-  env:
-    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-  name: setTriggerSolutionUpgrade
-  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
-  displayName: 'Set TriggerSolutionUpgrade Variable'
+#- pwsh: |    
+#    # If Solution Upgrade was not set at Canvas App Deployment Settings screen, check whether PR has Tag.
+#    if("$(TriggerSolutionUpgrade)".Contains("TriggerSolutionUpgrade"))
+#    {
+#        . "$env:POWERSHELLPATH/set-trigger-solution-upgrade.ps1"
+#        Set-TriggerSolutionUpgrade '$(TriggerSolutionUpgrade)' '$(System.TeamFoundationCollectionUri)' '$(System.TeamProjectId)' '$(Build.Repository.Name)' '$(Build.Repository.Provider)' '$(Build.SourceVersion)' '$(Build.Reason)' '$(GitHubRepo)' '$(GitHubPAT)'
+#    }
+#  env:
+#    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+#  name: setTriggerSolutionUpgrade
+#  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
+#  displayName: 'Set TriggerSolutionUpgrade Variable'
 
 # If the TriggerSolutionUpgrade variable is false, then import the solution as an Update
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
@@ -297,13 +297,53 @@ steps:
 
 - template: Hooks\deploy-power-page-pre-hook.yml
 
+- pwsh: |
+    $portalunpackpath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\"
+    Write-Host "portalunpackpath - $portalunpackpath"
+    if(Test-Path $portalunpackpath)
+    {
+        Get-ChildItem -Path $portalunpackpath -Recurse -Force        
+    }
+    else
+    {
+        Write-Host "Invalid path - $portalunpackpath"
+    }
+  displayName: "Display folder items"
+
+#- template: set-website-variable.yml
+#  parameters:
+#   serviceConnectionUrl: '${{parameters.serviceConnectionUrl}}'
+#   solutionName: '${{parameters.solutionName}}'
+
+- pwsh: |
+    $websiteName = ""
+    $solutionUnpackedFolder = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages"
+    Write-Host "solutionUnpackedFolder - $solutionUnpackedFolder"
+    if(Test-Path $solutionUnpackedFolder)
+    {
+        $matchedFolders = Get-ChildItem $solutionUnpackedFolder | Where-Object { $_.Name -match '${{parameters.solutionName}}'}
+
+        if($matchedFolders){
+          $websiteName = $matchedFolders.Name
+        }
+        echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
+    }
+    else
+    {
+       Write-Host "Invalid path - $solutionUnpackedFolder"
+    }
+    Write-Host "websiteName - $websiteName"
+  displayName: "Fetch Portal Website Name"
+
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.upload-paportal.PowerPlatformUploadPaportal@2
   displayName: 'Upload Power Page ${{parameters.solutionName}}'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
-    UploadPath: $(ArtifactDropPath)\PowerPages\${{parameters.solutionName}}
+    UploadPath: '$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\$(WebsiteName)\'
+    #UploadPath: '$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\${{parameters.solutionName}}'
     Environment: '${{parameters.serviceConnectionUrl}}'
+  condition: and(succeeded(), ne(variables['WebsiteName'], ''))
 
 - template: Hooks\deploy-power-page-post-hook.yml
 

@@ -330,7 +330,6 @@ steps:
   parameters:
    serviceConnectionUrl: '${{parameters.serviceConnectionUrl}}'
    solutionName: '${{parameters.solutionName}}'
-   powerPageWebSiteId: $(PowerPageWebsiteId)
 
 - template: Hooks\export-power-page-pre-hook.yml
 
@@ -347,6 +346,7 @@ steps:
 - template: Hooks\export-solution-commit-pre-hook.yml
 
 - pwsh: |
+    git config --system core.longpaths true
     git add --all
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Add Changes to Git Branch'

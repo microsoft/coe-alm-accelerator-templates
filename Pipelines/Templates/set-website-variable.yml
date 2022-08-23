@@ -6,37 +6,38 @@ parameters:
   #In case of exporting Power Page, we expect that the solution unique name will be the same as the Power Page name (name field in a given WebSite record)
 - name: solutionName
   type: string
-- name: powerPageWebsiteId
-  #This is the websiteId of the Power Page that can be used to get the website's record from Dataverse. If no given, we will try to get it from the solution name
-  type: string
 
 steps:
-- pwsh: | 
-    $websiteId = $null
-    if ('${{parameters.powerPageWebsiteId}}' -ne $null -and '${{parameters.powerPageWebsiteId}}' -ne '') {
-      #powerPageWebsiteId is set globally as pipeline variable. If it is set then we will use it in the rest of the pipeline.
-      write-host "Setting websiteId using global pipeline variable"
-      $websiteId = '${{parameters.powerPageWebsiteId}}'
-    }
-    else
-    {
-      # load PowerShell files into memory
-      . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
-      $dataverseHost = Get-HostFromUrl "${{parameters.serviceConnectionUrl}}"
-      $odataQuery = "adx_websites?`$filter=adx_name eq '${{parameters.solutionName}}'"    
+- script: |
+    echo "Portal Website provided as variable. Website ID - $(PowerPageWebsiteId)"
+    echo "##vso[task.setvariable variable=WebsiteId;]$(PowerPageWebsiteId)"
+  condition: ne(variables['PowerPageWebsiteId'], '')
+  displayName: "Fetch Power Pages Website ID from Variable"
 
-      try{
+- pwsh: |
+    Write-Host "Portal Website not provided as variable. Making API call."
+    . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+    $dataverseHost = Get-HostFromUrl "${{parameters.serviceConnectionUrl}}"
+    Write-Host "dataverseHost - $dataverseHost"
+    # Fetch the Website by the 'Solution name'
+    #$odataQuery = "adx_websites?`$filter=adx_name eq '${{parameters.solutionName}}'"    
+    $odataQuery = "adx_websites?`$filter=contains(adx_name,'${{parameters.solutionName}}')"
+    Write-Host "Portal odataQuery - $odataQuery"
+
+    try{
         $response = Invoke-DataverseHttpGet $env:SPNTOKEN $dataverseHost $odataQuery
-      }
-      catch{
-        #Write-Host "Error: $($_.Exception.Message)"
-        # if Power Pages solutions are not installed in Dataverse. adx_websites table will not be created.
-      }
-      if($null -ne $response.value -and $response.value.count -gt 0){
-        write-host "Setting websiteId using Dataverse"
-        $websiteId = $response.value[0].adx_websiteid
-      }
     }
-    Write-Host "WebsiteId: $($websiteId)"
-    echo "##vso[task.setvariable variable=WebsiteId]$websiteId"
-  displayName: 'Set Website Variable'
+    catch{
+        Write-Host "Error: $($_.Exception.Message)"
+        # if Power Pages solutions are not installed in Dataverse. adx_websites table will not be created. Suppres the error.
+    }
+
+    if($null -ne $response.value -and $response.value.count -gt 0){
+        $websiteId = $response.value[0].adx_websiteid
+        echo "##vso[task.setvariable variable=WebsiteId]$websiteId"
+    }
+    else{
+        Write-Host "No sites found with the given solution name - ${{parameters.solutionName}}. Retry by correcting the solution name."
+    }
+  condition: eq(variables['PowerPageWebsiteId'], '')
+  displayName: "Fetch Power Pages Website ID from Dataverse"
