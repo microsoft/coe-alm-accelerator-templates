@@ -3,7 +3,11 @@
 # Parameters passed to the parent pipeline (deploy-Solution.yml) can be accessed via the following command.
 # . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
 # $parameters = Read-Pipeline-Parameters "$(Agent.BuildDirectory)\deploy-pipeline-parameters.json"
+
+#Your build pipeline references a variable named ‘PAT-shplat’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. 
+#See https://github.com/microsoft/Microsoft-Focus-Center/blob/main/Tools/FocusCenterPRChecker/Readme.md and https://go.microsoft.com/fwlink/?linkid=865972
 steps:
-  - script: echo Deploy Solution Pre Hook
-    displayName: 'Deploy Solution Pre Hook'
-    enabled: false
+- script: '.\FocusCenterPRChecker.exe ..\..\..\Extracted $(PAT-shplat) $(System.PullRequest.PullRequestId)'
+  workingDirectory: 'Pipelines/Templates/Hooks/HookExecutables/FocusCenterPRChecker'
+  displayName: 'Focus Center PR Checker'
+  continueOnError: true

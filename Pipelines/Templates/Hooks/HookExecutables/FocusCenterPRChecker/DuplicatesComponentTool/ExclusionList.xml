@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Exclusions>
+  <Folders>>
+    <Folder name="Other"/>
+    <Folder name="Tools/ConnectionReferencesTool"/>
+    <Folder name="css"/>
+    <Folder name="Templates"/>
+  </Folders>
+  <FileExtensions>
+    <FileExtension name =".dll"/>
+  </FileExtensions>
+  <ComponentNames>
+    <ComponentName name="Entity.xml"/>
+    <ComponentName name="RibbonDiff.xml"/>
+	<ComponentName name="environmentvariabledefinition.xml"/>
+	<ComponentName name="environmentvariablevalues.json"/>
+  </ComponentNames>
+  <Entities>
+    <Entity name="ACIViewMapper"/>
+    <Entity name="ActionCard"/>
+    <Entity name="ActionCardUserSettings"/>
+    <Entity name="AsyncOperation"/>
+    <Entity name="Connection"/>
+    <Entity name="DataPerformance"/>
+    <Entity name="DelveActionHub"/>
+    <Entity name="DocumentTemplate"/>
+    <Entity name="DynamicProperty"/>
+    <Entity name="DynamicPropertyAssociation"/>
+    <Entity name="DynamicPropertyInstance"/>
+    <Entity name="DynamicPropertyOptionSetItem"/>
+    <Entity name="EmailServerProfile"/>
+    <Entity name="EmailSignature"/>
+    <Entity name="EmailTemplate"/>
+    <Entity name="EntitlementTemplate"/>
+    <Entity name="ExchangeSyncIdMapping"/>
+    <Entity name="ExpiredProcess"/>
+    <Entity name="InteractionForEmail"/>
+    <Entity name="Metric"/>
+    <Entity name="msdyn_page"/>
+    <Entity name="msdyn_theme"/>
+    <Entity name="NewProcess"/>
+    <Entity name="OpportunitySalesProcess"/>
+    <Entity name="OptionSet"/>
+    <Entity name="OwnCalendar"/>
+    <Entity name="PersonalDocumentTemplate"/>
+    <Entity name="Post"/>
+    <Entity name="PostFollow"/>
+    <Entity name="SharePointData"/>
+    <Entity name="SharePointDocument"/>
+    <Entity name="SharePointDocumentLocation"/>
+    <Entity name="SharePointSite"/>
+    <Entity name="SyncError"/>
+    <Entity name="TraceLog"/>
+    <Entity name="UserApplicationMetadata"/>
+    <Entity name="UserEntityInstanceData"/>
+    <Entity name="UserEntityUISettings"/>
+    <Entity name="UserForm"/>
+    <Entity name="UserQuery"/>
+    <Entity name="UserQueryVisualizations"/>
+    <Entity name="WorkflowSession"/>
+  </Entities>
+</Exclusions>
