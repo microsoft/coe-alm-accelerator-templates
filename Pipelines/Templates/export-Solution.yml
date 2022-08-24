@@ -44,6 +44,9 @@ parameters:
 - name: configurationData
   type: string
   default: ''
+- name: portalSiteName
+  type: string
+  default: ''
 steps:
 - template: set-spn-token.yml
   parameters:
@@ -329,7 +332,7 @@ steps:
 - template: set-website-variable.yml
   parameters:
    serviceConnectionUrl: '${{parameters.serviceConnectionUrl}}'
-   solutionName: '${{parameters.solutionName}}'
+   websiteName: '${{parameters.portalSiteName}}'
 
 - template: Hooks\export-power-page-pre-hook.yml
 
@@ -340,6 +343,7 @@ steps:
     serviceConnectionUrl: '${{parameters.serviceConnectionUrl}}'
     serviceConnectionName: '${{parameters.serviceConnectionName}}'
     solutionName: '${{parameters.solutionName}}'
+    websiteName: '${{parameters.portalSiteName}}'
 
 - template: Hooks\export-power-page-post-hook.yml
 

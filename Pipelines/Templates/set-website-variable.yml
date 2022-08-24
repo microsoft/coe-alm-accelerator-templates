@@ -3,8 +3,7 @@
 parameters:
 - name: serviceConnectionUrl
   type: string
-  #In case of exporting Power Page, we expect that the solution unique name will be the same as the Power Page name (name field in a given WebSite record)
-- name: solutionName
+- name: websiteName
   type: string
 
 steps:
@@ -15,29 +14,31 @@ steps:
   displayName: "Fetch Power Pages Website ID from Variable"
 
 - pwsh: |
-    Write-Host "Portal Website not provided as variable. Making API call."
-    . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
-    $dataverseHost = Get-HostFromUrl "${{parameters.serviceConnectionUrl}}"
-    Write-Host "dataverseHost - $dataverseHost"
-    # Fetch the Website by the 'Solution name'
-    #$odataQuery = "adx_websites?`$filter=adx_name eq '${{parameters.solutionName}}'"    
-    $odataQuery = "adx_websites?`$filter=contains(adx_name,'${{parameters.solutionName}}')"
-    Write-Host "Portal odataQuery - $odataQuery"
+    if([string]::IsNullOrEmpty("${{parameters.websiteName}}") -and "${{parameters.websiteName}}" -ne "NA")
+    {
+        Write-Host "Portal Website not provided as variable. Making API call."
+        . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+        $dataverseHost = Get-HostFromUrl "${{parameters.serviceConnectionUrl}}"
+        # Fetch the Website by the 'Website name'
+        #$odataQuery = "adx_websites?`$filter=adx_name eq '${{parameters.websiteName}}'"    
+        $odataQuery = "adx_websites?`$filter=contains(adx_name,'${{parameters.websiteName}}')"
+        Write-Host "Portal odataQuery - $odataQuery"
 
-    try{
-        $response = Invoke-DataverseHttpGet $env:SPNTOKEN $dataverseHost $odataQuery
-    }
-    catch{
-        Write-Host "Error: $($_.Exception.Message)"
-        # if Power Pages solutions are not installed in Dataverse. adx_websites table will not be created. Suppres the error.
-    }
+        try{
+            $response = Invoke-DataverseHttpGet $env:SPNTOKEN $dataverseHost $odataQuery
+        }
+        catch{
+            Write-Host "Error - $($_.Exception.Message)"
+            # if Power Pages solutions are not installed in Dataverse. adx_websites table will not be created. Suppres the error.
+        }
 
-    if($null -ne $response.value -and $response.value.count -gt 0){
-        $websiteId = $response.value[0].adx_websiteid
-        echo "##vso[task.setvariable variable=WebsiteId]$websiteId"
+        if($null -ne $response.value -and $response.value.count -gt 0){
+            $websiteId = $response.value[0].adx_websiteid
+            echo "##vso[task.setvariable variable=WebsiteId]$websiteId"
+        }
+        else{
+            Write-Host "No sites found with the provided website name - ${{parameters.websiteName}}. Retry by correcting the solution name."
+        }
     }
-    else{
-        Write-Host "No sites found with the given solution name - ${{parameters.solutionName}}. Retry by correcting the solution name."
-    }
-  condition: eq(variables['PowerPageWebsiteId'], '')
+  condition: and(eq(variables['PowerPageWebsiteId'], ''),ne(variables['websiteName'], 'NA'))
   displayName: "Fetch Power Pages Website ID from Dataverse"

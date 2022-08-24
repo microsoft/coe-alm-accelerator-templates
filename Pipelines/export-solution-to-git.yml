@@ -17,6 +17,7 @@
 # UserName: The Display name of the user performing the commit.
 # Data: Additional Data (e.g. JSON Payload) for the export to configure deployment pipelines
 # PipelineId to create a Github release for the CoE Starter Kit solution
+# PortalSiteName: Power Apps Portal/Power Pages website name
 parameters:
 - name: Branch
   type: string
@@ -52,6 +53,9 @@ parameters:
   type: string
   default: "NA"
 - name: ImportUnmanaged
+  type: string
+  default: "NA"
+- name: PortalSiteName
   type: string
   default: "NA"
 
@@ -97,3 +101,4 @@ stages:
         solutionName: ${{parameters.SolutionName}}
         userName: ${{parameters.UserName}}
         configurationData: ${{parameters.Data}}
+        portalSiteName: ${{parameters.PortalSiteName}}
