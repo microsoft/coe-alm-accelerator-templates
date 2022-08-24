@@ -20,8 +20,8 @@ steps:
  
 #TODO Because the override flag is not exposed yet in tools, so we need to clear the folder manually
 - powershell: |
-    if(Test-Path $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\PowerPages\${{parameters.solutionName}}){
-      Remove-Item $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\PowerPages\${{parameters.solutionName}}\* -Recurse -Force
+    if(Test-Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\PowerPages\${{parameters.solutionName}}"){
+      Remove-Item "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\PowerPages\${{parameters.solutionName}}\*" -Recurse -Force
     }
   displayName: 'Clear Download Folder'
   condition: and(succeeded(), ne(variables['websiteId'], ''))
@@ -32,6 +32,6 @@ steps:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
     Environment: '${{parameters.serviceConnectionUrl}}'
-    DownloadPath: $(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\PowerPages\
+    DownloadPath: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\PowerPages\'
     WebsiteId: ${{parameters.websiteId}}
   condition: and(succeeded(), ne(variables['websiteId'], ''))

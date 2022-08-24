@@ -298,24 +298,6 @@ steps:
 - template: Hooks\deploy-power-page-pre-hook.yml
 
 - pwsh: |
-    $portalunpackpath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\"
-    Write-Host "portalunpackpath - $portalunpackpath"
-    if(Test-Path $portalunpackpath)
-    {
-        Get-ChildItem -Path $portalunpackpath -Recurse -Force        
-    }
-    else
-    {
-        Write-Host "Invalid path - $portalunpackpath"
-    }
-  displayName: "Display folder items"
-
-#- template: set-website-variable.yml
-#  parameters:
-#   serviceConnectionUrl: '${{parameters.serviceConnectionUrl}}'
-#   solutionName: '${{parameters.solutionName}}'
-
-- pwsh: |
     $websiteName = ""
     $solutionUnpackedFolder = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages"
     Write-Host "solutionUnpackedFolder - $solutionUnpackedFolder"
@@ -341,7 +323,6 @@ steps:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
     UploadPath: '$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\$(WebsiteName)\'
-    #UploadPath: '$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\${{parameters.solutionName}}'
     Environment: '${{parameters.serviceConnectionUrl}}'
   condition: and(succeeded(), ne(variables['WebsiteName'], ''))
 
