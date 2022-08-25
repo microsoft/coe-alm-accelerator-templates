@@ -18,7 +18,7 @@ steps:
     $websiteId = "NA"
     if("${{parameters.websiteName}}" -ne "NA" -and "${{parameters.websiteName}}" -ne "")
     {
-        Write-Host "Portal Website not provided as variable. Making API call."
+        Write-Host "Portal 'Website ID' not provided as variable. Making API call."
         . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
         $dataverseHost = Get-HostFromUrl "${{parameters.serviceConnectionUrl}}"
         # Fetch the Website by the 'Website name'
