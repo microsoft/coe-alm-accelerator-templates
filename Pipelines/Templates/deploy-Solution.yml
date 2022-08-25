@@ -295,6 +295,8 @@ steps:
     makerPortalUrl: '$(TestAutomationMakerPortalUrl)'
     loginMethod: '$(TestAutomationLoginMethod)'
 
+- template: Hooks\deploy-solution-post-hook.yml
+
 # PowerPages folder contain only one subfolder which is WebSite
 - pwsh: |
     $websiteName = ""
