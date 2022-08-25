@@ -295,4 +295,36 @@ steps:
     makerPortalUrl: '$(TestAutomationMakerPortalUrl)'
     loginMethod: '$(TestAutomationLoginMethod)'
 
+# PowerPages folder contain only one subfolder which is WebSite
+- pwsh: |
+    $websiteName = ""
+    $solutionUnpackedFolder = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages"
+    Write-Host "solutionUnpackedFolder - $solutionUnpackedFolder"
+    if(Test-Path "$solutionUnpackedFolder")
+    {
+        
+        $matchedFolders = Get-ChildItem $solutionUnpackedFolder -Directory | select Name
+
+        if($matchedFolders){
+          $websiteName = $matchedFolders[0].Name
+        }
+        echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
+    }
+    else
+    {
+       Write-Host "Invalid path - $solutionUnpackedFolder"
+    }
+    Write-Host "websiteName - $websiteName"
+  displayName: "Fetch Portal Website Name"
+
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.upload-paportal.PowerPlatformUploadPaportal@2
+  displayName: 'Upload Power Page ${{parameters.solutionName}}'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
+    UploadPath: '$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\$(WebsiteName)\'
+    Environment: '${{parameters.serviceConnectionUrl}}'
+  condition: and(succeeded(), ne(variables['WebsiteName'], ''))
+
+- template: Hooks\deploy-power-page-post-hook.yml
 - template: Hooks\deploy-solution-post-hook.yml
