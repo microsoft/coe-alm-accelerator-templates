@@ -295,8 +295,6 @@ steps:
     makerPortalUrl: '$(TestAutomationMakerPortalUrl)'
     loginMethod: '$(TestAutomationLoginMethod)'
 
-- template: Hooks\deploy-solution-post-hook.yml
-
 # PowerPages folder contain only one subfolder which is WebSite
 - pwsh: |
     $websiteName = ""
@@ -327,5 +325,4 @@ steps:
     UploadPath: '$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\$(WebsiteName)\'
     Environment: '${{parameters.serviceConnectionUrl}}'
   condition: and(succeeded(), ne(variables['WebsiteName'], ''))
-
-- template: Hooks\deploy-power-page-post-hook.yml
+- template: Hooks\deploy-solution-post-hook.yml
