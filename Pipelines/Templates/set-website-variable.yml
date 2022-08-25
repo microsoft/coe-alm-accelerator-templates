@@ -14,14 +14,16 @@ steps:
   displayName: "Fetch Power Pages Website ID from Variable"
 
 - pwsh: |
-    if([string]::IsNullOrEmpty("${{parameters.websiteName}}") -and "${{parameters.websiteName}}" -ne "NA")
+    Write-Host "websiteName - ${{parameters.websiteName}}"
+    $websiteId = ""
+    if("${{parameters.websiteName}}" -ne "NA")
     {
         Write-Host "Portal Website not provided as variable. Making API call."
         . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
         $dataverseHost = Get-HostFromUrl "${{parameters.serviceConnectionUrl}}"
         # Fetch the Website by the 'Website name'
-        #$odataQuery = "adx_websites?`$filter=adx_name eq '${{parameters.websiteName}}'"    
-        $odataQuery = "adx_websites?`$filter=contains(adx_name,'${{parameters.websiteName}}')"
+        $odataQuery = "adx_websites?`$filter=adx_name eq '${{parameters.websiteName}}'"    
+        #$odataQuery = "adx_websites?`$filter=contains(adx_name,'${{parameters.websiteName}}')"
         Write-Host "Portal odataQuery - $odataQuery"
 
         try{
@@ -39,6 +41,8 @@ steps:
         else{
             Write-Host "No sites found with the provided website name - ${{parameters.websiteName}}. Retry by correcting the solution name."
         }
+
+        Write-Host "websiteId - $websiteId"
     }
   condition: and(eq(variables['PowerPageWebsiteId'], ''),ne(variables['websiteName'], 'NA'))
   displayName: "Fetch Power Pages Website ID from Dataverse"

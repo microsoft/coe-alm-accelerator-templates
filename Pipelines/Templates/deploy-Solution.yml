@@ -28,7 +28,7 @@ steps:
 
 - pwsh: |
     . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
-    Write-Deploy-Pipeline-Parameters "$(Agent.BuildDirectory)\deploy-pipeline-parameters.json" '${{ parameters.serviceConnectionName }}' '${{ parameters.serviceConnectionUrl }}' '${{ parameters.environmentName }}' '${{ parameters.solutionName }}' '${{ parameters.importUnmanaged }}' '${{ parameters.overwriteUnmanagedCustomizations }}' '${{ parameters.skipBuildToolsInstaller }}' '${{ parameters.cacheEnabled }}'
+    Write-Deploy-Pipeline-Parameters "$(Agent.BuildDirectory)\deploy-pipeline-parameters.json" "${{ parameters.serviceConnectionName }}" "${{ parameters.serviceConnectionUrl }}" "${{ parameters.environmentName }}" "${{ parameters.solutionName }}" "${{ parameters.importUnmanaged }}" "${{ parameters.overwriteUnmanagedCustomizations }}" "${{ parameters.skipBuildToolsInstaller }}" "${{ parameters.cacheEnabled }}"
   displayName: 'Saving Deploy Pipeline Parameters'
 
 - template: Hooks\deploy-solution-pre-hook.yml
@@ -55,7 +55,7 @@ steps:
 # Other tasks, which use the PowerApps PowerShell cmdlets, need the environment guid.  Setting it for future use.
 - template: set-environment-id.yml
   parameters:
-    serviceConnection: '${{parameters.serviceConnectionUrl}}'
+    serviceConnection: '${{parameters.serviceConnectionName}}'
 
 # Other tasks, in this pipeline need to know if the solution already exists. Setting it for future use.
 - template: set-solution-exists.yml
@@ -134,18 +134,18 @@ steps:
   displayName: 'Get managed solution zip path'
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
 
-#- pwsh: |    
-#    # If Solution Upgrade was not set at Canvas App Deployment Settings screen, check whether PR has Tag.
-#    if("$(TriggerSolutionUpgrade)".Contains("TriggerSolutionUpgrade"))
-#    {
-#        . "$env:POWERSHELLPATH/set-trigger-solution-upgrade.ps1"
-#        Set-TriggerSolutionUpgrade '$(TriggerSolutionUpgrade)' '$(System.TeamFoundationCollectionUri)' '$(System.TeamProjectId)' '$(Build.Repository.Name)' '$(Build.Repository.Provider)' '$(Build.SourceVersion)' '$(Build.Reason)' '$(GitHubRepo)' '$(GitHubPAT)'
-#    }
-#  env:
-#    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-#  name: setTriggerSolutionUpgrade
-#  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
-#  displayName: 'Set TriggerSolutionUpgrade Variable'
+- pwsh: |    
+    # If Solution Upgrade was not set at Canvas App Deployment Settings screen, check whether PR has Tag.
+    if('$(TriggerSolutionUpgrade)'.Contains("TriggerSolutionUpgrade"))
+    {
+        . "$env:POWERSHELLPATH/set-trigger-solution-upgrade.ps1"
+        Set-TriggerSolutionUpgrade '$(TriggerSolutionUpgrade)' '$(System.TeamFoundationCollectionUri)' '$(System.TeamProjectId)' '$(Build.Repository.Name)' '$(Build.Repository.Provider)' '$(Build.SourceVersion)' '$(Build.Reason)' '$(GitHubRepo)' '$(GitHubPAT)'
+    }
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  name: setTriggerSolutionUpgrade
+  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
+  displayName: 'Set TriggerSolutionUpgrade Variable'
 
 # If the TriggerSolutionUpgrade variable is false, then import the solution as an Update
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
@@ -158,7 +158,7 @@ steps:
     OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
     UseDeploymentSettingsFile: $(UseDeploymentSettings)
     DeploymentSettingsFile: $(DeploymentSettingsPath)
-  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), or(eq(variables['setTriggerSolutionUpgrade.TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'false')))
+  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), or(eq(variables['TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'false')))
 
 # If the TriggerSolutionUpgrade variable is true, then import the solution as an Upgrade, staging it as a holding solution, so we can apply a solution Upgrade.
 # Doing this will ensure that items removed from the solution in development are also removed from the solution in the target environment after the Upgrade is applied.
@@ -172,7 +172,7 @@ steps:
     OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
     UseDeploymentSettingsFile: $(UseDeploymentSettings)
     DeploymentSettingsFile: $(DeploymentSettingsPath)
-  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), eq(variables['setTriggerSolutionUpgrade.TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
+  condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
 
 # NOTE: Sometimes you need to perform intermediary steps between staging the upgrade and applying it.  
 # An example would be moving data from one entity to another before deleting the entity.
@@ -185,7 +185,7 @@ steps:
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
     SolutionName: ${{parameters.solutionName}}
     AsyncOperation: true
-  condition: and(succeeded(), eq(variables['setTriggerSolutionUpgrade.TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
+  condition: and(succeeded(), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.publish-customizations.PowerPlatformPublishCustomizations@2
   displayName: 'Power Platform Publish Customizations '
@@ -297,16 +297,18 @@ steps:
 
 - template: Hooks\deploy-power-page-pre-hook.yml
 
+# PowerPages folder contain only one subfolder which is WebSite
 - pwsh: |
     $websiteName = ""
     $solutionUnpackedFolder = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages"
     Write-Host "solutionUnpackedFolder - $solutionUnpackedFolder"
-    if(Test-Path $solutionUnpackedFolder)
+    if(Test-Path "$solutionUnpackedFolder")
     {
-        $matchedFolders = Get-ChildItem $solutionUnpackedFolder | Where-Object { $_.Name -match '${{parameters.solutionName}}'}
+        
+        $matchedFolders = Get-ChildItem $solutionUnpackedFolder -Directory | select Name
 
         if($matchedFolders){
-          $websiteName = $matchedFolders.Name
+          $websiteName = $matchedFolders[0].Name
         }
         echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
     }

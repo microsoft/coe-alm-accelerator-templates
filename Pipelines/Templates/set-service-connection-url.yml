@@ -10,8 +10,6 @@ parameters:
 
 steps:
 - pwsh: |
-    # Adding LongPath policy to mitigate Power Pages file length issues
-    git config --system core.longpaths true
     if('${{parameters.serviceConnectionUrl}}'.Contains('$(')) {
         Write-Host "##vso[task.setvariable variable=ServiceConnectionUrl]${{parameters.serviceConnectionName}}"
         Write-Host "##vso[task.setvariable variable=BuildTools.EnvironmentUrl]${{parameters.serviceConnectionName}}"

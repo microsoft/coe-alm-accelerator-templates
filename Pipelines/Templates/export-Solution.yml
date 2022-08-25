@@ -54,7 +54,7 @@ steps:
 
 - pwsh: |
     . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
-    Write-Export-Pipeline-Parameters "$(Agent.BuildDirectory)\export-pipeline-parameters.json" '${{ parameters.gitAccessUrl }}' '${{ parameters.project }}' '${{ parameters.repo }}' '${{ parameters.branch }}' '${{ parameters.branchToCreate }}' '${{ parameters.commitMessage }}' '${{ parameters.email }}' '${{ parameters.serviceConnectionName }}' '${{ parameters.serviceConnectionUrl }}' '${{ parameters.solutionName }}' '${{ parameters.userName }}'
+    Write-Export-Pipeline-Parameters "$(Agent.BuildDirectory)\export-pipeline-parameters.json" "${{ parameters.gitAccessUrl }}" "${{ parameters.project }}" "${{ parameters.repo }}" "${{ parameters.branch }}" "${{ parameters.branchToCreate }}" "${{ parameters.commitMessage }}" "${{ parameters.email }}" "${{ parameters.serviceConnectionName }}" "${{ parameters.serviceConnectionUrl }}" "${{ parameters.solutionName }}" "${{ parameters.userName }}"
   env:
     DEPLOYMENT_SETTINGS: ${{parameters.configurationData}}
   displayName: 'Saving Export Pipeline Parameters'
@@ -305,7 +305,7 @@ steps:
     displayName: 'Retrieve Default Environment Variable Config for Export'
 
 - pwsh: |
-   if($(outDefaultEnvironmentVariables) -ne '') {
+   if('$(outDefaultEnvironmentVariables)' -ne '') {
        $config = Get-Content $(outDefaultEnvironmentVariables) | ConvertFrom-Json
        foreach ($c in $config) {
            $envVariableName = $c[0]
@@ -350,7 +350,6 @@ steps:
 - template: Hooks\export-solution-commit-pre-hook.yml
 
 - pwsh: |
-    git config --system core.longpaths true
     git add --all
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Add Changes to Git Branch'
