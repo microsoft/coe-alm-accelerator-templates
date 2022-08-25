@@ -327,4 +327,3 @@ steps:
   condition: and(succeeded(), ne(variables['WebsiteName'], ''))
 
 - template: Hooks\deploy-power-page-post-hook.yml
-- template: Hooks\deploy-solution-post-hook.yml
