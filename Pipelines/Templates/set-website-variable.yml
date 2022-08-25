@@ -16,7 +16,7 @@ steps:
 - pwsh: |
     Write-Host "websiteName - ${{parameters.websiteName}}"
     $websiteId = "NA"
-    if("${{parameters.websiteName}}" -ne "NA")
+    if("${{parameters.websiteName}}" -ne "NA" -and "${{parameters.websiteName}}" -ne "")
     {
         Write-Host "Portal Website not provided as variable. Making API call."
         . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
