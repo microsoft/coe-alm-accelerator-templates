@@ -295,24 +295,11 @@ steps:
     makerPortalUrl: '$(TestAutomationMakerPortalUrl)'
     loginMethod: '$(TestAutomationLoginMethod)'
 
-# PowerPages folder contain only one subfolder which is unpacked WebSite folder.
-# ALM Accelerator currently supports single website.
+# ALM Accelerator currently supports ALM of single website.
+# PowerPages folder contain one subfolder at depth 1, which is the unpacked WebSite folder.
 - pwsh: |
-    $websiteName = "NA"
-    $solutionUnpackedFolder = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages"
-    Write-Host "solutionUnpackedFolder - $solutionUnpackedFolder"
-    if(Test-Path "$solutionUnpackedFolder")
-    {
-        $matchedFolders = Get-ChildItem "$solutionUnpackedFolder" -Directory | select Name
-
-        if($matchedFolders){
-          $websiteName = $matchedFolders[0].Name
-        }
-    }
-    else
-    {
-       Write-Host "Unpacked website folder unavailable. Path - $solutionUnpackedFolder"
-    }
+    . "$env:POWERSHELLPATH/portal-functions.ps1"
+    $websiteName = Get-Website-Name "$(Build.SourcesDirectory)" "$(Build.Repository.Name)" "${{parameters.solutionName}}"
     echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
     Write-Host "websiteName - $websiteName"
   displayName: "Fetch Portal Website Name"
