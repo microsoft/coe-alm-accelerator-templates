@@ -141,6 +141,7 @@ steps:
         Out-File $_.FullName
    }
   displayName: 'Update Solution XML with Build Number'
+  condition: and(succeeded(), ne(variables.UseSolutionVersionFromDataverse, 'true'))
 
 - pwsh: |
     #Set variable to continue on unpack error for use in the next two steps
