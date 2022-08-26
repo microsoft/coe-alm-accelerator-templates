@@ -19,9 +19,11 @@ steps:
     $websiteName = "NA"
     $solutionUnpackedFolder = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\PowerPages"
     Write-Host "solutionUnpackedFolder - $solutionUnpackedFolder"
-    if(Test-Path $solutionUnpackedFolder)
+    if(Test-Path "$solutionUnpackedFolder")
     {
-        $matchedFolders = Get-ChildItem $solutionUnpackedFolder | Where-Object { $_.Name -match '${{parameters.websiteName}}'}
+        Write-Host "Power Pages Path Exists - $solutionUnpackedFolder"
+        Get-ChildItem -Recurse "$solutionUnpackedFolder" | Where { $_.PSIsContainer } | Select Name,FullName
+        $matchedFolders = Get-ChildItem "$solutionUnpackedFolder" | Where-Object { $_.Name -match '${{parameters.websiteName}}'}
 
         if($matchedFolders){
           $websiteName = $matchedFolders.Name
