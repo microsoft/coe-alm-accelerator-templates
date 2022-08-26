@@ -303,7 +303,7 @@ steps:
     Write-Host "solutionUnpackedFolder - $solutionUnpackedFolder"
     if(Test-Path "$solutionUnpackedFolder")
     {
-        $matchedFolders = Get-ChildItem $solutionUnpackedFolder -Directory | select Name
+        $matchedFolders = Get-ChildItem "$solutionUnpackedFolder" -Directory | select Name
 
         if($matchedFolders){
           $websiteName = $matchedFolders[0].Name
