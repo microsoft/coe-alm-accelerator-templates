@@ -22,8 +22,9 @@ steps:
     if(Test-Path "$solutionUnpackedFolder")
     {
         Write-Host "Power Pages Path Exists - $solutionUnpackedFolder"
-        Get-ChildItem -Recurse "$solutionUnpackedFolder" | Where { $_.PSIsContainer } | Select Name,FullName
+        Get-ChildItem -Recurse "$solutionUnpackedFolder" -Depth 2 | Where { $_.PSIsContainer } | Select Name,FullName
         $matchedFolders = Get-ChildItem "$solutionUnpackedFolder" | Where-Object { $_.Name -match '${{parameters.websiteName}}'}
+        Write-Host "matchedFolders - $matchedFolders"
 
         if($matchedFolders){
           $websiteName = $matchedFolders.Name
