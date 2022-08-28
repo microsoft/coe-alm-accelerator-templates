@@ -44,6 +44,12 @@ class Helper {
         $headers.Add("Content-Type", "application/json")
         $apiVersion = "?api-version=7.0"
 
+        #DELETE https://dev.azure.com/{organization}/{project}/_apis/build/folders?path={path}&api-version=6.0-preview.2
+
+        $requestUrl = "$org/$project/_apis/build/folders?path=\ALMAcceleratorSampleSolution"
+        $response = Invoke-RestMethod $requestUrl -Method 'DELETE' -Headers $headers
+        $response | ConvertTo-Json -Depth 10
+
         $requestUrl = "$org/$project/_apis/pipelines$apiVersion"
         $response = Invoke-RestMethod $requestUrl -Method 'GET' -Headers $headers
         $response | ConvertTo-Json -Depth 10
