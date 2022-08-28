@@ -44,7 +44,7 @@ class Helper {
         $headers.Add("Content-Type", "application/json")
         $apiVersion = "?api-version=7.0"
 
-        $requestUrl = "$org/$project/_apis/build/folders?path=\$solutionName"
+        $requestUrl = "$org/$project/_apis/build/folders?path=\\$solutionName"
         $response = Invoke-RestMethod $requestUrl -Method 'DELETE' -Headers $headers
         $response | ConvertTo-Json -Depth 10
 
