@@ -42,12 +42,13 @@ class Helper {
         $token = [Helper]::AccessToken
         $headers.Add("Authorization", "Bearer $token")
         $headers.Add("Content-Type", "application/json")
-        $apiVersion = "?api-version=7.0"
 
-        $requestUrl = "$org/$project/_apis/build/folders?path=\\$solutionName"
+        $apiVersion = "?api-version=6.0-preview.2"
+        $requestUrl = "$org/$project/_apis/build/folders$apiVersion&path=$solutionName"
         $response = Invoke-RestMethod $requestUrl -Method 'DELETE' -Headers $headers
         $response | ConvertTo-Json -Depth 10
 
+        $apiVersion = "?api-version=7.0"
         $requestUrl = "$org/$project/_apis/pipelines$apiVersion"
         $response = Invoke-RestMethod $requestUrl -Method 'GET' -Headers $headers
         $response | ConvertTo-Json -Depth 10
