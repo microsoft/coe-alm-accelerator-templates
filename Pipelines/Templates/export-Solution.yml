@@ -329,6 +329,8 @@ steps:
 - template: Hooks\export-solution-commit-pre-hook.yml
 
 - pwsh: |
+    # Workaround for git Filename too long issue 
+    git config --system core.longpaths true
     git add --all
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Add Changes to Git Branch'
