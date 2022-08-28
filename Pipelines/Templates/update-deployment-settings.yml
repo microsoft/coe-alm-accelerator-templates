@@ -25,3 +25,11 @@ steps:
     DEPLOYMENT_SETTINGS: ${{parameters.configurationData}}
   displayName: 'Update Deployment Settings'
   condition: and(succeeded(), ne(variables.GenerateDeploymentSettings, 'false'))
+
+- pwsh: |
+    $path = "$(Agent.BuildDirectory)\PipelineUtils\combined.log"
+    if(Test-Path $(Agent.BuildDirectory)\PipelineUtils\combined.log) {
+        Copy-Item $path "$(Build.ArtifactStagingDirectory)\coe-cli.log"
+    }
+  condition: and(succeeded(), ne(variables.GenerateDeploymentSettings, 'false'))
+  displayName: 'Archiving combined.log'
