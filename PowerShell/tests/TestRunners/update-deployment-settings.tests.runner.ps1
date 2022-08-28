@@ -13,6 +13,7 @@ function Invoke-DeploymentSettingsConfiguration-Test($usePlaceholders, $path)
     $data = @{
         DeploymentConfig                    = $testDeploymentConfig
         BuildSourceDirectory                = $testConfig.buildSourceDirectory
+        PipelineSourceDirectory             = $testConfig.pipelineSourceDirectory
         BuildProjectName                    = $testConfig.buildProjectName
         BuildRepositoryName                 = $testConfig.buildRepositoryName
         CdsBaseConnectionString             = $testConfig.cdsBaseConnectionString
@@ -32,5 +33,5 @@ function Invoke-DeploymentSettingsConfiguration-Test($usePlaceholders, $path)
     Invoke-Pester -Container $container
 }
 
-Invoke-DeploymentSettingsConfiguration-Test 'false' '../'
-Invoke-DeploymentSettingsConfiguration-Test 'true' './tests'
+Invoke-DeploymentSettingsConfiguration-Test 'true' '../'
+Invoke-DeploymentSettingsConfiguration-Test 'false' './tests'
