@@ -82,6 +82,10 @@ stages:
     - checkout: self
       path: 'PipelineUtils'
       displayName: 'Checkout Pipeline Branch'
+    
+    - pwsh: |
+       Write-Host "##vso[task.setvariable variable=PipelineProject]$(System.TeamProject)"
+      displayName: 'Set Pipeline Source Project Name'
 
     # Checkout our Branch
     - checkout: git://${{parameters.Project}}/${{parameters.Repo}}@${{parameters.Branch}}

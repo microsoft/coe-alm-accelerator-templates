@@ -83,6 +83,12 @@ steps:
 - checkout: SourceRepo
   displayName: 'Checkout Source Branch'
 
+- pwsh: |
+    $splitName = "$(System.TeamProject)".Split("/")
+    $projectName = $splitName[$splitName.Length - 1]
+    Write-Host "##vso[task.setvariable variable=PipelineProject]$projectName"
+  displayName: 'Set Pipeline Source Project Name'
+
 # Other tasks, which use the PowerApps PowerShell cmdlets, need the environment guid.  Setting it for future use.
 - template: Templates\export-Solution.yml
   parameters:

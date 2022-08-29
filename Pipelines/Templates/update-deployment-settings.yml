@@ -19,17 +19,9 @@ steps:
 - powershell: |
       # load PowerShell files into memory
       . "$env:POWERSHELLPATH/update-deployment-settings.ps1"
-      Set-DeploymentSettingsConfiguration '$(Build.SourcesDirectory)' '$(Agent.BuildDirectory)\PipelineUtils' '$(System.TeamProject)' '$(Build.Repository.Name)' '$(CdsBaseConnectionString)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '${{parameters.orgUrl}}' '${{parameters.projectName}}' '${{parameters.repo}}' 'Bearer' '${{parameters.serviceConnection}}' '${{parameters.solutionName}}' '${{parameters.useDeploymentSettingsPlaceholders}}'
+      Set-DeploymentSettingsConfiguration '$(Build.SourcesDirectory)' '$(Agent.BuildDirectory)\PipelineUtils' '$(PipelineProject)' '$(Build.Repository.Name)' '$(CdsBaseConnectionString)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '${{parameters.orgUrl}}' '${{parameters.projectName}}' '${{parameters.repo}}' 'Bearer' '${{parameters.serviceConnection}}' '${{parameters.solutionName}}' '${{parameters.useDeploymentSettingsPlaceholders}}'
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     DEPLOYMENT_SETTINGS: ${{parameters.configurationData}}
   displayName: 'Update Deployment Settings'
   condition: and(succeeded(), ne(variables.GenerateDeploymentSettings, 'false'))
-
-- pwsh: |
-    $path = "$(Agent.BuildDirectory)\PipelineUtils\combined.log"
-    if(Test-Path $(Agent.BuildDirectory)\PipelineUtils\combined.log) {
-        Copy-Item $path "$(Build.ArtifactStagingDirectory)\coe-cli.log"
-    }
-  condition: and(succeeded(), ne(variables.GenerateDeploymentSettings, 'false'))
-  displayName: 'Archiving combined.log'

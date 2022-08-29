@@ -379,10 +379,4 @@ steps:
   displayName: 'Push to ${{parameters.branchToCreate}} Remote Branch'
   condition: and(ne('${{parameters.gitAccessUrl}}', ''), succeeded(), ne('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter')) # If an empty value is not passed for the BranchToCreate variable, then run this task
 
-- task: PublishPipelineArtifact@1
-  displayName: 'Publish Artifacts'
-  inputs:
-    targetPath: '$(Build.ArtifactStagingDirectory)'
-    artifact: drop
-
 - template: Hooks\export-solution-post-hook.yml

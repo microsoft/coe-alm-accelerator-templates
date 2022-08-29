@@ -43,11 +43,6 @@ class Helper {
         $headers.Add("Authorization", "Bearer $token")
         $headers.Add("Content-Type", "application/json")
 
-        $apiVersion = "?api-version=6.0-preview.2"
-        $requestUrl = "$org/$project/_apis/build/folders$apiVersion&path=$solutionName"
-        $response = Invoke-RestMethod $requestUrl -Method 'DELETE' -Headers $headers
-        $response | ConvertTo-Json -Depth 10
-
         $apiVersion = "?api-version=7.0"
         $requestUrl = "$org/$project/_apis/pipelines$apiVersion"
         $response = Invoke-RestMethod $requestUrl -Method 'GET' -Headers $headers
@@ -240,5 +235,16 @@ Describe 'E2E-Pipeline-Test' {
         $result = $result | ConvertFrom-Json -Depth 10
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
+
+        #Clean up the pipelines for the next run to validate the creation of the pipelines.
+        $token = [Helper]::AccessToken
+        $headers.Add("Authorization", "Bearer $token")
+        $headers.Add("Content-Type", "application/json")
+
+        $apiVersion = "?api-version=6.0-preview.2"
+        $requestUrl = "$org/$project/_apis/build/folders$apiVersion&path=$solutionName"
+        $response = Invoke-RestMethod $requestUrl -Method 'DELETE' -Headers $headers
+        $response | ConvertTo-Json -Depth 10
+
     }    
 }
