@@ -868,27 +868,28 @@ class DevOpsCommand {
                     return true;
                 }
             });
-            if ((existingPolices.length == 0) && (buildMatch.length > 0)) {
-                let newPolicy = {};
-                newPolicy.settings = {};
-                newPolicy.settings.buildDefinitionId = buildMatch[0].id;
-                newPolicy.settings.displayName = 'Build Validation';
-                newPolicy.settings.filenamePatterns = [`/${args.destinationBranch}/*`];
-                newPolicy.settings.manualQueueOnly = false;
-                newPolicy.settings.queueOnSourceUpdateOnly = false;
-                newPolicy.settings.validDuration = 0;
-                let repoRef = { refName: `refs/heads/${args.destinationBranch}`, matchKind: 'Exact', repositoryId: repo.id };
-                newPolicy.settings.scope = [repoRef];
-                newPolicy.type = buildTypes[0];
-                newPolicy.isBlocking = true;
-                newPolicy.isEnabled = true;
-                newPolicy.isEnterpriseManaged = false;
-                (_a = this.logger) === null || _a === void 0 ? void 0 : _a.info('Checking branch policy');
-                await policyApi.createPolicyConfiguration(newPolicy, args.projectName);
+            if (existingPolices.length > 0) {
+                (_a = this.logger) === null || _a === void 0 ? void 0 : _a.info(util_1.default.format("Policy for branch %s already exists. Deleting existing policy", args.destinationBranch));
+                for (let i = 0; i < existingPolices.length; i++) {
+                    await policyApi.deletePolicyConfiguration(args.projectName, existingPolices[i].id);
+                }
             }
-            else {
-                (_b = this.logger) === null || _b === void 0 ? void 0 : _b.info('Branch policy already created');
-            }
+            let newPolicy = {};
+            newPolicy.settings = {};
+            newPolicy.settings.buildDefinitionId = buildMatch[0].id;
+            newPolicy.settings.displayName = 'Build Validation';
+            newPolicy.settings.filenamePatterns = [`/${args.destinationBranch}/*`];
+            newPolicy.settings.manualQueueOnly = false;
+            newPolicy.settings.queueOnSourceUpdateOnly = false;
+            newPolicy.settings.validDuration = 0;
+            let repoRef = { refName: `refs/heads/${args.destinationBranch}`, matchKind: 'Exact', repositoryId: repo.id };
+            newPolicy.settings.scope = [repoRef];
+            newPolicy.type = buildTypes[0];
+            newPolicy.isBlocking = true;
+            newPolicy.isEnabled = true;
+            newPolicy.isEnterpriseManaged = false;
+            (_b = this.logger) === null || _b === void 0 ? void 0 : _b.info('Checking branch policy');
+            await policyApi.createPolicyConfiguration(newPolicy, args.projectName);
         }
     }
     withoutRefsPrefix(refName) {
