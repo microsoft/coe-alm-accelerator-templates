@@ -864,6 +864,7 @@ class DevOpsCommand {
                 if (((_a = policy.settings.scope) === null || _a === void 0 ? void 0 : _a.length) == 1
                     && policy.settings.scope[0].refName == `refs/heads/${args.destinationBranch}`
                     && policy.settings.scope[0].repositoryId == repo.id
+                    && policy.settings.displayName == 'Build Validation'
                     && policy.type.id == buildTypes[0].id) {
                     return true;
                 }
