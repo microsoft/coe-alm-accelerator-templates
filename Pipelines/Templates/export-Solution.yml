@@ -123,7 +123,7 @@ steps:
 
 - pwsh: |
     # Default to true when no variable is set on the pipeline
-    if ('$(ProcessCanvasApps)'.Contains('$')){
+    if ("$(ProcessCanvasApps)".Contains("ProcessCanvasApps")){
       echo '##vso[task.setvariable variable=localProcessCanvasApps]true'
     }
     else {
@@ -293,6 +293,8 @@ steps:
 
 - pwsh: |
     git add --all
+    # Workaround for git Filename too long issue 
+    git config --system core.longpaths true
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Add Changes to Git Branch'
 
