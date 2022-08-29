@@ -755,7 +755,7 @@ class DevOpsCommand {
      * @returns
      */
     async createBranch(args, pipelineProject, project, gitApi) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         var pipelineRepos = await gitApi.getRepositories(pipelineProject.id);
         var repos = await gitApi.getRepositories(project.id);
         var matchingRepo;
@@ -764,46 +764,42 @@ class DevOpsCommand {
             // No repository defined assume it is the project name
             repositoryName = args.projectName;
         }
-        let pipelineRepo = null;
-        for (let i = 0; i < repos.length; i++) {
-            let repo = repos[i];
-            (_a = this.logger) === null || _a === void 0 ? void 0 : _a.info(`Searching repository ${repo.name.toLowerCase()}: ${pipelineProject.name} ${args.pipelineRepository.toLowerCase()}`);
-            if (repo.name.toLowerCase() == args.pipelineRepository.toLowerCase()) {
-                (_b = this.logger) === null || _b === void 0 ? void 0 : _b.info(`Found pipeline repo`);
-                pipelineRepo = repo;
-                break;
-            }
-        }
+        (_a = this.logger) === null || _a === void 0 ? void 0 : _a.info(`Found ${repos.length} repositories`);
+        (_b = this.logger) === null || _b === void 0 ? void 0 : _b.info(`Found ${pipelineRepos.length} pipeline repositories`);
+        (_c = this.logger) === null || _c === void 0 ? void 0 : _c.info(`Searching for repository ${pipelineProject.name} ${args.pipelineRepository.toLowerCase()}`);
+        let pipelineRepo = pipelineRepos.find((repo) => {
+            return repo.name.toLowerCase() == args.pipelineRepository.toLowerCase();
+        });
         if (pipelineRepo) {
             let foundRepo = false;
             for (let i = 0; i < repos.length; i++) {
                 let repo = repos[i];
-                (_c = this.logger) === null || _c === void 0 ? void 0 : _c.info(`Searching for repository ${project.name} ${repositoryName.toLowerCase()}`);
+                (_d = this.logger) === null || _d === void 0 ? void 0 : _d.info(`Searching for repository ${project.name} ${repositoryName.toLowerCase()}`);
                 if (repo.name.toLowerCase() == repositoryName.toLowerCase()) {
                     foundRepo = true;
                     matchingRepo = repo;
-                    (_d = this.logger) === null || _d === void 0 ? void 0 : _d.info(`Found matching repo ${repositoryName}`);
+                    (_e = this.logger) === null || _e === void 0 ? void 0 : _e.info(`Found matching repo ${repositoryName}`);
                     let refs = await gitApi.getRefs(repo.id, undefined, "heads/");
                     if (refs.length == 0) {
                         this.logger.error("No commits to this repository yet. Initialize this repository before creating new branches");
                         return Promise.resolve(null);
                     }
                     let sourceBranch = args.sourceBranch;
-                    if (typeof sourceBranch === "undefined" || ((_e = args.sourceBranch) === null || _e === void 0 ? void 0 : _e.length) == 0) {
+                    if (typeof sourceBranch === "undefined" || ((_f = args.sourceBranch) === null || _f === void 0 ? void 0 : _f.length) == 0) {
                         sourceBranch = this.withoutRefsPrefix(repo.defaultBranch);
                     }
                     let sourceRef = refs.filter(f => f.name == util_1.default.format("refs/heads/%s", sourceBranch));
                     if (sourceRef.length == 0) {
-                        (_f = this.logger) === null || _f === void 0 ? void 0 : _f.error(util_1.default.format("Source branch [%s] not found", sourceBranch));
-                        (_g = this.logger) === null || _g === void 0 ? void 0 : _g.debug('Existing branches');
+                        (_g = this.logger) === null || _g === void 0 ? void 0 : _g.error(util_1.default.format("Source branch [%s] not found", sourceBranch));
+                        (_h = this.logger) === null || _h === void 0 ? void 0 : _h.debug('Existing branches');
                         for (var refIndex = 0; refIndex < refs.length; refIndex++) {
-                            (_h = this.logger) === null || _h === void 0 ? void 0 : _h.debug(refs[refIndex].name);
+                            (_j = this.logger) === null || _j === void 0 ? void 0 : _j.debug(refs[refIndex].name);
                         }
                         return matchingRepo;
                     }
                     let destinationRef = refs.filter(f => f.name == util_1.default.format("refs/heads/%s", args.destinationBranch));
                     if (destinationRef.length > 0) {
-                        (_j = this.logger) === null || _j === void 0 ? void 0 : _j.error("Destination branch already exists");
+                        (_k = this.logger) === null || _k === void 0 ? void 0 : _k.error("Destination branch already exists");
                         return matchingRepo;
                     }
                     let newRef = {};
@@ -823,13 +819,13 @@ class DevOpsCommand {
                     let gitPush = {};
                     gitPush.refUpdates = [newRef];
                     gitPush.commits = [newGitCommit];
-                    (_k = this.logger) === null || _k === void 0 ? void 0 : _k.info(util_1.default.format('Pushing new branch %s', args.destinationBranch));
+                    (_l = this.logger) === null || _l === void 0 ? void 0 : _l.info(util_1.default.format('Pushing new branch %s', args.destinationBranch));
                     await gitApi.createPush(gitPush, repo.id, project.name);
                 }
             }
             if (!foundRepo && (repositoryName === null || repositoryName === void 0 ? void 0 : repositoryName.length) > 0) {
-                (_l = this.logger) === null || _l === void 0 ? void 0 : _l.info(util_1.default.format("Repo %s not found", repositoryName));
-                (_m = this.logger) === null || _m === void 0 ? void 0 : _m.info('Did you mean?');
+                (_m = this.logger) === null || _m === void 0 ? void 0 : _m.info(util_1.default.format("Repo %s not found", repositoryName));
+                (_o = this.logger) === null || _o === void 0 ? void 0 : _o.info('Did you mean?');
                 repos.forEach(repo => {
                     var _a;
                     if (repo.name.startsWith(repositoryName[0])) {
