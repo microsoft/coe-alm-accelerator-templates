@@ -770,58 +770,58 @@ class DevOpsCommand {
         let pipelineRepo = pipelineRepos.find((repo) => {
             return repo.name.toLowerCase() == args.pipelineRepository.toLowerCase();
         });
-        if (pipelineRepo) {
+        let repo = pipelineRepos.find((repo) => {
+            return repo.name.toLowerCase() == repositoryName.toLowerCase();
+        });
+        if (pipelineRepo && repo) {
             let foundRepo = false;
-            for (let i = 0; i < repos.length; i++) {
-                let repo = repos[i];
-                (_d = this.logger) === null || _d === void 0 ? void 0 : _d.info(`Searching for repository ${project.name} ${repositoryName.toLowerCase()}`);
-                if (repo.name.toLowerCase() == repositoryName.toLowerCase()) {
-                    foundRepo = true;
-                    matchingRepo = repo;
-                    (_e = this.logger) === null || _e === void 0 ? void 0 : _e.info(`Found matching repo ${repositoryName}`);
-                    let refs = await gitApi.getRefs(repo.id, undefined, "heads/");
-                    if (refs.length == 0) {
-                        this.logger.error("No commits to this repository yet. Initialize this repository before creating new branches");
-                        return Promise.resolve(null);
-                    }
-                    let sourceBranch = args.sourceBranch;
-                    if (typeof sourceBranch === "undefined" || ((_f = args.sourceBranch) === null || _f === void 0 ? void 0 : _f.length) == 0) {
-                        sourceBranch = this.withoutRefsPrefix(repo.defaultBranch);
-                    }
-                    let sourceRef = refs.filter(f => f.name == util_1.default.format("refs/heads/%s", sourceBranch));
-                    if (sourceRef.length == 0) {
-                        (_g = this.logger) === null || _g === void 0 ? void 0 : _g.error(util_1.default.format("Source branch [%s] not found", sourceBranch));
-                        (_h = this.logger) === null || _h === void 0 ? void 0 : _h.debug('Existing branches');
-                        for (var refIndex = 0; refIndex < refs.length; refIndex++) {
-                            (_j = this.logger) === null || _j === void 0 ? void 0 : _j.debug(refs[refIndex].name);
-                        }
-                        return matchingRepo;
-                    }
-                    let destinationRef = refs.filter(f => f.name == util_1.default.format("refs/heads/%s", args.destinationBranch));
-                    if (destinationRef.length > 0) {
-                        (_k = this.logger) === null || _k === void 0 ? void 0 : _k.error("Destination branch already exists");
-                        return matchingRepo;
-                    }
-                    let newRef = {};
-                    newRef.repositoryId = repo.id;
-                    newRef.oldObjectId = sourceRef[0].objectId;
-                    newRef.name = util_1.default.format("refs/heads/%s", args.destinationBranch);
-                    let newGitCommit = {};
-                    newGitCommit.comment = "Add DevOps Pipeline";
-                    if (typeof args.settings["environments"] === "string") {
-                        newGitCommit.changes = await this.getGitCommitChanges(args, gitApi, pipelineRepo, args.destinationBranch, this.withoutRefsPrefix(repo.defaultBranch), args.settings["environments"].split('|').map(element => {
-                            return element.toLowerCase();
-                        }));
-                    }
-                    else {
-                        newGitCommit.changes = await this.getGitCommitChanges(args, gitApi, pipelineRepo, args.destinationBranch, this.withoutRefsPrefix(repo.defaultBranch), ['validation', 'test', 'prod']);
-                    }
-                    let gitPush = {};
-                    gitPush.refUpdates = [newRef];
-                    gitPush.commits = [newGitCommit];
-                    (_l = this.logger) === null || _l === void 0 ? void 0 : _l.info(util_1.default.format('Pushing new branch %s', args.destinationBranch));
-                    await gitApi.createPush(gitPush, repo.id, project.name);
+            (_d = this.logger) === null || _d === void 0 ? void 0 : _d.info(`Searching for repository ${project.name} ${repositoryName.toLowerCase()}`);
+            if (repo.name.toLowerCase() == repositoryName.toLowerCase()) {
+                foundRepo = true;
+                matchingRepo = repo;
+                (_e = this.logger) === null || _e === void 0 ? void 0 : _e.info(`Found matching repo ${repositoryName}`);
+                let refs = await gitApi.getRefs(repo.id, undefined, "heads/");
+                if (refs.length == 0) {
+                    this.logger.error("No commits to this repository yet. Initialize this repository before creating new branches");
+                    return Promise.resolve(null);
                 }
+                let sourceBranch = args.sourceBranch;
+                if (typeof sourceBranch === "undefined" || ((_f = args.sourceBranch) === null || _f === void 0 ? void 0 : _f.length) == 0) {
+                    sourceBranch = this.withoutRefsPrefix(repo.defaultBranch);
+                }
+                let sourceRef = refs.filter(f => f.name == util_1.default.format("refs/heads/%s", sourceBranch));
+                if (sourceRef.length == 0) {
+                    (_g = this.logger) === null || _g === void 0 ? void 0 : _g.error(util_1.default.format("Source branch [%s] not found", sourceBranch));
+                    (_h = this.logger) === null || _h === void 0 ? void 0 : _h.debug('Existing branches');
+                    for (var refIndex = 0; refIndex < refs.length; refIndex++) {
+                        (_j = this.logger) === null || _j === void 0 ? void 0 : _j.debug(refs[refIndex].name);
+                    }
+                    return matchingRepo;
+                }
+                let destinationRef = refs.filter(f => f.name == util_1.default.format("refs/heads/%s", args.destinationBranch));
+                if (destinationRef.length > 0) {
+                    (_k = this.logger) === null || _k === void 0 ? void 0 : _k.error("Destination branch already exists");
+                    return matchingRepo;
+                }
+                let newRef = {};
+                newRef.repositoryId = repo.id;
+                newRef.oldObjectId = sourceRef[0].objectId;
+                newRef.name = util_1.default.format("refs/heads/%s", args.destinationBranch);
+                let newGitCommit = {};
+                newGitCommit.comment = "Add DevOps Pipeline";
+                if (typeof args.settings["environments"] === "string") {
+                    newGitCommit.changes = await this.getGitCommitChanges(args, gitApi, pipelineRepo, args.destinationBranch, this.withoutRefsPrefix(repo.defaultBranch), args.settings["environments"].split('|').map(element => {
+                        return element.toLowerCase();
+                    }));
+                }
+                else {
+                    newGitCommit.changes = await this.getGitCommitChanges(args, gitApi, pipelineRepo, args.destinationBranch, this.withoutRefsPrefix(repo.defaultBranch), ['validation', 'test', 'prod']);
+                }
+                let gitPush = {};
+                gitPush.refUpdates = [newRef];
+                gitPush.commits = [newGitCommit];
+                (_l = this.logger) === null || _l === void 0 ? void 0 : _l.info(util_1.default.format('Pushing new branch %s', args.destinationBranch));
+                await gitApi.createPush(gitPush, repo.id, project.name);
             }
             if (!foundRepo && (repositoryName === null || repositoryName === void 0 ? void 0 : repositoryName.length) > 0) {
                 (_m = this.logger) === null || _m === void 0 ? void 0 : _m.info(util_1.default.format("Repo %s not found", repositoryName));
