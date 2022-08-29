@@ -53,6 +53,9 @@ parameters:
 - name: ImportUnmanaged
   type: string
   default: "NA"
+- name: PortalSiteName
+  type: string
+  default: "NA"
 
 trigger: none
 pr: none
@@ -73,7 +76,10 @@ pool:
   vmImage: 'windows-2022'
 
 steps:
-
+- pwsh: |
+    # Workaround for git Filename too long issue 
+    git config --system core.longpaths true        
+  displayName: "Configuring core.longpaths true"
 # Checkout Pipelines
 - checkout: self
   path: 'PipelineUtils'
@@ -98,6 +104,7 @@ steps:
     solutionName: ${{parameters.SolutionName}}
     userName: ${{parameters.UserName}}
     configurationData: ${{parameters.Data}}
+    portalSiteName: ${{parameters.PortalSiteName}}
 
 # Checkout our Azure DevOps Branch
 - checkout: git://${{parameters.Project}}/${{parameters.Repo}}@${{parameters.Branch}}
