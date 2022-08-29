@@ -129,6 +129,9 @@ steps:
     else {
       echo '##vso[task.setvariable variable=localProcessCanvasApps]$(ProcessCanvasApps)'
     }    
+    if(Test-Path '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\CanvasApps') {
+        Remove-Item '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\CanvasApps' -Force -Recurse
+    }
   displayName: 'Set localProcessCanvasApps variable'
 
 - template: Hooks\export-solution-unpack-pre-hook.yml
