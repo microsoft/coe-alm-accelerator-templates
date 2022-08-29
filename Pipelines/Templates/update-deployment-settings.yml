@@ -17,12 +17,13 @@ parameters:
 
 steps:
 - powershell: |
-     $splitName = "$(System.TeamProject)".Split("/")
-     $pipelineProjectName = $splitName[$splitName.Length - 1]
-
       # load PowerShell files into memory
       . "$env:POWERSHELLPATH/update-deployment-settings.ps1"
-      Set-DeploymentSettingsConfiguration '$(Build.SourcesDirectory)' '$(Agent.BuildDirectory)\PipelineUtils' '$pipelineProjectName' '$(Build.Repository.Name)' '$(CdsBaseConnectionString)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '${{parameters.orgUrl}}' '${{parameters.projectName}}' '${{parameters.repo}}' 'Bearer' '${{parameters.serviceConnection}}' '${{parameters.solutionName}}' '${{parameters.useDeploymentSettingsPlaceholders}}'
+      $pipelineProject = "$(System.TeamProject)"
+      if(!'$(PipelineProject)'.Contains("PipelineProject")) {
+        $pipelineProject = "$(PipelineProject)"
+      }
+      Set-DeploymentSettingsConfiguration '$(Build.SourcesDirectory)' '$(Agent.BuildDirectory)\PipelineUtils' '$pipelineProject' '$(Build.Repository.Name)' '$(CdsBaseConnectionString)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '${{parameters.orgUrl}}' '${{parameters.projectName}}' '${{parameters.repo}}' 'Bearer' '${{parameters.serviceConnection}}' '${{parameters.solutionName}}' '${{parameters.useDeploymentSettingsPlaceholders}}'
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     DEPLOYMENT_SETTINGS: ${{parameters.configurationData}}
