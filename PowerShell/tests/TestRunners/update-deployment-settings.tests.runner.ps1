@@ -28,6 +28,7 @@ function Invoke-DeploymentSettingsConfiguration-Test($usePlaceholders, $path)
         UsePlaceholders                     = $usePlaceholders
         AccessToken                         = $token
         Pat                                 = $pat
+        AgentOS                             = "Windows"
     }    
     $container = New-PesterContainer -Path $path -Data $data
     Invoke-Pester -Container $container

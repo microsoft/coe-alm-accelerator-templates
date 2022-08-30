@@ -14,6 +14,7 @@
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter()] [String]$agentOS = "",
         [Parameter()] [String]$usePlaceholders = "true",
         [Parameter()] [String]$pat = "" # Azure DevOps Personal Access Token only required for running local tests
     )
@@ -32,7 +33,7 @@
     }
 
     #Update / Create Deployment Pipelines
-    New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData
+    New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS
 
     Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
@@ -259,7 +260,8 @@ function New-DeploymentPipelines
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [String] [AllowEmptyString()] $pat,
         [Parameter(Mandatory)] [String]$solutionName,
-        [Parameter(Mandatory)] [System.Object[]]$configurationData
+        [Parameter(Mandatory)] [System.Object[]]$configurationData,
+        [Parameter()] [String]$agentOS
     )
     if($null -ne $configurationData -and $configurationData.length -gt 0) {
         Write-Host "Retrieved " $configurationData.length " deployment environments"
@@ -334,12 +336,28 @@ function New-DeploymentPipelines
 
                 $currentPath = Get-Location
                 Set-Location "$pipelineSourceDirectory"
-                npm install --legacy-peer-dep
-                if([string]::IsNullOrWhiteSpace($pat)) {
-                    node .\Coe-Cli\src\index.js alm branch --pipelineProject $buildProjectName --pipelineRepository $buildRepositoryName -o $orgUrl -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
+                if(Test-Path ".\combined.log") {
+                    Remove-Item ".\combined.log"
+                }
+                if ($agentOS -eq "Linux") {
+                    if([string]::IsNullOrWhiteSpace($pat)) {
+                        .\Coe-Cli\coe-linux alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
+                    }
+                    else {
+                        .\Coe-Cli\coe-linux alm branch --pipelineProject "$buildProjectName" --pipelineRepository $buildRepositoryName -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
+                    }
                 }
                 else {
-                    node .\Coe-Cli\src\index.js alm branch --pipelineProject $buildProjectName --pipelineRepository $buildRepositoryName -o $orgUrl -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
+                    if([string]::IsNullOrWhiteSpace($pat)) {
+                        .\Coe-Cli\coe-win.exe alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
+                    }
+                    else {
+                        .\Coe-Cli\coe-win.exe alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
+                    }
+                }
+
+                if(Test-Path ".\combined.log") {
+                    Write-Host ((Get-Content ".\combined.log") -join "`n") 
                 }
                 Set-Location $currentPath
             }
