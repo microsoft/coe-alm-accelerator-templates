@@ -239,6 +239,7 @@ Describe 'E2E-Pipeline-Test' {
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
 
         #Clean up the pipelines for the next run to validate the creation of the pipelines.
+        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
         $token = [Helper]::AccessToken
         $headers.Add("Authorization", "Bearer $token")
         $headers.Add("Content-Type", "application/json")
