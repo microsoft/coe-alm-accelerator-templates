@@ -340,6 +340,8 @@ function New-DeploymentPipelines
                     Remove-Item ".\combined.log"
                 }
                 if ($agentOS -eq "Linux") {
+                    #NOTE: The ability to call the coe-cli in a Linux environment is here for reference. Currently, the ALM Accelerator Pipelines require Windows runners due to several
+                    #packages we use that are windows only. We are actively working toward support for Linux environments, but as of the time of this addition this is for reference only.
                     if([string]::IsNullOrWhiteSpace($pat)) {
                         .\Coe-Cli\linux\coe-cli alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
                     }
