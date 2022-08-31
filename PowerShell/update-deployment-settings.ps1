@@ -341,18 +341,18 @@ function New-DeploymentPipelines
                 }
                 if ($agentOS -eq "Linux") {
                     if([string]::IsNullOrWhiteSpace($pat)) {
-                        .\Coe-Cli\coe-linux alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
+                        .\Coe-Cli\linux\coe-cli alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
                     }
                     else {
-                        .\Coe-Cli\coe-linux alm branch --pipelineProject "$buildProjectName" --pipelineRepository $buildRepositoryName -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
+                        .\Coe-Cli\linux\coe-cli alm branch --pipelineProject "$buildProjectName" --pipelineRepository $buildRepositoryName -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
                     }
                 }
                 else {
                     if([string]::IsNullOrWhiteSpace($pat)) {
-                        .\Coe-Cli\coe-win.exe alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
+                        .\Coe-Cli\coe-cli.exe alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
                     }
                     else {
-                        .\Coe-Cli\coe-win.exe alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
+                        .\Coe-Cli\coe-cli.exe alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
                     }
                 }
 
