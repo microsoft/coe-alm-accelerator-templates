@@ -44,6 +44,9 @@ parameters:
 - name: ImportUnmanaged
   type: string
   default: "NA"
+- name: PortalSiteName
+  type: string
+  default: "NA"
 
 trigger: none
 pr: none
@@ -87,7 +90,7 @@ stages:
         serviceConnectionName: ${{parameters.ServiceConnectionName}}
         serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
         solutionName: ${{parameters.SolutionName}}
-        importUnmanaged: 'true'
+        importUnmanaged: ${{parameters.ImportUnmanaged}}
         skipBuildToolsInstaller: 'true'
         
     - template: Templates\update-canvas-app-ownership.yml
