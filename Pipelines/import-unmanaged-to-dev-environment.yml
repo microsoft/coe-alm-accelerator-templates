@@ -90,7 +90,7 @@ stages:
         serviceConnectionName: ${{parameters.ServiceConnectionName}}
         serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
         solutionName: ${{parameters.SolutionName}}
-        importUnmanaged: ${{parameters.ImportUnmanaged}}
+        importUnmanaged: 'true'
         skipBuildToolsInstaller: 'true'
         
     - template: Templates\update-canvas-app-ownership.yml
