@@ -108,6 +108,18 @@ Describe 'E2E-Pipeline-Test' {
     # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
     It 'ExportToGitNewBranch' -Tag 'ExportToGitNewBranch' {
         [Helper]::WriteTestMessageToHost('ExportToGitNewBranch')        
+        
+        #Delete the existing pipelines to validate the creation of new pipelines during export.
+        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+        $token = [Helper]::AccessToken
+        $headers.Add("Authorization", "Bearer $token")
+        $headers.Add("Content-Type", "application/json")
+
+        $apiVersion = "?api-version=6.0-preview.2"
+        $requestUrl = "$Org/$Project/_apis/build/folders$apiVersion&path=$SolutionName"
+        $response = Invoke-RestMethod $requestUrl -Method 'DELETE' -Headers $headers
+        $response | ConvertTo-Json -Depth 10
+
 
         $body = @{
             resources          = @{
@@ -237,17 +249,5 @@ Describe 'E2E-Pipeline-Test' {
         $result = $result | ConvertFrom-Json -Depth 10
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
-
-        #Clean up the pipelines for the next run to validate the creation of the pipelines.
-        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-        $token = [Helper]::AccessToken
-        $headers.Add("Authorization", "Bearer $token")
-        $headers.Add("Content-Type", "application/json")
-
-        $apiVersion = "?api-version=6.0-preview.2"
-        $requestUrl = "$org/$project/_apis/build/folders$apiVersion&path=$solutionName"
-        $response = Invoke-RestMethod $requestUrl -Method 'DELETE' -Headers $headers
-        $response | ConvertTo-Json -Depth 10
-
     }    
 }
