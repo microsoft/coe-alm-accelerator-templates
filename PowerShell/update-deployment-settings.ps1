@@ -64,6 +64,13 @@
         if($buildDefinitionResponseResults.length -gt 0) {
             $newBuildDefinitionVariables = $buildDefinitionResponseResults[0].variables
         }
+
+        # Updating "ServiceConnection"; Required if the ''Environment URL' in the profile changes post commit.
+        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.DeploymentEnvironmentUrl) {
+            $DeploymentEnvironmentUrl=$configurationDataEnvironment.DeploymentEnvironmentUrl
+            Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $newBuildDefinitionVariables
+        }
+
         if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
             foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
                 $configurationVariableName = $configurationVariable.Name
@@ -177,13 +184,7 @@
 
                 #See if the variable already exists
                 if($null -ne $newBuildDefinitionVariables) {
-                    $found = $false
-                    foreach($buildVariable in $newBuildDefinitionVariables.PSObject.Properties) {
-                        if($buildVariable.Name -eq $configurationVariableName) {
-                            $found = $true
-                            break
-                        }
-                    }                
+                    $found = Check-Parameter $configurationVariableName $newBuildDefinitionVariables               
                     #Add the configuration variable to the list of pipeline variables if usePlaceholders is not false
                     if($usePlaceholders.ToLower() -ne 'false') {
                         #If the variable was not found create it 
@@ -376,7 +377,7 @@ function Set-BuildDefinitionVariables {
         [Parameter()] [String]$definitionId,
         [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
     )
-    if($null -ne $newBuildDefinitionVariables) {
+     if($null -ne $newBuildDefinitionVariables) {
         #Set the build definition variables to the newly created list
         ([pscustomobject]$buildDefinitionResult.variables) = ([pscustomobject]$newBuildDefinitionVariables)
         $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions/" + $definitionId + "?api-version=6.0"
@@ -388,5 +389,46 @@ function Set-BuildDefinitionVariables {
         $body = $body -replace "`t", ""
         Write-Host $buildDefinitionResourceUrl
         Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
+     }       
+}
+
+function Create-Update-ServiceConnection-Parameters{
+    param (
+        [Parameter(Mandatory)] [String]$DeploymentEnvironmentUrl,
+        [Parameter(Mandatory)] [PSCustomObject]$newBuildDefinitionVariables
+    )
+     if($null -ne $newBuildDefinitionVariables){
+        #If the "ServiceConnection" variable was not found create it 
+        $found = Check-Parameter "ServiceConnection" $newBuildDefinitionVariables
+        if(!$found) { 
+            $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ServiceConnection" -Value @{value = ''}
+        }
+
+        #If the "ServiceConnectionUrl" variable was not found create it 
+        $found = Check-Parameter "ServiceConnectionUrl" $newBuildDefinitionVariables
+        if(!$found) { 
+            $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ServiceConnectionUrl" -Value @{value = ''}
+        }
+
+        $newBuildDefinitionVariables.ServiceConnection.value = $DeploymentEnvironmentUrl
+        $newBuildDefinitionVariables.ServiceConnectionUrl.value = $DeploymentEnvironmentUrl
     }
+}
+
+function Check-Parameter{
+    param (
+        [Parameter(Mandatory)] [String]$configurationVariableName,
+        [Parameter(Mandatory)] [PSCustomObject]$newBuildDefinitionVariables
+    )
+    $found = $false
+    if($null -ne $newBuildDefinitionVariables){
+        foreach($buildVariable in $newBuildDefinitionVariables.PSObject.Properties) {
+            if($buildVariable.Name -eq $configurationVariableName) {
+                $found = $true
+                break
+            }
+         }
+     }
+
+     return $found
 }
