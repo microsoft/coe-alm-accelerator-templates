@@ -6,6 +6,49 @@
 
 #Your build pipeline references a variable named ‘PAT-shplat’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. 
 #See https://github.com/microsoft/Microsoft-Focus-Center/blob/main/Tools/FocusCenterPRChecker/Readme.md and https://go.microsoft.com/fwlink/?linkid=865972
+parameters:
+- name: checkduplicatecomponents
+  type: string
+  default: "false"
+- name: checkduplicateconnectionreferences
+  type: string
+  default: "false"
+- name: checklastupdatedprocessfield
+  type: string
+  default: "false"
+- name: checkmissingconnectionreferences
+  type: string
+  default: "true"
+- name: checkpublisher
+  type: string
+  default: "false"
+- name: checksecurityroles
+  type: string
+  default: "true"
+- name: checksolutionversion
+  type: string
+  default: "false"
+- name: enablecommentstopullrequest
+  type: string
+  default: "false"
+- name: exclusionlistpath
+  type: string
+  default: "DuplicatesComponentTool\ExclusionList.xml"
+- name: flowauditingattribute
+  type: string
+  default: "<prefix_customattribute>"
+- name: masterbranchname
+  type: string
+  default: "main"
+- name: solutionpublisheroptionvalueprefix
+  type: string  
+- name: solutionpublisherprefix
+  type: string  
+- name: solutionpublisheruniquename
+  type: string
+- name: solutionsrepopath
+  type: string
+  default: "/<yourRelativeRepoPath>/"
 steps:
 - script: '.\FocusCenterPRChecker.exe ..\..\..\Extracted $(PAT-shplat) $(System.PullRequest.PullRequestId)'
   workingDirectory: 'Pipelines/Templates/Hooks/HookExecutables/FocusCenterPRChecker'
