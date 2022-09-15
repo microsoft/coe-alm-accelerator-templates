@@ -22,7 +22,6 @@
     $reservedVariables = @("TriggerSolutionUpgrade")
     Write-Host (ConvertTo-Json -Depth 10 $configurationData)
 
-
     #Generate Deployment Settings
     Write-Host "Update Deployment Settings"
     if(!(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\")) {
@@ -66,9 +65,12 @@
         }
 
         # Updating "ServiceConnection"; Required if the ''Environment URL' in the profile changes post commit.
-        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.DeploymentEnvironmentUrl) {
+        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.DeploymentEnvironmentUrl) {         
             $DeploymentEnvironmentUrl=$configurationDataEnvironment.DeploymentEnvironmentUrl
-            Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $newBuildDefinitionVariables
+            $ServiceConnectionName=$configurationDataEnvironment.ServiceConnectionName
+            Write-Host "DeploymentEnvironmentUrl - $DeploymentEnvironmentUrl"
+            Write-Host "ServiceConnectionName - $ServiceConnectionName"
+            Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables           
         }
 
         if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
@@ -394,7 +396,8 @@ function Set-BuildDefinitionVariables {
 
 function Create-Update-ServiceConnection-Parameters{
     param (
-        [Parameter(Mandatory)] [String]$DeploymentEnvironmentUrl,
+        [Parameter()] [String]$DeploymentEnvironmentUrl,
+        [Parameter()] [String]$ServiceConnectionName,
         [Parameter(Mandatory)] [PSCustomObject]$newBuildDefinitionVariables
     )
      if($null -ne $newBuildDefinitionVariables){
@@ -410,7 +413,12 @@ function Create-Update-ServiceConnection-Parameters{
             $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ServiceConnectionUrl" -Value @{value = ''}
         }
 
-        $newBuildDefinitionVariables.ServiceConnection.value = $DeploymentEnvironmentUrl
+		# If the "$ServiceConnectionName" variable was not found, use $DeploymentEnvironmentUrl
+		if([string]::IsNullOrEmpty($ServiceConnectionName))
+		{
+			$ServiceConnectionName = $DeploymentEnvironmentUrl
+        }
+        $newBuildDefinitionVariables.ServiceConnection.value = $ServiceConnectionName
         $newBuildDefinitionVariables.ServiceConnectionUrl.value = $DeploymentEnvironmentUrl
     }
 }
