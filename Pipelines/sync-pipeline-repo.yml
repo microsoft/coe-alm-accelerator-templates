@@ -58,6 +58,17 @@ stages:
       - checkout: self
         persistCredentials: true
 
+      - pwsh: |
+            echo "##vso[task.setvariable variable=syncTemplateRepo]$(TEMPLATE-REPO)"
+        displayName: 'Sync from $(TEMPLATE-REPO)'
+        condition: ne(variables['TEMPLATE-REPO'], '')
+
+      - pwsh: |
+            echo "##vso[task.setvariable variable=syncTemplateRepo]https://github.com/microsoft/coe-alm-accelerator-templates"
+        displayName: 'Sync from https://github.com/microsoft/coe-alm-accelerator-templates'
+        condition: eq(variables['TEMPLATE-REPO'], '')
+
+
         # add Azure DevOps extension
       - script: az extension add -n azure-devops
         displayName: 'Install Azure DevOps Extension'
@@ -76,14 +87,14 @@ stages:
 
         # Add remote and fetch source branch
       - script: | 
-          git remote add template-repo $(TEMPLATE-REPO)
+          git remote add template-repo $(syncTemplateRepo)
           git fetch template-repo ${{parameters.SourceBranchOrTag}}
         displayName: 'Fetch branch from cloned repository'
         condition: and(succeeded(), eq('${{parameters.SyncFrom}}', 'Branch'))
 
         # Add remote and fetch source tag
       - script: | 
-          git remote add template-repo $(TEMPLATE-REPO)
+          git remote add template-repo $(syncTemplateRepo)
           git fetch template-repo refs/tags/${{parameters.SourceBranchOrTag}}:refs/tags/${{parameters.SourceBranchOrTag}}
         displayName: 'Fetch tag from cloned repository'
         condition: and(succeeded(), eq('${{parameters.SyncFrom}}', 'Tag'))
