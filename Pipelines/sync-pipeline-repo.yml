@@ -37,7 +37,7 @@ parameters:
     - false
     - true
   default: false
-- name: deleteSourceBranch
+- name: DeleteSourceBranch
   type: string
   values:
     - false
@@ -118,5 +118,5 @@ stages:
         displayName: 'Set az devops defaults'
 
         # Create Pull Requests
-      - powershell: az repos pr create --source-branch ${{parameters.BranchToCreate}} --delete-source-branch ${{parameters.deleteSourceBranch}} --auto-complete ${{parameters.autoCompletePR}} --target-branch ${{parameters.TargetBranch}} --reviewers="$(Build.RequestedForEmail)" --title 'Sync from cloned repository'
+      - powershell: az repos pr create --source-branch ${{parameters.BranchToCreate}} --delete-source-branch ${{parameters.DeleteSourceBranch}} --auto-complete ${{parameters.autoCompletePR}} --target-branch ${{parameters.TargetBranch}} --reviewers="$(Build.RequestedForEmail)" --title 'Sync from cloned repository'
         displayName: 'Create PR - ${{parameters.BranchToCreate}} to ${{parameters.TargetBranch}}'
