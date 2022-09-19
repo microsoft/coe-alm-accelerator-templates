@@ -57,6 +57,14 @@ steps:
   parameters:
     serviceConnection: '${{parameters.serviceConnectionName}}'
 
+# Use set-connection-variables task to get values from AzDO Service Connection to be used in scripts that don't use tasks
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.set-connection-variables.PowerPlatformSetConnectionVariables@2
+  displayName: 'Connection Variables '
+  name: connectionVariables
+  inputs:
+    authenticationType: 'PowerPlatformSPN'
+    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
+
 # Other tasks, in this pipeline need to know if the solution already exists. Setting it for future use.
 - template: set-solution-exists.yml
   parameters:

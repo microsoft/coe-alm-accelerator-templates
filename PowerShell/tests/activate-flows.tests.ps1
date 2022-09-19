@@ -22,7 +22,7 @@ Describe 'Activate-Flows-Test' {
         Write-Host "Importing PowerShell Module: $MicrosoftXrmDataPowerShellModule - $XrmDataPowerShellVersion"
         Import-Module $MicrosoftXrmDataPowerShellModule -Force -RequiredVersion $XrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
     
-        $connectionString = $CdsBaseConnectionString + $ServiceConnection
+        $connectionString = $CdsBaseConnectionString
     
         $conn = Get-CrmConnection -ConnectionString $connectionString
         foreach ($activateConfig in $activationConfigs){

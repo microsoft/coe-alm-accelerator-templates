@@ -24,7 +24,7 @@ function Invoke-ActivateFlows {
     Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
 
-    $conn = Get-CrmConnection -ConnectionString "$cdsBaseConnectionString$serviceConnection"
+    $conn = Get-CrmConnection -ConnectionString "$cdsBaseConnectionString"
 
     $flowsToActivate = [System.Collections.ArrayList]@()
 
@@ -33,7 +33,7 @@ function Invoke-ActivateFlows {
     Get-OwnerFlowActivations $solutionComponentOwnershipConfiguration $activateFlowConfiguration $conn $flowsToActivate
 
     #Activate any flows added to the collection based on sort order
-    $impersonationConn = Get-CrmConnection -ConnectionString "$cdsBaseConnectionString$serviceConnection"
+    $impersonationConn = Get-CrmConnection -ConnectionString "$cdsBaseConnectionString"
     $flowsToActivate = $flowsToActivate | Sort-Object -Property sortOrder
     $flowsActivatedThisPass = $false
     $throwOnComplete = $false
