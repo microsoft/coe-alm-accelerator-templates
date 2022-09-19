@@ -9,6 +9,6 @@ steps:
 
     if('$(SpnToken)'.Contains('$(')) {
         . "$powerShellPath/dataverse-webapi-functions.ps1"
-        Set-SpnTokenVariableWithinAgent "$(TenantId)" "$(ClientId)" "$(ClientSecret)" "${{parameters.serviceConnection}}" "$(AADHost)"
+        Set-SpnTokenVariableWithinAgent "$(connectionVariables.BuildTools.TenantId)" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "${{parameters.serviceConnection}}" "$(AADHost)"
     }
   displayName: "Set SpnToken for use by other tasks that need one"
