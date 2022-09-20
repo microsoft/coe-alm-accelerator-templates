@@ -37,6 +37,9 @@ steps:
 - template: set-spn-token.yml
   parameters:
     serviceConnection: ${{parameters.serviceConnectionUrl}}
+    tenantId: $(connectionVariables.BuildTools.TenantId)
+    clientId: $(connectionVariables.BuildTools.ApplicationId)
+    clientSecret: $(connectionVariables.BuildTools.ClientSecret)
 
 - pwsh: |
     . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
