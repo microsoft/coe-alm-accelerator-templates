@@ -9,6 +9,9 @@ parameters:
   type: string
 - name: solutionName
   type: string
+- name: skipBuildToolsInstaller
+  type: string
+  default: 'false'
 
 steps:  
 - template: set-service-connection-url.yml
