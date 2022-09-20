@@ -28,7 +28,7 @@ steps:
 
 # Use set-connection-variables task to get values from AzDO Service Connection to be used in scripts that don't use tasks
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.set-connection-variables.PowerPlatformSetConnectionVariables@2
-  displayName: 'Connection Variables '
+  displayName: 'Set Connection Variables'
   name: connectionVariables
   inputs:
     authenticationType: 'PowerPlatformSPN'
