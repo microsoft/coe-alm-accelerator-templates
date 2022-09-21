@@ -43,9 +43,6 @@ steps:
       Import-Module $microsoftPowerAppsAdministrationPowerShellModule -Force -RequiredVersion $env:PowerAppsAdminModuleVersion -ArgumentList @{ NonInteractive = $true }
       Add-PowerAppsAccount -TenantID $env:TenantId -ApplicationId $env:ClientId -ClientSecret "$(ClientSecret)"
 
-      Write-Host "Env EnvironmentId - " $env:EnvironmentId
-      Write-Host "Build EnvironmentId - " $(BuildTools.EnvironmentId)
-      #Set-CanvasTestAutomationURLs $env:SPNTOKEN $serviceConnection $solutionName $canvasAppsPath $env:EnvironmentId
       Set-CanvasTestAutomationURLs $env:SPNTOKEN $serviceConnection $solutionName $canvasAppsPath "$(BuildTools.EnvironmentId)"
 
       $jsonPath = (Get-Location).Path + "\CanvasTestAutomationURLs.json"
