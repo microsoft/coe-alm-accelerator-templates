@@ -44,7 +44,7 @@ steps:
           $aadGroupTeams = Get-CrmRecords -conn $conn -EntityLogicalName team -FilterAttribute "name" -FilterOperator "eq" -FilterValue $aadGroupTeamName -Fields teamid
           $fields = @{ "name"=$aadGroupTeamName;"teamtype"=$teamTypeValue;"azureactivedirectoryobjectid"=[guid]$aadId }
 
-          #Get business unit - business unit is hard coded here but should be passed in from a variable in the ALM Accelerator app
+          #Get business unit
           if(-not string::IsNullOrWhiteSpace($businessUnitId)) {
               $businessUnitLookup = [PSCustomObject]@{"LogicalName"="businessunit"; "Id"=[guid]"$businessUnitId"}
               $fields = @{ "name"=$aadGroupTeamName;"teamtype"=$teamTypeValue;"azureactivedirectoryobjectid"=[guid]$aadId;"businessunitid"=$businessUnitLookup }
