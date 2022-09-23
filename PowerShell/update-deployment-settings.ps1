@@ -70,7 +70,9 @@
             $ServiceConnectionName=$configurationDataEnvironment.ServiceConnectionName
             Write-Host "DeploymentEnvironmentUrl - $DeploymentEnvironmentUrl"
             Write-Host "ServiceConnectionName - $ServiceConnectionName"
-            Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables           
+            if($null -ne $newBuildDefinitionVariables){
+                Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables
+            }
         }
 
         if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
