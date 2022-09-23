@@ -71,19 +71,21 @@
             Write-Host "DeploymentEnvironmentUrl - $DeploymentEnvironmentUrl"
             Write-Host "ServiceConnectionName - $ServiceConnectionName"
             if($null -ne $newBuildDefinitionVariables){
-                Write-Host "About to call method"
-                #Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables
+                Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables
             }
         }
 
-        Write-Host "Outside"
-
+        Write-Host "Hook 1"
+        Write-Host "User Settings - "$configurationDataEnvironment.UserSettings
         if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
+            Write-Host "Hook 2"
             foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
+                Write-Host "For Hook"
                 $configurationVariableName = $configurationVariable.Name
                 $configurationVariableValue = $configurationVariable.Value
                 #Set connection reference variables
                 if($configurationVariableName.StartsWith("connectionreference.user.", "CurrentCultureIgnoreCase")) {
+                    Write-Host "Hook 3"
                     $schemaName = $configurationVariableName -replace "connectionreference.user.", ""
                     $connRefResults = Get-CrmRecords -conn $conn -EntityLogicalName connectionreference -FilterAttribute "connectionreferencelogicalname" -FilterOperator "eq" -FilterValue $schemaName -Fields connectorid
                     if ($connRefResults.Count -gt 0){
@@ -102,6 +104,7 @@
                 }
                 #Set environment variable variables
                 elseif($configurationVariableName.StartsWith("environmentvariable.", "CurrentCultureIgnoreCase")) {
+                    Write-Host "Hook 4"
                     $schemaName = $configurationVariableName -replace "environmentvariable.", ""
                     $envVarResults =  Get-CrmRecords -conn $conn -EntityLogicalName environmentvariabledefinition -FilterAttribute "schemaname" -FilterOperator "eq" -FilterValue $schemaName -Fields type
                     if ($envVarResults.Count -gt 0){
@@ -116,6 +119,7 @@
                     }
                 }
                 elseif($configurationVariableName.StartsWith("canvasshare.aadGroupId.", "CurrentCultureIgnoreCase")) {
+                    Write-Host "Hook 5"
                     $schemaName = $configurationVariableName -replace "canvasshare.aadGroupId.", ""
                     $roleVariable = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq "canvasshare.roleName.$schemaName" } | Select-Object -First 1
                     $canvasAppResults =  Get-CrmRecords -conn $conn -EntityLogicalName canvasapp -FilterAttribute "name" -FilterOperator "eq" -FilterValue $schemaName -Fields displayname
@@ -131,6 +135,7 @@
                     }
                 }
                 elseif($configurationVariableName.StartsWith("owner.ownerEmail.", "CurrentCultureIgnoreCase")) {
+                    Write-Host "Hook 6"
                     #Create the flow ownership deployment settings
                     $flowSplit = $configurationVariableName.Split(".")
                     if($flowSplit.length -eq 4){
@@ -142,6 +147,7 @@
                     }
                 }
                 elseif($configurationVariableName.StartsWith("flow.sharing.", "CurrentCultureIgnoreCase")) {
+                    Write-Host "Hook 7"
                     $flowSplit = $configurationVariableName.Split(".")
                     $flowSharing = [PSCustomObject]@{"solutionComponentName"=$flowSplit[2]; "solutionComponentUniqueName"=$flowSplit[3]; "aadGroupTeamName"="#{$configurationVariableName}#"}
                     if($usePlaceholders.ToLower() -eq 'false') {
@@ -150,6 +156,7 @@
                     $flowSharings.Add($flowSharing)
                 }
                 elseif($configurationVariableName.StartsWith("activateflow.activate.", "CurrentCultureIgnoreCase")) {
+                    Write-Host "Hook 8"
                     $flowSplit = $configurationVariableName.Split(".")
                     $flowActivateAsName = $configurationVariableName.Replace(".activate.", ".activateas.")
                     $flowActivateOrderName = $configurationVariableName.Replace(".activate.", ".order.")
@@ -169,6 +176,7 @@
                     }
                 }
                 elseif($configurationVariableName.StartsWith("connector.teamname.", "CurrentCultureIgnoreCase")) {
+                    Write-Host "Hook 9"
                     $connectorSplit = $configurationVariableName.Split(".")
                     if($connectorSplit.length -eq 4){
                         $connectorSharingConfig = [PSCustomObject]@{"solutionComponentName"=$connectorSplit[2]; "solutionComponentUniqueName"=$connectorSplit[3]; "aadGroupTeamName"="#{$configurationVariableName}#"}
@@ -179,6 +187,7 @@
                     }
                 }
                 elseif($configurationVariableName.StartsWith("groupTeam.", "CurrentCultureIgnoreCase")) {
+                    Write-Host "Hook 10"
                     $teamName = $configurationVariableName.split('.')[-1]
                     $teamGroupRoles = $configurationVariable.Data.split(',')
                     $businessUnitVariableName = $configurationVariableName.Replace("groupTeam", "businessUnit")
@@ -196,6 +205,7 @@
 
                 #See if the variable already exists
                 if($null -ne $newBuildDefinitionVariables) {
+                    Write-Host "configurationVariableName - $configurationVariableName"
                     $found = Check-Parameter $configurationVariableName $newBuildDefinitionVariables               
                     #Add the configuration variable to the list of pipeline variables if usePlaceholders is not false
                     if($usePlaceholders.ToLower() -ne 'false') {
@@ -437,7 +447,7 @@ function Create-Update-ServiceConnection-Parameters{
 
 function Check-Parameter{
     param (
-        [Parameter(Mandatory)] [String]$configurationVariableName,
+        [Parameter()] [String]$configurationVariableName,
         [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
     )
     $found = $false
