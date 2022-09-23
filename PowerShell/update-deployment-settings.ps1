@@ -407,6 +407,8 @@ function Create-Update-ServiceConnection-Parameters{
         [Parameter()] [String]$ServiceConnectionName,
         [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
     )
+    Write-Host "Inside Create-Update-ServiceConnection-Parameters"
+    Write-Host "newBuildDefinitionVariables - $newBuildDefinitionVariables"
      if($null -ne $newBuildDefinitionVariables){
         #If the "ServiceConnection" variable was not found create it 
         $found = Check-Parameter "ServiceConnection" $newBuildDefinitionVariables

@@ -127,8 +127,8 @@ Describe 'E2E-Pipeline-Test' {
         {
           if($dataJson[$i])
           {
-              $dataJson[$i].DeploymentEnvironmentUrl = "";
-              $dataJson[$i].ServiceConnectionName = "";
+              $dataJson[$i].DeploymentEnvironmentUrl = [string]::Empty;
+              $dataJson[$i].ServiceConnectionName = [string]::Empty;
           }
         }
 
