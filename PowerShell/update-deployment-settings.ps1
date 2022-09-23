@@ -71,9 +71,12 @@
             Write-Host "DeploymentEnvironmentUrl - $DeploymentEnvironmentUrl"
             Write-Host "ServiceConnectionName - $ServiceConnectionName"
             if($null -ne $newBuildDefinitionVariables){
-                Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables
+                Write-Host "About to call method"
+                #Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables
             }
         }
+
+        Write-Host "Outside"
 
         if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
             foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
