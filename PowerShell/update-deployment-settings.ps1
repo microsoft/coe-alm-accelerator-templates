@@ -398,7 +398,7 @@ function Create-Update-ServiceConnection-Parameters{
     param (
         [Parameter()] [String]$DeploymentEnvironmentUrl,
         [Parameter()] [String]$ServiceConnectionName,
-        [Parameter(Mandatory)] [PSCustomObject]$newBuildDefinitionVariables
+        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
     )
      if($null -ne $newBuildDefinitionVariables){
         #If the "ServiceConnection" variable was not found create it 
@@ -426,7 +426,7 @@ function Create-Update-ServiceConnection-Parameters{
 function Check-Parameter{
     param (
         [Parameter(Mandatory)] [String]$configurationVariableName,
-        [Parameter(Mandatory)] [PSCustomObject]$newBuildDefinitionVariables
+        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
     )
     $found = $false
     if($null -ne $newBuildDefinitionVariables){
