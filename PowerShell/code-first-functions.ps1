@@ -258,3 +258,57 @@ function add-packagetype-node-to-cdsproj{
         Write-Host "cdsproj file unavailble at - $cdsProjPath"
     }
 }
+
+function restructure-legacy-folders{
+    param (
+        [Parameter(Mandatory)] [String]$artifactStagingDirectory,
+        [Parameter(Mandatory)] [String]$buildSourceDirectory,
+        [Parameter(Mandatory)] [String]$repo,
+        [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter(Mandatory)] [String]$pacPath
+    )
+    $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+
+    # Legacy folder structure "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\{unpackedcomponents}"
+    # New folder structure "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src\{unpackedcomponents}"
+    if(-not (Test-Path $cdsProjPath)){
+        # Move unpacked files from legacy to new folder
+        # While moving Destination path cannot be a subdirectory of the source
+        # Hence copy files to temp location first and then to new folder location
+        $sourceDirectory  = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\"
+        $tempSolPackageDirectory  = "$artifactStagingDirectory\temp_SolutionPackage"
+        Write-Host "Moving files to temp directory"
+        Get-ChildItem -Path "$sourceDirectory" -Recurse | Move-Item -Destination "$tempSolPackageDirectory" -Force
+
+        # Create new folder structure
+        New-Item -ItemType "directory" -Path "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src"
+
+        # Move unpacked files from legacy to new folder
+        # While moving Destination path cannot be a subdirectory of the source
+        # Hence copy files to temp location first and then to new folder location
+        $destinationDirectory = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src\"
+        Write-Host "Moving files to $destinationDirectory directory"
+        Get-ChildItem -Path "$tempSolPackageDirectory" -Recurse | Move-Item -Destination "$destinationDirectory" -Force
+
+        # Generate .cdsproj file by triggering Clone
+        $temp_clone_path = "$artifactStagingDirectory\temp_clone"
+        $cloneCommand = "solution clone -n $solutionName -pca true -o $temp_clone_path -p Both"
+        Write-Host "Clone Command - $pacPath\pac.exe $cloneCommand"
+        Invoke-Expression -Command "$pacPath\pac.exe $cloneCommand"
+
+        # Copy .cdsprojfile from temp to new folder structure
+        $temp_cdsProjPath = "$artifactStagingDirectory\temp_clone\$solutionName\$solutionName.cdsproj"
+        Write-Host "temp_cdsProjPath - $temp_cdsProjPath"
+        if(Test-Path "$temp_cdsProjPath")
+        {
+            Copy-Item "$temp_cdsProjPath" -Destination "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\"
+            # Delete 
+        }
+        else{
+            Write-Host "cdsproj file unavailble at temp path - $temp_cdsProjPath"
+        }
+    }
+    else{
+        Write-Host "Valid folder structure. No need of restructure"
+    }
+}

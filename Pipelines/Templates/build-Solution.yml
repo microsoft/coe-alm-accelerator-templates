@@ -37,6 +37,16 @@ steps:
 
 - template: Hooks\build-solution-manipulate-source-pre-hook.yml
 
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      install-pac-and-authenticate "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)"
+  displayName: 'Install pac cli and Authenticate'
+
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      restructure-legacy-folders '$(Build.ArtifactStagingDirectory)' '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
+  displayName: 'Restructure legacy folders'
+
 # Solution version in source control is not used.  Instead, create version at build time from the current build number.
 - pwsh: |
    $solutionXMLPath = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\Other\Solution.xml"
@@ -155,17 +165,21 @@ steps:
 
 - template: Hooks\build-solution-pack-pre-hook.yml
 
-- pwsh: |
-      . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      install-pac-and-authenticate "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)"
-  displayName: 'Install pac cli and Authenticate'
+#- pwsh: |
+#      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+#      install-pac-and-authenticate "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)"
+#  displayName: 'Install pac cli and Authenticate'
+
+#- pwsh: |
+#      Write-Host "pacPath - $(pacPath)"
+#      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+#      restructure-legacy-folders '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
+#  displayName: 'Restructure legacy folders'
+
 
 - pwsh: |
-      Write-Host "pacPath - $(pacPath)"
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
       add-pcf-Projects-to-cdsproj '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
-  env:
-    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
   displayName: 'Add project references to cdsproject'
 
 - pwsh: |
