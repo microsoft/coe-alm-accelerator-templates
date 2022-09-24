@@ -36,10 +36,11 @@ steps:
   condition: and(succeeded(), ne('${{parameters.buildType}}', 'Unmanaged'))
 
 - template: Hooks\build-solution-manipulate-source-pre-hook.yml
-  
+
 # Solution version in source control is not used.  Instead, create version at build time from the current build number.
 - pwsh: |
-   Get-ChildItem -Path "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\**\Solution.xml" | 
+   $solutionXMLPath = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\Other\Solution.xml"
+   Get-ChildItem -Path "$solutionXMLPath" | 
    ForEach-Object {
         (Get-Content $_.FullName) `
             -replace '<Version>0.0.0.0<\/Version>', '<Version>$(Build.BuildNumber)</Version>' |
@@ -154,24 +155,76 @@ steps:
 
 - template: Hooks\build-solution-pack-pre-hook.yml
 
-#Pack the solution based on the build type parameter (Unmanaged, Managed or Both)
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.pack-solution.PowerPlatformPackSolution@2
-  displayName: 'Pack Solutions (Unmanaged and/or Managed)'
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      install-pac-and-authenticate "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)"
+  displayName: 'Install pac cli and Authenticate'
+
+- pwsh: |
+      Write-Host "pacPath - $(pacPath)"
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      add-pcf-Projects-to-cdsproj '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  displayName: 'Add project references to cdsproject'
+
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      pcf-Projects-install-npm '$(Build.SourcesDirectory)' '$(RepoName)'
+  displayName: 'Install npm - pcf projects'
+
+- task: VSBuild@1
   inputs:
-    SolutionSourceFolder: $(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage
-    SolutionOutputFile: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
-    SolutionType: ${{parameters.buildType}}
-    ProcessCanvasApps: $(localProcessCanvasApps)
+    solution: '$(Build.SourcesDirectory)\$(RepoName)\**\*.cdsproj'
+    msbuildArgs: '/t:build /restore'
+    #platform: '$(buildPlatform)'
+    #configuration: '$(buildConfiguration)'
+  displayName: 'Build cdsproject'
 
 #Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
-  displayName: 'Run Solution Checker'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
-    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
-    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
-  condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
+#- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
+#  displayName: 'Run Solution Checker'
+#  inputs:
+#    authenticationType: PowerPlatformSPN
+#    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
+#    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
+#    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
+#  condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
+
+- pwsh: |
+    $sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\bin\Debug\*"
+    Get-ChildItem "$sourceDirectory" -Recurse
+  displayName: 'Display Bin Files' 
+
+  # Using cdsproj approach Solutions gets created post building cdsproj file.
+  # Copy the Solution from bin to ArtifactStagingDirectory
+- pwsh: |
+    $sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\bin\Debug\*"
+    $destinationDirectory = "$(Build.ArtifactStagingDirectory)"
+    If(Test-Path "$sourceDirectory")
+    {
+        Copy-item -Force -Recurse -Verbose "$sourceDirectory" -Destination $destinationDirectory
+    }
+    else
+    {
+        Write-Host "Folder unavailable - $sourceDirectory"
+    }
+  displayName: 'Copy cdsproj solutions to ArtifactStagingDirectory'
+
+- pwsh: |
+    Get-ChildItem "$(Build.ArtifactStagingDirectory)"
+  displayName: 'Display ArtifactStagingDirectory Files'
+
+##Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
+#- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
+#  displayName: 'Run Solution Checker'
+#  inputs:
+#    authenticationType: PowerPlatformSPN
+#    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
+#    #FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
+#    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip'
+#    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
+#  condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
 
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Artifacts'
