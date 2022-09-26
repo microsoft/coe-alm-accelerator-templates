@@ -44,7 +44,7 @@ steps:
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      restructure-legacy-folders '$(Build.ArtifactStagingDirectory)' '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
+      restructure-legacy-folders '$(Build.ArtifactStagingDirectory)' '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)' '${{parameters.serviceConnectionUrl}}'
   displayName: 'Restructure legacy folders'
 
 # Solution version in source control is not used.  Instead, create version at build time from the current build number.
@@ -189,7 +189,8 @@ steps:
 
 - task: VSBuild@1
   inputs:
-    solution: '$(Build.SourcesDirectory)\$(RepoName)\**\*.cdsproj'
+    #solution: '$(Build.SourcesDirectory)\$(RepoName)\**\*.cdsproj'
+    solution: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\${{parameters.solutionName}}.cdsproj'
     msbuildArgs: '/t:build /restore'
     #platform: '$(buildPlatform)'
     #configuration: '$(buildConfiguration)'

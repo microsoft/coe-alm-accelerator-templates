@@ -265,13 +265,22 @@ function restructure-legacy-folders{
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName,
-        [Parameter(Mandatory)] [String]$pacPath
+        [Parameter(Mandatory)] [String]$pacPath,
+        [Parameter(Mandatory)] [String]$serviceConnection
     )
     $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
 
     # Legacy folder structure "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\{unpackedcomponents}"
     # New folder structure "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src\{unpackedcomponents}"
     if(-not (Test-Path $cdsProjPath)){
+        # Get Publisher Name
+        $publisherName = get-publisher-name "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\Other\Solution.xml"
+        # Get Prefix Name
+        $publisherPrefix = get-publisher-prefix-by-Name "$serviceConnection" "$publisherName"
+
+        Write-Host "publisherName - $publisherName"
+        Write-Host "publisherPrefix - $publisherPrefix"
+
         # Move unpacked files from legacy to new folder
         # While moving Destination path cannot be a subdirectory of the source
         # Hence copy files to temp location first and then to new folder location
@@ -291,10 +300,14 @@ function restructure-legacy-folders{
         Get-ChildItem -Path "$tempSolPackageDirectory" -Recurse | Move-Item -Destination "$destinationDirectory" -Force
 
         # Generate .cdsproj file by triggering Clone
-        $temp_clone_path = "$artifactStagingDirectory\temp_clone"
-        $cloneCommand = "solution clone -n $solutionName -pca true -o $temp_clone_path -p Both"
-        Write-Host "Clone Command - $pacPath\pac.exe $cloneCommand"
-        Invoke-Expression -Command "$pacPath\pac.exe $cloneCommand"
+        $temp_clone_path = "$artifactStagingDirectory\temp_clone\$solutionName"
+        #$cloneCommand = "solution clone -n $solutionName -pca true -o $temp_clone_path -p Both"
+        #Write-Host "Clone Command - $pacPath\pac.exe $cloneCommand"
+        #Invoke-Expression -Command "$pacPath\pac.exe $cloneCommand"
+
+        $solInitCommand = "solution init -pn $publisherName -pp $publisherPrefix -o $temp_clone_path"
+        Write-Host "Solution Init Command - $pacPath\pac.exe $solInitCommand"
+        Invoke-Expression -Command "$pacPath\pac.exe $solInitCommand"
 
         # Copy .cdsprojfile from temp to new folder structure
         $temp_cdsProjPath = "$artifactStagingDirectory\temp_clone\$solutionName\$solutionName.cdsproj"
@@ -302,7 +315,8 @@ function restructure-legacy-folders{
         if(Test-Path "$temp_cdsProjPath")
         {
             Copy-Item "$temp_cdsProjPath" -Destination "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\"
-            # Delete 
+            Write-Host "Adding Package Type 'Both' to .cds proj file"
+            add-packagetype-node-to-cdsproj "$buildSourceDirectory" "$repo" "$solutionName"
         }
         else{
             Write-Host "cdsproj file unavailble at temp path - $temp_cdsProjPath"
@@ -311,4 +325,51 @@ function restructure-legacy-folders{
     else{
         Write-Host "Valid folder structure. No need of restructure"
     }
+}
+
+function get-publisher-name{
+    param (
+        [Parameter(Mandatory)] [String]$solutionFilePath
+    )
+    $publisherName = $null
+
+    if(Test-Path "$solutionFilePath"){
+        [xml]$xmlElm = Get-Content -Path "$solutionFilePath"
+        $publisherName = $xmlElm.ImportExportXml.SolutionManifest.Publisher.UniqueName
+    }
+    else{
+       Write-Host "Solution xml file unavailble at path - $solutionFilePath"
+    }
+
+    Write-Host "publisherName - $publisherName"
+    return $publisherName
+}
+
+function get-publisher-prefix-by-Name{
+    param (
+        [Parameter(Mandatory)] [String]$serviceConnection,
+        [Parameter(Mandatory)] [String]$publisherName
+    )
+
+    $prefix = $null
+
+      . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+    $dataverseHost = Get-HostFromUrl "$serviceConnection"
+	Write-Host "dataverseHost - $dataverseHost"
+
+    $queryPublisher = "publishers?`$select=customizationprefix&`$filter=(uniquename eq '$publisherName')"    
+
+    try{
+        Write-Host "Publisher Query - $queryPublisher"
+        $publisher = Invoke-DataverseHttpGet $env:SpnToken $dataverseHost $queryPublisher
+    }
+    catch{
+        Write-Host "Error queryPublisher - $($_.Exception.Message)"
+    }
+
+    if($null -ne $publisher.value -and $publisher.value.count -gt 0){
+        $prefix = $publisher.value[0].customizationprefix
+    }
+
+    return $prefix
 }
