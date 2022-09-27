@@ -4,7 +4,7 @@
 # 'The command line is too long' when sending the json to the Data parameter.
 # So I wrote Invoke-ExportToGit function using the REST API
 
-# TODO: 
+# TODO:
 # Complete inner/outer loop tests
 # -PR into main from solution/vnext branch and detect whether prod deployment pipeline succeeded
 #   -Test solution ugrade
@@ -12,7 +12,7 @@
 # Document how to setup inner loop / personal files for local testing in the PowerShell/Ignore folder
 
 param(
-    $Org, $Project, $BranchToTest, $SourceBranch, $BranchToCreate, $CommitMessage, $Data, 
+    $Org, $Project, $BranchToTest, $SourceBranch, $BranchToCreate, $CommitMessage, $Data,
     $Email, $Repo, $ServiceConnection, $SolutionName, $UserName, $PortalSiteName
 )
 
@@ -28,8 +28,8 @@ class Helper {
             $result = az pipelines runs show --id $id --org $org --project $project
             $result = $result | ConvertFrom-Json -Depth 10
         }
-    
-        return $result.result -eq 'succeeded' -or $result.result -eq 'partiallySucceeded' 
+
+        return $result.result -eq 'succeeded' -or $result.result -eq 'partiallySucceeded'
     }
 
     static [void]WriteTestMessageToHost($testName) {
@@ -37,7 +37,7 @@ class Helper {
         Write-Information "$timestamp - Running $testName..."
     }
 
-    static [bool]QueueExportToGit($org, $project, $solutionName, $body) {        
+    static [bool]QueueExportToGit($org, $project, $solutionName, $body) {
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
         $token = [Helper]::AccessToken
         $headers.Add("Authorization", "Bearer $token")
@@ -55,7 +55,7 @@ class Helper {
                 $pipelineId = $pipeline.id
                 break
             }
-        }        
+        }
 
         $body.templateParameters.PipelineId = $pipelineId
         $body = ConvertTo-Json -Depth 10 $body -Compress
@@ -71,8 +71,8 @@ class Helper {
     }
 }
 
-BeforeAll { 
-    [Helper]::AccessToken = (az account get-access-token | ConvertFrom-Json -Depth 10).accessToken    
+BeforeAll {
+    [Helper]::AccessToken = (az account get-access-token | ConvertFrom-Json -Depth 10).accessToken
 }
 
 Describe 'E2E-Pipeline-Test' {
@@ -80,7 +80,7 @@ Describe 'E2E-Pipeline-Test' {
     # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
     It 'ImportUnamanagedToDevEnvironment' -Tag 'ImportUnamanagedToDevEnvironment' {
         [Helper]::WriteTestMessageToHost('ImportUnamanagedToDevEnvironment')
-        
+
         # hacky/brittle
         # and depends on the fact that the service connection name is the environment url
         # and that the environment name is the same as the first part of the environment url
@@ -107,8 +107,8 @@ Describe 'E2E-Pipeline-Test' {
     # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
     # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
     It 'ExportToGitNewBranch' -Tag 'ExportToGitNewBranch' {
-        [Helper]::WriteTestMessageToHost('ExportToGitNewBranch')        
-        
+        [Helper]::WriteTestMessageToHost('ExportToGitNewBranch')
+
         #Delete the existing pipelines to validate the creation of new pipelines during export.
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
         $token = [Helper]::AccessToken
@@ -132,8 +132,8 @@ Describe 'E2E-Pipeline-Test' {
           }
         }
 
-        $modifiedData = ConvertTo-Json $dataJson	
-        Write-Information "Modified Data - $modifiedData"		
+        $modifiedData = ConvertTo-Json $dataJson
+        Write-Information "Modified Data - $modifiedData"
 
         $body = @{
             resources          = @{
@@ -157,11 +157,11 @@ Describe 'E2E-Pipeline-Test' {
                 UserName              = $UserName
                 PipelineId            = 0
                 PortalSiteName        = $PortalSiteName
-            } 
+            }
         }
         [Helper]::ExportToGitNewBranchSucceeded = [Helper]::QueueExportToGit($Org, $Project, $SolutionName, $body)
         [Helper]::ExportToGitNewBranchSucceeded | Should -BeTrue
-    }    
+    }
 
     # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
     # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
@@ -169,12 +169,12 @@ Describe 'E2E-Pipeline-Test' {
         if ([Helper]::ExportToGitNewBranchSucceeded -ne $true) {
             Set-ItResult -Skipped -Because "ExportToGitNewBranchSucceeded did not succeed"
         }
-        
-        [Helper]::WriteTestMessageToHost('ExportToGitExistingBranch')  
-        
+
+        [Helper]::WriteTestMessageToHost('ExportToGitExistingBranch')
+
         # set branch to use for second commit to existing branch previously created
         $branchToUse = $BranchToCreate
-    
+
         $body = @{
             resources          = @{
                 repositories = @{
@@ -196,13 +196,13 @@ Describe 'E2E-Pipeline-Test' {
                 UserName              = $UserName
                 PipelineId            = 0
                 PortalSiteName        = $PortalSiteName
-            } 
+            }
         }
-    
+
         [Helper]::ExportToGitExistingBranchSucceeded = [Helper]::QueueExportToGit($Org, $Project, $SolutionName, $body)
         [Helper]::ExportToGitExistingBranchSucceeded | Should -BeTrue
     }
-    
+
     # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
     # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
     It 'CreatePullRequestForUATWaitForPRValidationToSucceedApproveAndMerge' -Tag 'CreatePullRequestForUATWaitForPRValidationToSucceedApproveAndMerge' {
@@ -220,7 +220,7 @@ Describe 'E2E-Pipeline-Test' {
         $result = az repos pr create --org $Org --project $Project --repository $Repo --source-branch $BranchToCreate --target-branch $SolutionName --title "E2E-Pipeline-Test"
         $result = $result | ConvertFrom-Json -Depth 10
         $result.status | Should -Be 'active'
-        
+
         # Get the id of the PR validation pipeline using the PR id and wait for it to successfully complete
         $pullRequestId = $result.pullRequestId
         # sleep for 15 seconds to ensure the pipeline to validate the PR is kicked off (may need to tweak)
@@ -242,12 +242,12 @@ Describe 'E2E-Pipeline-Test' {
         $id = $result[0].id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
     }
-    
+
     # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
     # TODO: Investigate why pester doesn't like it when it's a variable and come up with a better way to do this.
     It 'DeleteUnamangedSolutionAndComponents' -Tag 'DeleteUnamangedSolutionAndComponents' {
         [Helper]::WriteTestMessageToHost('DeleteUnamangedSolutionAndComponents')
-        
+
         $result = az pipelines run --org $Org --project $Project --branch $BranchToTest `
             --name 'delete-unmanaged-solution-and-components' `
             --parameters `
@@ -263,5 +263,5 @@ Describe 'E2E-Pipeline-Test' {
         $result = $result | ConvertFrom-Json -Depth 10
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
-    }    
+    }
 }
