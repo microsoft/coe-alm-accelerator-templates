@@ -233,7 +233,7 @@ function clone-or-sync-solution{
         if(Test-Path "$cdsProjPath")
         {
             Write-Host "Cloned solution available; Triggering Solution Sync"
-            $syncCommand = "solution sync -pca true -f $cdsProjFolderPath -p Both"
+            $syncCommand = "solution sync -pca true -f ""$cdsProjFolderPath"" -p Both"
             Write-Host "Triggering Sync - $syncCommand"
             Invoke-Expression -Command "$pacexepath $syncCommand"
         }
@@ -245,7 +245,7 @@ function clone-or-sync-solution{
             }
 
             # Trigger Clone
-            $cloneCommand = "solution clone -n $solutionName -pca true -o $unpackfolderpath -p Both"
+            $cloneCommand = "solution clone -n $solutionName -pca true -o ""$unpackfolderpath"" -p Both"
             Write-Host "Clone Command - $pacexepath $cloneCommand"
             Invoke-Expression -Command "$pacexepath $cloneCommand"
         }        
