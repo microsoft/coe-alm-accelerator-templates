@@ -44,7 +44,7 @@ $ScriptAnalyzerResult = Invoke-ScriptAnalyzer -Path $ScriptDirectory -Recurse -I
 
 if ( $ScriptAnalyzerResult ) {
     $ScriptAnalyzerResultString = $ScriptAnalyzerResult | Out-String
-    $ScriptAnalyzerResultString = [System.Text.RegularExpressions.Regex]::Unescape($ScriptAnalyzerResultString)
+    $ScriptAnalyzerResultString = [System.Text.RegularExpressions.Regex]::Escape($ScriptAnalyzerResultString)
     # build the markdown comments
     # cannot be tabbed over to match indentation
     $markdownComment = @"
@@ -54,7 +54,7 @@ $ScriptAnalyzerResultString
 "@
     $body = @"
 {
-    "body": "Warning: Script Analyzer found the following issues with your code:"
+    "body": "$markdownComment"
 }
 "@
     # post to the PR
