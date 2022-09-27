@@ -13,7 +13,7 @@ function Invoke-UpdateSolutionComponentOwner {
     $impersonationConn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"
 
     $flowsToSetOwners = [System.Collections.ArrayList]@()
-    Get-OwnerFlowActivations $solutionComponentOwnershipConfiguration "" $conn $flowsToSetOwners
+    Get-OwnerFlowActivation $solutionComponentOwnershipConfiguration "" $conn $flowsToSetOwners
 
     foreach ($ownershipConfig in $flowsToSetOwners) {
         #Need to deactivate the flow before setting ownership if currently active

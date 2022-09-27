@@ -31,6 +31,6 @@ Describe 'Activate-Flows-Test' {
                 Set-CrmRecordState -conn $conn -EntityLogicalName workflow -Id $workflow.workflowid -StateCode 0 -StatusCode 1
             }
         }
-        Invoke-ActivateFlows $DataverseConnectionString $MicrosoftXrmDataPowerShellModule $XrmDataPowerShellVersion $MicrosoftPowerAppsAdministrationPowerShellModule $PowerAppsAdminModuleVersion $TenantId $ClientId $ClientSecret $SolutionName $EnvironmentId $componentOwnerConfig $connectionReferenceConfig $activationConfig
+        Invoke-ActivateFlow $DataverseConnectionString $MicrosoftXrmDataPowerShellModule $XrmDataPowerShellVersion $MicrosoftPowerAppsAdministrationPowerShellModule $PowerAppsAdminModuleVersion $TenantId $ClientId $ClientSecret $SolutionName $EnvironmentId $componentOwnerConfig $connectionReferenceConfig $activationConfig
     }
 }

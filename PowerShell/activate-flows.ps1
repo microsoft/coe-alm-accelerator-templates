@@ -1,4 +1,4 @@
-function Invoke-ActivateFlows {
+function Invoke-ActivateFlow {
     param (
         [Parameter(Mandatory)] [String]$dataverseConnectionString,
         [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule,
@@ -28,8 +28,8 @@ function Invoke-ActivateFlows {
     $flowsToActivate = [System.Collections.ArrayList]@()
 
     Get-UserConfiguredFlowActivations $activateFlowConfiguration $conn $flowsToActivate
-    Get-ConnectionReferenceFlowActivations $connectionReferences $activateFlowConfiguration $conn $flowsToActivate
-    Get-OwnerFlowActivations $solutionComponentOwnershipConfiguration $activateFlowConfiguration $conn $flowsToActivate
+    Get-ConnectionReferenceFlowActivation $connectionReferences $activateFlowConfiguration $conn $flowsToActivate
+    Get-OwnerFlowActivation $solutionComponentOwnershipConfiguration $activateFlowConfiguration $conn $flowsToActivate
 
     #Activate any flows added to the collection based on sort order
     $impersonationConn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"
@@ -62,7 +62,7 @@ function Invoke-ActivateFlows {
     }
 }
 
-function Get-ActivationConfigurations {
+function Get-ActivationConfiguration {
     param (
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$activateFlowConfiguration
     )
@@ -80,7 +80,7 @@ function Get-UserConfiguredFlowActivations {
         [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
 
-    $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
+    $activationConfigs = Get-ActivationConfiguration $activateFlowConfiguration
     # Turn on specified list of flows using a specified user.
     # This should be an ordered list of flows that must be turned on before any other dependent (parent) flows can be turned on.
     if ($null -ne $activationConfigs) {
@@ -118,7 +118,7 @@ function Get-UserConfiguredFlowActivations {
     }
 }
 
-function Get-ConnectionReferenceFlowActivations {
+function Get-ConnectionReferenceFlowActivation {
     param (
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$connectionReferences,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$activateFlowConfiguration,
@@ -134,7 +134,7 @@ function Get-ConnectionReferenceFlowActivations {
             $result = Get-CrmRecords -conn $conn -EntityLogicalName solutioncomponent -FilterAttribute "solutionid" -FilterOperator "eq" -FilterValue $solutionId -Fields objectid, componenttype
             $solutionComponents = $result.CrmRecords
 
-            $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
+            $activationConfigs = Get-ActivationConfiguration $activateFlowConfiguration
             $config = Get-Content $connectionReferences | ConvertFrom-Json
 
             foreach ($connectionRefConfig in $config) {
@@ -220,7 +220,7 @@ function Get-ConnectionReferenceFlowActivations {
     }
 }
 
-function Get-OwnerFlowActivations {
+function Get-OwnerFlowActivation {
     param (
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$solutionComponentOwnershipConfiguration,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$activateFlowConfiguration,
@@ -229,7 +229,7 @@ function Get-OwnerFlowActivations {
     )
     if($solutionComponentOwnershipConfiguration -ne "") {
         $config = Get-Content $solutionComponentOwnershipConfiguration | ConvertFrom-Json
-        $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
+        $activationConfigs = Get-ActivationConfiguration $activateFlowConfiguration
 
         foreach ($ownershipConfig in $config) {
             $existingActivation = $flowsToActivate | Where-Object { $_.solutionComponentUniqueName -eq $ownershipConfig.solutionComponentUniqueName } | Select-Object -First 1

@@ -1,5 +1,5 @@
 ﻿#Run in Windows Powershell
-function Invoke-ActivateFlows-Test()
+function Invoke-ActivateFlow-Test()
 {
     Set-Location -Path "..\"
     $testConfig = Get-Content ".\TestData\activate-flows-test.config.json" | ConvertFrom-Json
@@ -25,4 +25,4 @@ function Invoke-ActivateFlows-Test()
     Invoke-Pester -Container $container
 }
 
-Invoke-ActivateFlows-Test
+Invoke-ActivateFlow-Test
