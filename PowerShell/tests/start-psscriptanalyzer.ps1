@@ -11,7 +11,7 @@ param (
 function Add-PRComment {
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $true)][string]$PRNumber
+    [Parameter(Mandatory = $true)][string]$PRNumber,
     [Parameter(Mandatory = $true)][string]$Body
 )
     Write-Information "Posting PR Comment via AzureDevOps REST API"
