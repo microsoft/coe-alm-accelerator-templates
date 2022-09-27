@@ -1,5 +1,7 @@
 trigger:
   none
+variables:
+- group: alm-accelerator-variable-group
 pr: 
   branches:
     include:
