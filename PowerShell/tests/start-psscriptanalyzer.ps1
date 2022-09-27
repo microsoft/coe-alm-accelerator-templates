@@ -14,21 +14,22 @@ param (
     [Parameter(Mandatory = $true)][string]$PRNumber,
     [Parameter(Mandatory = $true)][string]$Body
 )
-    Write-Information "Posting PR Comment via AzureDevOps REST API"
+    Write-Host "Posting PR Comment via AzureDevOps REST API"
 
     # post the comment to the pull request
     try {
         $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$PRNumber"
         Write-Host $uri
+        Write-Host $Body
         $pr = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json
         if($null -ne $pr) {
             $uri = $pr._links.comments.href
-            Write-Information "Constructed URL: $uri"
+            Write-Host $uri
 
             $response = Invoke-RestMethod -Uri $uri -Method POST -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -Body $Body -ContentType application/json
 
             if ($null -eq $response) {
-                Write-Information "Rest API posted OK"
+                Write-Host "Rest API posted OK"
             }
         }
     }
@@ -75,7 +76,7 @@ if ( $ScriptAnalyzerResult ) {
 :white_check_mark: Script Analyzer found no issues with your code! :hand:
 "@
 
-    Write-Information "Posting PR Comment via AzureDevOps REST API"
+    Write-Host "Posting PR Comment via AzureDevOps REST API"
 
     $body = @"
 {
