@@ -27,9 +27,22 @@ function Invoke-ActivateFlow {
 
     $flowsToActivate = [System.Collections.ArrayList]@()
 
-    Get-UserConfiguredFlowActivation $activateFlowConfiguration $conn $flowsToActivate
-    Get-ConnectionReferenceFlowActivation $connectionReferences $activateFlowConfiguration $conn $flowsToActivate
-    Get-OwnerFlowActivation $solutionComponentOwnershipConfiguration $activateFlowConfiguration $conn $flowsToActivate
+    Get-UserConfiguredFlowActivation
+        -activateFlowConfiguration $activateFlowConfiguration
+        -conn $conn
+        -flowsToActivate $flowsToActivate
+
+    Get-ConnectionReferenceFlowActivation
+        -connectionReferences $connectionReferences
+        -activateFlowConfiguration $activateFlowConfiguration
+        -conn $conn
+        -flowsToActivate $flowsToActivate
+
+    Get-OwnerFlowActivation
+        -solutionComponentOwnershipConfiguration $solutionComponentOwnershipConfiguration
+        -activateFlowConfiguration $activateFlowConfiguration
+        -conn $conn
+        -flowsToActivate $flowsToActivate
 
     #Activate any flows added to the collection based on sort order
     $impersonationConn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"

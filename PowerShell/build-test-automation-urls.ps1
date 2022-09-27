@@ -32,7 +32,10 @@ function Set-CanvasTestAutomationURLs {
                         if ($line.Contains($asTestCase)) {
                             $pipeDelimeter = "|"
                             $testCaseId = $line.Replace($asTestCase,$pipeDelimeter).Split($pipeDelimeter)[0].Replace("`"", "").Replace("'", "").Trim()
-                            $testUrl = Get-CanvasAppPlayUrl $token $hostUrl $appName
+                            $testUrl = Get-CanvasAppPlayUrl
+                                -token $token
+                                -hostUrl $hostUrl
+                                -canvasName $appName
                             $testUrl = "$testUrl&__PATestCaseId=$testCaseId&source=testStudioLink"
                             $testUrls.Add($testUrl)
                             # We need to bypass consent.  Otherwise the test might fail.
