@@ -48,9 +48,7 @@ if ( $ScriptAnalyzerResult ) {
     # build the markdown comments
     # cannot be tabbed over to match indentation
     $markdownComment = $ScriptAnalyzerResultString
-    $body = {
-        "body": "$markdownComment"
-    }
+    $body = [PSCustomObject]@{"body"="$markdownComment"}
     $jsonBody = $body | ConvertTo-Json
     # post to the PR
     Add-PRComment -PRNumber $PRNumber -Body $jsonBody
@@ -63,9 +61,7 @@ if ( $ScriptAnalyzerResult ) {
 
     $markdownComment = ":white_check_mark: Script Analyzer found no issues with your code! :hand:"
     Write-Host "Posting PR Comment via AzureDevOps REST API"
-    $body = {
-        "body": "$markdownComment"
-    }
+    $body = [PSCustomObject]@{"body"="$markdownComment"}
     # post to the PR
     $jsonBody = $body | ConvertTo-Json
     Add-PRComment -PRNumber $PRNumber -Body ConvertTo-Json $jsonBody
