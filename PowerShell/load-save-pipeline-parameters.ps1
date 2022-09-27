@@ -1,15 +1,15 @@
 function Write-Export-Pipeline-Parameters {
     param (
-        [Parameter(Mandatory)] [String]$filePath, 
-        [Parameter()] [String]$gitAccessUrl, 
+        [Parameter(Mandatory)] [String]$filePath,
+        [Parameter()] [String]$gitAccessUrl,
         [Parameter()] [String]$project,
-        [Parameter()] [String]$repo, 
+        [Parameter()] [String]$repo,
         [Parameter()] [String]$branch,
-        [Parameter()] [String]$branchToCreate, 
+        [Parameter()] [String]$branchToCreate,
         [Parameter()] [String]$commitMessage,
-        [Parameter()] [String]$email, 
+        [Parameter()] [String]$email,
         [Parameter()] [String]$serviceConnectionName,
-        [Parameter()] [String]$serviceConnectionUrl, 
+        [Parameter()] [String]$serviceConnectionUrl,
         [Parameter()] [String]$solutionName,
         [Parameter()] [String]$userName
     )
@@ -21,26 +21,26 @@ function Write-Export-Pipeline-Parameters {
 
 function Write-Deploy-Pipeline-Parameters {
     param (
-        [Parameter(Mandatory)] [String]$filePath, 
-        [Parameter()] [String]$serviceConnectionName, 
+        [Parameter(Mandatory)] [String]$filePath,
+        [Parameter()] [String]$serviceConnectionName,
         [Parameter()] [String]$serviceConnectionUrl,
-        [Parameter()] [String]$environmentName, 
+        [Parameter()] [String]$environmentName,
         [Parameter()] [String]$solutionName,
-        [Parameter()] [String]$importUnmanaged, 
+        [Parameter()] [String]$importUnmanaged,
         [Parameter()] [String]$overwriteUnmanagedCustomizations,
-        [Parameter()] [String]$skipBuildToolsInstaller, 
+        [Parameter()] [String]$skipBuildToolsInstaller,
         [Parameter()] [String]$cacheEnabled
     )
     $pipelineParameterObject = [PSCustomObject]@{"serviceConnectionName"="$serviceConnectionName"; "serviceConnectionUrl"="$serviceConnectionUrl"; "environmentName"="$environmentName"; "solutionName"="$solutionName"; "importUnmanaged"="$importUnmanaged"; "overwriteUnmanagedCustomizations"="$overwriteUnmanagedCustomizations"; "skipBuildToolsInstaller"="$skipBuildToolsInstaller"; "cacheEnabled"="$cacheEnabled" }
     Write-Pipeline-Parameters $filePath $pipelineParameterObject
 }
 
-function Write-Build-Pipeline-Parameters {
+function Write-Build-Pipeline-Parameter {
     param (
-        [Parameter(Mandatory)] [String]$filePath, 
-        [Parameter()] [String]$buildType, 
+        [Parameter(Mandatory)] [String]$filePath,
+        [Parameter()] [String]$buildType,
         [Parameter()] [String]$serviceConnectionName,
-        [Parameter()] [String]$serviceConnectionUrl, 
+        [Parameter()] [String]$serviceConnectionUrl,
         [Parameter()] [String]$solutionName
     )
     $pipelineParameterObject = [PSCustomObject]@{"buildType"=$buildType; "serviceConnectionName"="$serviceConnectionName"; "serviceConnectionUrl"="$serviceConnectionUrl"; "solutionName"="$solutionName" }

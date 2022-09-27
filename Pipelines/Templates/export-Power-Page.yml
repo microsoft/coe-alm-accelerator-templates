@@ -28,7 +28,7 @@ steps:
 #TODO Because the override flag is not exposed yet in tools, so we need to clear the folder manually
 - pwsh: |
     . "$env:POWERSHELLPATH/portal-functions.ps1"
-    Clean-Website-Folder "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(WebsiteName)"
+    Remove-Website-Folder "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(WebsiteName)"
   displayName: 'Clear Download Folder'
   condition: and(succeeded(), ne(variables['websiteId'], 'NA'))
 

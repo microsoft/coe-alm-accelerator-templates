@@ -11,7 +11,7 @@
     Write-Information "solutionUnpackedFolder - $solutionUnpackedFolder"
     if(Test-Path "$solutionUnpackedFolder")
     {
-        $matchedFolders = Get-ChildItem "$solutionUnpackedFolder" -Directory | select Name
+        $matchedFolders = Get-ChildItem "$solutionUnpackedFolder" -Directory | Select-Object Name
         Write-Information "matchedFolders - $matchedFolders"
 
         if($matchedFolders){
@@ -25,7 +25,7 @@
     return $websiteName
 }
 
-function Clean-Website-Folder
+function Remove-Website-Folder
 {
     param (
         [Parameter(Mandatory)] [String]$sourcesDirectory,

@@ -25,7 +25,7 @@ function Write-Export-Pipeline-Parameters-Test()
     Invoke-Pester -Container $container
 }
 
-function Write-Build-Pipeline-Parameters-Test()
+function Write-Build-Pipeline-Parameter-Test()
 {
     $testConfig = Get-Content ".\TestData\save-build-pipeline-parameter-test.config.json" | ConvertFrom-Json
 
@@ -62,5 +62,5 @@ function Write-Deploy-Pipeline-Parameters-Test()
 }
 
 Write-Export-Pipeline-Parameters-Test
-Write-Build-Pipeline-Parameters-Test
+Write-Build-Pipeline-Parameter-Test
 Write-Deploy-Pipeline-Parameters-Test
