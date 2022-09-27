@@ -22,6 +22,7 @@ jobs:
           PR_LOOP_USERNAME: ${{ secrets.PR_LOOP_USERNAME }}
         run: |
           . ./.github/workflows/pr-loop.ps1
+          Install-Module PSScriptAnalyzer
           $data = @{
               Org                   = $env:AZDO_ORG
               Project               = $env:AZDO_PROJECT
