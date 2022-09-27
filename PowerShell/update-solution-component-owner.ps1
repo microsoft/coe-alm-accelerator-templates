@@ -24,5 +24,5 @@ function Invoke-UpdateSolutionComponentOwner {
         Write-Information -MessageData "Setting flow owner: "$ownershipConfig.solutionComponent.name
         $impersonationConn.OrganizationWebProxyClient.CallerId = $ownershipConfig.impersonationCallerId
         Set-CrmRecordOwner -conn $conn $ownershipConfig.solutionComponent $ownershipConfig.impersonationCallerId
-    }    
+    }
 }

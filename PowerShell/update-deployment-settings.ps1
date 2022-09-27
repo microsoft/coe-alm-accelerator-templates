@@ -33,17 +33,17 @@
     }
 
     #Update / Create Deployment Pipelines
-    New-DeploymentPipeline 
-        -pipelineSourceDirectory "$pipelineSourceDirectory" 
-        -buildProjectName "$buildProjectName" 
-        -buildRepositoryName "$buildRepositoryName" 
-        -orgUrl "$orgUrl" 
-        -projectName "$projectName" 
-        -repo "$repo" 
-        -azdoAuthType "$azdoAuthType" 
-        -pat "$pat" 
-        -solutionName "$solutionName" 
-        -configurationData $configurationData 
+    New-DeploymentPipeline
+        -pipelineSourceDirectory "$pipelineSourceDirectory"
+        -buildProjectName "$buildProjectName"
+        -buildRepositoryName "$buildRepositoryName"
+        -orgUrl "$orgUrl"
+        -projectName "$projectName"
+        -repo "$repo"
+        -azdoAuthType "$azdoAuthType"
+        -pat "$pat"
+        -solutionName "$solutionName"
+        -configurationData $configurationData
         -agentOS $agentOS
 
     Write-Information -MessageData "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"

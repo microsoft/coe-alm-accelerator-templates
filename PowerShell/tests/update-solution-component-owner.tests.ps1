@@ -8,7 +8,7 @@ Describe 'Enable-Disable-Solution-Flows-Test' {
         . ..\activate-flows.ps1
         . ..\update-solution-component-owner.ps1
         . .\utilities.tests.ps1
-   
+
         $componentOwnerConfig = Invoke-SetDeploymentVariable "$SolutionComponentOwnershipConfigurationPath" "SolutionComponentOwnershipConfiguration"
         Invoke-UpdateSolutionComponentOwner $DataverseConnectionString $ServiceConnection $MicrosoftXrmDataPowerShellModule $XrmDataPowerShellVersion $componentOwnerConfig
     }

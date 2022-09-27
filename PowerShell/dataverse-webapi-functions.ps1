@@ -22,7 +22,7 @@ function Get-HostFromUrl {
 }
 
 # Convenient inside of agent
-function Set-SpnTokenVariableWithinAgent {    
+function Set-SpnTokenVariableWithinAgent {
     param (
         [Parameter(Mandatory)] [String]$tenantId,
         [Parameter(Mandatory)] [String]$clientId,
@@ -31,7 +31,7 @@ function Set-SpnTokenVariableWithinAgent {
         [Parameter(Mandatory)] [String]$aadHost
     )
     $dataverseHost = Get-HostFromUrl $serviceConnection
-      
+
     $spnToken = Get-SpnToken $tenantId $clientId $clientSecret $dataverseHost $aadHost
 
     Write-Information -MessageData "##vso[task.setvariable variable=SpnToken;issecret=true]$spnToken"
@@ -53,7 +53,7 @@ function Set-RequestUrl {
         [Parameter(Mandatory)] [String]$requestUrlRemainder
     )
     $requestUrl = "https://$dataverseHost/api/data/v9.2/$requestUrlRemainder"
-    return $requestUrl    
+    return $requestUrl
 }
 
 function Invoke-DataverseHttpGet {

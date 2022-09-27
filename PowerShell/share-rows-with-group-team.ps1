@@ -6,7 +6,11 @@ function Grant-AccessToWorkflow {
         [Parameter(Mandatory)] [String]$teamName,
         [Parameter(Mandatory)] [String]$workflowId
     )
-    $teamId = Get-TeamId $token $dataverseHost $teamName
+    $teamId = Get-TeamId
+        -token $token
+        -dataverseHost $dataverseHost
+        -teamName $teamName
+
     if($teamId -ne '') {
         $body = "{
         `n    `"Target`":{
@@ -49,7 +53,7 @@ function Grant-AccessToConnector {
         `n        `"AccessMask`": `"ReadAccess`"
         `n    }
         `n}"
-    
+
         $requestUrlRemainder = "GrantAccess"
         Invoke-DataverseHttpPost $token $dataverseHost $requestUrlRemainder $body
     }
