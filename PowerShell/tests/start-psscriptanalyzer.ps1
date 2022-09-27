@@ -9,15 +9,15 @@ param (
 function Add-PRComment {
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $true)]
-    [string]
-    $Body
+    [Parameter(Mandatory = $true)][string]$Body
 )
     Write-Information "Posting PR Comment via AzureDevOps REST API"
 
     # post the comment to the pull request
     try {
-        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$($Env:SYSTEM_PULLREQUEST_PULLREQUESTID)"
+        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$Env:SYSTEM_PULLREQUEST_PULLREQUESTID"
+        Write-Host $uri
+        Write-Host $env:GITHUBPAT
         $response = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json
 
         if($null -ne $response) {
