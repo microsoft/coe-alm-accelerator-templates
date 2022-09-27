@@ -7,10 +7,10 @@ function Invoke-EnableDisableSolutionFlows-Test()
 
     $path = './enable-disable-solution-flows.tests.ps1'
     $data = @{
-        BuildSourceDirectory    = $testConfig.buildSourceDirectory 
-        Repo                    = $testConfig.repo 
-        SolutionName            = $testConfig.solutionName 
-        DisableAllFlows         = $testConfig.disableAllFlows 
+        BuildSourceDirectory    = $testConfig.buildSourceDirectory
+        Repo                    = $testConfig.repo
+        SolutionName            = $testConfig.solutionName
+        DisableAllFlows         = $testConfig.disableAllFlows
         ActivationConfigPath    = $testConfig.activationConfigPath
     }
     $container = New-PesterContainer -Path $path -Data $data

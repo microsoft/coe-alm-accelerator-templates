@@ -15,13 +15,13 @@ function Invoke-E2E-Pipeline-Tests-Test($solutionName)
         SourceBranch          = $solutionName
         BranchToCreate        = 'pr-loop-e2e-test-' + (New-Guid).Guid
         CommitMessage         = 'pr-loop-e2e-test'
-        Data                  = $testData 
+        Data                  = $testData
         Email                 = $testConfig.email
         Repo                  = $testConfig.repo
         ServiceConnection     = $testConfig.serviceConnection
         SolutionName          = $solutionName
         UserName              = $testConfig.user
-    }    
+    }
     $container = New-PesterContainer -Path $path -Data $data
     Invoke-Pester -Container $container
 }
