@@ -13,22 +13,22 @@ param (
     [string]
     $Body
 )
-    Write-Verbose "Posting PR Comment via AzureDevOps REST API"
+    Write-Information "Posting PR Comment via AzureDevOps REST API"
 
     # post the comment to the pull request
     try {
         $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$($Env:SYSTEM_PULLREQUEST_PULLREQUESTID)"
-        $response = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $($Env:GITHUBPAT)" } -ContentType application/json
+        $response = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json
 
         if($null -ne $response) {
             $pr = Get-Content $response | ConvertFrom-Json
             $uri = $pr._links.comments
-            Write-Verbose "Constructed URL: $uri"
+            Write-Information "Constructed URL: $uri"
 
-            $response = Invoke-RestMethod -Uri $uri -Method POST -Headers @{Authorization = "Bearer $($Env:GITHUBPAT)" } -Body $Body -ContentType application/json
+            $response = Invoke-RestMethod -Uri $uri -Method POST -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -Body $Body -ContentType application/json
 
             if ($null -eq $response) {
-                Write-Verbose "Rest API posted OK"
+                Write-Information "Rest API posted OK"
             }
         }
     }
@@ -49,9 +49,9 @@ if ( $ScriptAnalyzerResult ) {
     foreach ($result in $ScriptAnalyzerResult) {
         # build the script path for the PR comment, drop the workdir from the path
         $ScriptPath = $result.ScriptPath -replace [regex]::Escape($Env:SYSTEM_DEFAULTWORKINGDIRECTORY), ""
-        Write-Verbose "ScriptPath: $ScriptPath"
-        Write-Verbose "Line Number: $($result.Line)"
-        Write-Verbose "Message: $($result.Message)"
+        Write-Information "ScriptPath: $ScriptPath"
+        Write-Information "Line Number: $($result.Line)"
+        Write-Information "Message: $($result.Message)"
 
 
         # build the markdown comments
@@ -81,7 +81,7 @@ if ( $ScriptAnalyzerResult ) {
 :white_check_mark: Script Analyzer found no issues with your code! High Five! :hand:
 "@
 
-    Write-Verbose "Posting PR Comment via AzureDevOps REST API"
+    Write-Information "Posting PR Comment via AzureDevOps REST API"
 
     $body = @"
 {
