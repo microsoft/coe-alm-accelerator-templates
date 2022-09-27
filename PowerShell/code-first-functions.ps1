@@ -217,6 +217,8 @@ function clone-or-sync-solution{
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$pacPath
     )
+	
+	$legacyFolderPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
     $pacexepath = "$pacPath\pac.exe"
     if(Test-Path "$pacexepath")
     {
@@ -236,9 +238,10 @@ function clone-or-sync-solution{
             Invoke-Expression -Command "$pacexepath $syncCommand"
         }
         else {
-            if(Test-Path "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"){ # Legacy folder structure
+            if(Test-Path "$legacyFolderPath"){ # Legacy folder structure
+				Write-Host "Deleting legcay folder path - $legacyFolderPath"
                 # Delete "SolutionPackage" folder
-                Remove-Item "$buildSourceDirectory\$repo\$solutionName\SolutionPackage" -Force
+                Remove-Item "$legacyFolderPath" -recurse -Force
             }
 
             # Trigger Clone
