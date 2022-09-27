@@ -37,7 +37,6 @@
             } else {
                 Write-Information $results.Item2.ToString()
             }
-    
             $saveResults = $results.Item1.SaveToSources($destination)
             if($saveResults.HasErrors) {
                 throw $saveResults.ToString();

@@ -48,13 +48,13 @@ function Write-Deploy-Pipeline-Parameters-Test()
     $path = './load-save-deploy-parameters.tests.ps1'
     $data = @{
         ConfigFileOutPath                   = $testConfig.configFileOutPath #".\TestData\out-deploy-pipeline-parameters.json"
-        ServiceConnectionName               = $testConfig.serviceConnectionName 
-        ServiceConnectionUrl                = $testConfig.serviceConnectionUrl 
-        EnvironmentName                     = $testConfig.environmentName 
-        SolutionName                        = $testConfig.solutionName 
-        ImportUnmanaged                     = $testConfig.importUnmanaged 
-        OverwriteUnmanagedCustomizations    = $testConfig.overwriteUnmanagedCustomizations 
-        SkipBuildToolsInstaller             = $testConfig.skipBuildToolsInstaller 
+        ServiceConnectionName               = $testConfig.serviceConnectionName
+        ServiceConnectionUrl                = $testConfig.serviceConnectionUrl
+        EnvironmentName                     = $testConfig.environmentName
+        SolutionName                        = $testConfig.solutionName
+        ImportUnmanaged                     = $testConfig.importUnmanaged
+        OverwriteUnmanagedCustomizations    = $testConfig.overwriteUnmanagedCustomizations
+        SkipBuildToolsInstaller             = $testConfig.skipBuildToolsInstaller
         CacheEnabled                        = $testConfig.cacheEnabled
     }
     $container = New-PesterContainer -Path $path -Data $data

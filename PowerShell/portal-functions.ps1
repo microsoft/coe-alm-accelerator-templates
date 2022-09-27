@@ -30,7 +30,7 @@ function Clean-Website-Folder
     param (
         [Parameter(Mandatory)] [String]$sourcesDirectory,
         [Parameter(Mandatory)] [String]$repo,
-        [Parameter(Mandatory)] [String]$solutionName,        
+        [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$websiteName
     )
     $portalWebsitePath = "$sourcesDirectory\$repo\$solutionName\PowerPages\$websiteName\"

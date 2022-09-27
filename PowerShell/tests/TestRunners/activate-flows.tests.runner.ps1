@@ -14,7 +14,6 @@ function Invoke-ActivateFlows-Test()
         ComponentOwnerConfigPath                           = $testConfig.componentOwnerConfigPath
         ConnectionReferenceConfigPath                      = $testConfig.connectionReferenceConfigPath
         DataverseConnectionString                          = $testConfig.dataverseConnectionString
-        ServiceConnection                                  = $testConfig.serviceConnection
         TenantId                                           = $testConfig.tenantId
         ClientId                                           = $testConfig.clientId
         ClientSecret                                       = $testConfig.clientSecret

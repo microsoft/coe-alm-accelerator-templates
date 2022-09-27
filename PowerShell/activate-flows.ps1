@@ -1,7 +1,6 @@
 function Invoke-ActivateFlows {
     param (
         [Parameter(Mandatory)] [String]$dataverseConnectionString,
-        [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule,
         [Parameter(Mandatory)] [String]$xrmDataPowerShellVersion,
         [Parameter(Mandatory)] [String]$microsoftPowerAppsAdministrationPowerShellModule,
@@ -268,7 +267,7 @@ function Get-OwnerFlowActivations {
                             if ($activateFlow -ne 'false') {
                                 Write-Information "Adding flow " $ownershipConfig.solutionComponentName " to activation collection"
                                 $flowActivation = [PSCustomObject]@{}
-    
+
                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $ownershipConfig.solutionComponentUniqueName
                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'impersonationCallerId' -Value $systemUserId
