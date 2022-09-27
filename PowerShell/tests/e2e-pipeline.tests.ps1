@@ -72,7 +72,18 @@ class Helper {
 }
 
 BeforeAll { 
-    [Helper]::AccessToken = (az account get-access-token | ConvertFrom-Json -Depth 10).accessToken    
+    [Helper]::AccessToken = (az account get-access-token | ConvertFrom-Json -Depth 10).accessToken
+}
+
+Describe 'PSScriptAnalyzer analysis' {    
+    $ScriptAnalyzerRules = Get-ScriptAnalyzerRule -Name "PSAvoid*"
+
+    Foreach ( $Rule in $ScriptAnalyzerRules ) {
+        It "Should not return any violation for the rule : $($Rule.RuleName)" {
+            Invoke-ScriptAnalyzer -Path "..\**\*.ps1" -IncludeRule $Rule.RuleName |
+            Should BeNullOrEmpty
+        }
+    }
 }
 
 Describe 'E2E-Pipeline-Test' {
