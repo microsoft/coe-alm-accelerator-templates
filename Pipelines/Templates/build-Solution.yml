@@ -39,8 +39,13 @@ steps:
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      install-pac-and-authenticate "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)"
-  displayName: 'Install pac cli and Authenticate'
+      set-pac-tools-path "$(Agent.OS)"
+  displayName: 'Set pac tools path'
+
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      pac-authenticate "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)" "$(pacPath)"
+  displayName: 'Pac cli and Authenticate'
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
@@ -165,21 +170,14 @@ steps:
 
 - template: Hooks\build-solution-pack-pre-hook.yml
 
-#- pwsh: |
-#      . "$env:POWERSHELLPATH/code-first-functions.ps1"
-#      install-pac-and-authenticate "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)"
-#  displayName: 'Install pac cli and Authenticate'
-
-#- pwsh: |
-#      Write-Host "pacPath - $(pacPath)"
-#      . "$env:POWERSHELLPATH/code-first-functions.ps1"
-#      restructure-legacy-folders '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
-#  displayName: 'Restructure legacy folders'
-
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      check-code-first-components '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
+  displayName: 'Check codefirst components existence'
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      add-pcf-Projects-to-cdsproj '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
+      add-codefirst-projects-to-cdsproj '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
   displayName: 'Add project references to cdsproject'
 
 - pwsh: |
@@ -189,22 +187,24 @@ steps:
 
 - task: VSBuild@1
   inputs:
-    #solution: '$(Build.SourcesDirectory)\$(RepoName)\**\*.cdsproj'
     solution: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\${{parameters.solutionName}}.cdsproj'
     msbuildArgs: '/t:build /restore'
     #platform: '$(buildPlatform)'
     #configuration: '$(buildConfiguration)'
   displayName: 'Build cdsproject'
 
-#Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
-#- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
-#  displayName: 'Run Solution Checker'
-#  inputs:
-#    authenticationType: PowerPlatformSPN
-#    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
-#    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
-#    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
-#  condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
+- task: VSTest@2
+  inputs:
+    platform: 'Any CPU'
+    configuration: 'Release'
+    codeCoverageEnabled: True
+    searchFolder: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}'
+    testAssemblyVer2: |
+      **\*test*.dll
+      !**\*TestAdapter.dll
+      !**\obj\**
+    condition: and(succeeded(), eq(variables.pluginsexists, 'true'))
+  displayName: 'Run Unit Test Case Projects'
 
 - pwsh: |
     $sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\bin\Debug\*"
@@ -228,18 +228,26 @@ steps:
 
 - pwsh: |
     Get-ChildItem "$(Build.ArtifactStagingDirectory)"
-  displayName: 'Display ArtifactStagingDirectory Files'
+  displayName: 'Display ArtifactStagingDirectory Files-1'
 
-##Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
-#- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
-#  displayName: 'Run Solution Checker'
-#  inputs:
-#    authenticationType: PowerPlatformSPN
-#    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
-#    #FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
-#    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}.zip'
-#    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
-#  condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      append-version-to-managed-solution '$(Build.ArtifactStagingDirectory)' '${{parameters.solutionName}}' '$(Build.BuildNumber)'
+  displayName: 'Append version to managed solution'
+
+- pwsh: |
+    Get-ChildItem "$(Build.ArtifactStagingDirectory)"
+  displayName: 'Display ArtifactStagingDirectory Files-2'
+
+#Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
+  displayName: 'Run Solution Checker'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
+    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
+    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
+  condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
 
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Artifacts'

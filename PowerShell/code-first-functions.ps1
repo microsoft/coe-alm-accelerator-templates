@@ -66,7 +66,7 @@ function set-cmd-Path{
     }
 }
 
-function add-pcf-Projects-to-cdsproj{
+function add-codefirst-projects-to-cdsproj{
     param (
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$repo,
@@ -91,6 +91,7 @@ function add-pcf-Projects-to-cdsproj{
             $cdsProjectRootPath = [System.IO.Path]::GetDirectoryName($cdsProjPath)
             Set-Location -Path $cdsProjectRootPath
           
+          Write-Host "Adding .pcf project references to cdsproj"
           # Get all pcfproject files under Repo/Commited Solution folder
           $pcfProjectFiles = Get-ChildItem -Path "$buildSourceDirectory\$repo\$solutionName" -Filter *.pcfproj -Recurse
           foreach($pcfProj in $pcfProjectFiles)
@@ -99,6 +100,19 @@ function add-pcf-Projects-to-cdsproj{
             $pcfProjectPath = $pcfProj.FullName
 
             $addReferenceCommand = "solution add-reference -p $pcfProjectPath"
+            Write-Host "Add Reference Command - $addReferenceCommand"
+            Invoke-Expression -Command "$pacexepath $addReferenceCommand"
+          } 
+
+          Write-Host "Adding Plugin (i.e.,.csproj) references to cdsproj"
+          # Get all .csproj files under Repo/Commited Solution folder
+          $pluginProjectFiles = Get-ChildItem -Path "$buildSourceDirectory\$repo\$solutionName" -Filter *.csproj -Recurse
+          foreach($pluginProj in $pluginProjectFiles)
+          {     
+            Write-Host "Adding Reference of Plugin Project - " $pluginProj.FullName
+            $pluginProjectPath = $pluginProj.FullName
+
+            $addReferenceCommand = "solution add-reference -p $pluginProjectPath"
             Write-Host "Add Reference Command - $addReferenceCommand"
             Invoke-Expression -Command "$pacexepath $addReferenceCommand"
           } 
@@ -142,9 +156,10 @@ function build-cdsproj{
 function check-code-first-components{
     param (
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
-        [Parameter(Mandatory)] [String]$repo
+        [Parameter(Mandatory)] [String]$repo,
+        [Parameter(Mandatory)] [String]$solutionName
     )
-    $path = "$buildSourceDirectory\$repo"
+    $path = "$buildSourceDirectory\$repo\$solutionName"
     $totalCSproj = (Get-ChildItem -Path $path -force -Recurse | Where-Object Extension -eq '.csproj' | Measure-Object).Count
     $totalpcfproj = (Get-ChildItem -Path $path -force -Recurse | Where-Object Extension -eq '.pcfproj' | Measure-Object).Count
     [bool] $isCSProjExists = ($totalCSproj -gt 0)
@@ -155,25 +170,32 @@ function check-code-first-components{
     Write-Host "##vso[task.setvariable variable=codefirstexists;]$isCodeFirstProjectExists"
 }
 
-function install-pac-and-authenticate{
+function set-pac-tools-path{
+    param (
+        [Parameter(Mandatory)] [String]$agentOS
+    )
+
+   if ($agentOS -eq "Linux") {
+       $pacToolsPath = $env:POWERPLATFORMTOOLS_PACCLIPATH + "/pac_linux/tools"
+   }
+   else {
+       $pacToolsPath = $env:POWERPLATFORMTOOLS_PACCLIPATH + "\pac\tools"
+   } 
+
+    echo "##vso[task.setvariable variable=pacPath]$pacToolsPath"
+}
+
+function pac-authenticate{
     param (
         [Parameter(Mandatory)] [String]$serviceConnectionUrl,
         [Parameter(Mandatory)] [String]$clientId,
         [Parameter(Mandatory)] [String]$clientSecret,
-        [Parameter(Mandatory)] [String]$tenantID
+        [Parameter(Mandatory)] [String]$tenantID,
+        [Parameter(Mandatory)] [String]$pacPath
     )
-    $pacexepath = $null
-    $outFolder = "pac"
-    $nugetPackage = "Microsoft.PowerApps.CLI"
-    nuget install $nugetPackage -OutputDirectory $outFolder
-
-    $pacNugetFolder = Get-ChildItem $outFolder | Where-Object {$_.Name -match $nugetPackage + "."}
-    $pacPath = $pacNugetFolder.FullName + "\tools"
-    echo "##vso[task.setvariable variable=pacPath]$pacPath"
     if(Test-Path "$pacPath\pac.exe")
     {
         $pacexepath = "$pacPath\pac.exe"
-        #Invoke-Expression -Command "$pacexepath auth create --url ${{parameters.serviceConnectionUrl}} --name ppdev --applicationId $(ClientId) --clientSecret $(ClientSecret) --tenant $(TenantID)"
         Invoke-Expression -Command "$pacexepath auth create --url $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
     }
     else
@@ -192,15 +214,9 @@ function clone-or-sync-solution{
         [Parameter(Mandatory)] [String]$tenantID,
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$repo,
-        [Parameter(Mandatory)] [String]$solutionName
+        [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter(Mandatory)] [String]$pacPath
     )
-    $pacexepath = $null
-    $outFolder = "pac"
-    $nugetPackage = "Microsoft.PowerApps.CLI"
-    nuget install $nugetPackage -OutputDirectory $outFolder
-
-    $pacNugetFolder = Get-ChildItem $outFolder | Where-Object {$_.Name -match $nugetPackage + "."}
-    $pacPath = $pacNugetFolder.FullName + "\tools"
     $pacexepath = "$pacPath\pac.exe"
     if(Test-Path "$pacexepath")
     {
@@ -210,14 +226,13 @@ function clone-or-sync-solution{
 
         # Trigger Clone or Sync
         $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+        $cdsProjFolderPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName"
         # If .cds project file exists (i.e., Clone performed already) trigger Sync
         if(Test-Path "$cdsProjPath")
         {
             Write-Host "Cloned solution available; Triggering Solution Sync"
-            # Point cmd to cdsproj file directory
-            set-cmd-Path "$cdsProjPath"
-            $syncCommand = "solution sync -pca true -o $unpackfolderpath -p Both"
-            Write-Host "Triggering Sync"
+            $syncCommand = "solution sync -pca true -f $cdsProjFolderPath -p Both"
+            Write-Host "Triggering Sync - $syncCommand"
             Invoke-Expression -Command "$pacexepath $syncCommand"
         }
         else {
@@ -232,8 +247,6 @@ function clone-or-sync-solution{
             Invoke-Expression -Command "$pacexepath $cloneCommand"
         }        
     }
-    ## Install Pac and Authenticate
-    #$pacexepath = install-pac-and-authenticate "$serviceConnectionUrl" "$clientId" "$clientSecret" "$tenantID"
 }
 
 function add-packagetype-node-to-cdsproj{
@@ -245,14 +258,23 @@ function add-packagetype-node-to-cdsproj{
     $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
 
     if(Test-Path $cdsProjPath){
-        $cdsContent = Get-Content -Path $cdsProjPath
-        [xml]$xmlDoc = $cdsContent
+        [xml]$xmlDoc = Get-Content -Path $cdsProjPath
 
-        $newPropertyGroup = $xmlDoc.Project.AppendChild($xmlDoc.CreateElement("PropertyGroup",$xmlDoc.Project.NamespaceURI));
-        $newSolPkgType = $newPropertyGroup.AppendChild($xmlDoc.CreateElement("SolutionPackageType",$xmlDoc.Project.NamespaceURI));
-        $newSolPkgTypeTextNode = $newSolPkgType.AppendChild($xmlDoc.CreateTextNode("Both"));
+        # Skip logic if 'Solution Package Type' node already exists'
+        $solutionPackageType = $xmlDoc.Project.PropertyGroup.SolutionPackageType
 
-        $xmlDoc.save("$cdsProjPath")
+        if($solutionPackageType -eq $null){
+            Write-Host "Adding SolutionPackageType='Both' node"
+            $newPropertyGroup = $xmlDoc.Project.AppendChild($xmlDoc.CreateElement("PropertyGroup",$xmlDoc.Project.NamespaceURI));
+            $newSolPkgType = $newPropertyGroup.AppendChild($xmlDoc.CreateElement("SolutionPackageType",$xmlDoc.Project.NamespaceURI));
+            $newSolPkgTypeTextNode = $newSolPkgType.AppendChild($xmlDoc.CreateTextNode("Both"));
+
+            $xmlDoc.save("$cdsProjPath")
+        }
+        else
+        {
+            Write-Host "Solution Package Type' node already exists. Value - $solutionPackageType"
+        }
     }
     else{
         Write-Host "cdsproj file unavailble at - $cdsProjPath"
@@ -276,7 +298,7 @@ function restructure-legacy-folders{
         # Get Publisher Name
         $publisherName = get-publisher-name "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\Other\Solution.xml"
         # Get Prefix Name
-        $publisherPrefix = get-publisher-prefix-by-Name "$serviceConnection" "$publisherName"
+        $publisherPrefix = get-publisher-prefix "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\Other\Solution.xml"
 
         Write-Host "publisherName - $publisherName"
         Write-Host "publisherPrefix - $publisherPrefix"
@@ -300,17 +322,14 @@ function restructure-legacy-folders{
         Get-ChildItem -Path "$tempSolPackageDirectory" -Recurse | Move-Item -Destination "$destinationDirectory" -Force
 
         # Generate .cdsproj file by triggering Clone
-        $temp_clone_path = "$artifactStagingDirectory\temp_clone\$solutionName"
-        #$cloneCommand = "solution clone -n $solutionName -pca true -o $temp_clone_path -p Both"
-        #Write-Host "Clone Command - $pacPath\pac.exe $cloneCommand"
-        #Invoke-Expression -Command "$pacPath\pac.exe $cloneCommand"
+        $temp_init_path = "$artifactStagingDirectory\temp_init"
 
-        $solInitCommand = "solution init -pn $publisherName -pp $publisherPrefix -o $temp_clone_path"
+        $solInitCommand = "solution init -pn $publisherName -pp $publisherPrefix -o $temp_init_path\$solutionName"
         Write-Host "Solution Init Command - $pacPath\pac.exe $solInitCommand"
         Invoke-Expression -Command "$pacPath\pac.exe $solInitCommand"
 
         # Copy .cdsprojfile from temp to new folder structure
-        $temp_cdsProjPath = "$artifactStagingDirectory\temp_clone\$solutionName\$solutionName.cdsproj"
+        $temp_cdsProjPath = "$temp_init_path\$solutionName\$solutionName.cdsproj"
         Write-Host "temp_cdsProjPath - $temp_cdsProjPath"
         if(Test-Path "$temp_cdsProjPath")
         {
@@ -320,6 +339,17 @@ function restructure-legacy-folders{
         }
         else{
             Write-Host "cdsproj file unavailble at temp path - $temp_cdsProjPath"
+        }
+
+        # Delete Temp folders
+        Write-Host "Deleting Temp folders"
+        if(Test-Path "$tempSolPackageDirectory")
+        {
+            Remove-Item -path "$tempSolPackageDirectory" -recurse -force
+        }
+        if(Test-Path "$temp_init_path")
+        {
+            Remove-Item -path "$temp_init_path" -recurse -force
         }
     }
     else{
@@ -345,31 +375,44 @@ function get-publisher-name{
     return $publisherName
 }
 
-function get-publisher-prefix-by-Name{
+function get-publisher-prefix{
     param (
-        [Parameter(Mandatory)] [String]$serviceConnection,
-        [Parameter(Mandatory)] [String]$publisherName
+        [Parameter(Mandatory)] [String]$solutionFilePath
     )
+    $publisherPrefix = $null
 
-    $prefix = $null
-
-      . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
-    $dataverseHost = Get-HostFromUrl "$serviceConnection"
-	Write-Host "dataverseHost - $dataverseHost"
-
-    $queryPublisher = "publishers?`$select=customizationprefix&`$filter=(uniquename eq '$publisherName')"    
-
-    try{
-        Write-Host "Publisher Query - $queryPublisher"
-        $publisher = Invoke-DataverseHttpGet $env:SpnToken $dataverseHost $queryPublisher
+    if(Test-Path "$solutionFilePath"){
+        [xml]$xmlElm = Get-Content -Path "$solutionFilePath"
+        $publisherPrefix = $xmlElm.ImportExportXml.SolutionManifest.Publisher.CustomizationPrefix
     }
-    catch{
-        Write-Host "Error queryPublisher - $($_.Exception.Message)"
+    else{
+       Write-Host "Solution xml file unavailble at path - $solutionFilePath"
     }
 
-    if($null -ne $publisher.value -and $publisher.value.count -gt 0){
-        $prefix = $publisher.value[0].customizationprefix
-    }
+    Write-Host "publisher Prefix - $publisherPrefix"
+    return $publisherPrefix
+}
 
-    return $prefix
+function append-version-to-managed-solution{
+    param (
+        [Parameter(Mandatory)] [String]$artifactStagingDirectory,
+        [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter(Mandatory)] [String]$buildNumber
+    )
+    $folderType = ".zip"
+    $newFolderName = "$solutionName" + "_" + "$buildNumber" + "$folderType"
+    $managedSolutionPath = "$artifactStagingDirectory\$solutionName" + "_managed.zip"
+    Write-Host "managedSolutionPath - $managedSolutionPath"
+    Write-Host "newFolderName - $newFolderName"
+    if(Test-Path "$managedSolutionPath")
+    {
+        #Rename-Item -Path "$managedSolutionPath" -NewName "$newFolderName"
+
+        # Create a new Solution zip file with new name (Appending version number)
+        Copy-Item "$managedSolutionPath" -Destination "$artifactStagingDirectory\$newFolderName"
+    }
+    else
+    {
+        Write-Host "Solution is unavailble at $managedSolutionPath"
+    }
 }

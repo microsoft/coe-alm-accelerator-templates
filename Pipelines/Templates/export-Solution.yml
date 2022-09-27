@@ -99,13 +99,13 @@ steps:
 
 - template: install-powershell-modules.yml
 
-## Before exporting the solution, publish solution customizations to ensure all the changes are exported
-#- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.publish-customizations.PowerPlatformPublishCustomizations@2
-#  displayName: 'Publish Customizations'
-#  inputs:
-#    authenticationType: PowerPlatformSPN
-#    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
-#  condition: and(succeeded(), not(eq('variables.PublishCustomizationsBeforeExport', 'false')))
+# Before exporting the solution, publish solution customizations to ensure all the changes are exported
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.publish-customizations.PowerPlatformPublishCustomizations@2
+  displayName: 'Publish Customizations'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
+  condition: and(succeeded(), not(eq('variables.PublishCustomizationsBeforeExport', 'false')))
 
 ## Export both unmanaged and managed to put into source control
 #- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@2
@@ -139,7 +139,12 @@ steps:
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      clone-or-sync-solution "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)" "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}"
+      set-pac-tools-path "$(Agent.OS)"
+  displayName: 'Set pac tools path'
+
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      clone-or-sync-solution "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)" "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)"
   displayName: 'pac - Clone or Sync Solution'
 
 - pwsh: |
