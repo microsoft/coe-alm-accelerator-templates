@@ -15,7 +15,7 @@ param (
 
     # post the comment to the pull request
     try {
-        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$(System.PullRequest.PullRequestId)"
+        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$(System.PullRequest.PullRequestNumber)"
         Write-Host $uri
         Write-Host $env:GITHUBPAT
         $response = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json
@@ -47,13 +47,6 @@ if ( $ScriptAnalyzerResult ) {
 
     # loop through each result and post to the azuredevops rest api
     foreach ($result in $ScriptAnalyzerResult) {
-        # build the script path for the PR comment, drop the workdir from the path
-        $ScriptPath = $result.ScriptPath -replace [regex]::Escape($Env:SYSTEM_DEFAULTWORKINGDIRECTORY), ""
-        Write-Information "ScriptPath: $ScriptPath"
-        Write-Information "Line Number: $($result.Line)"
-        Write-Information "Message: $($result.Message)"
-
-
         # build the markdown comments
         # cannot be tabbed over to match indentation
         $markdownComment = @"
@@ -72,7 +65,8 @@ if ( $ScriptAnalyzerResult ) {
         Add-PRComment -Body $body
     }
 
-    throw "PSScriptAnalyzer found issues with your code"
+    #Uncomment the line below to fail build based on results
+    #throw "PSScriptAnalyzer found issues with your code"
 
 } else {
     Write-Output "All Script Analyzer tests passed"
