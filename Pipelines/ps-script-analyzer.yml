@@ -1,0 +1,26 @@
+trigger:
+  none
+
+jobs:
+- job: 'PSScriptAnalyzer'
+  displayName: PSScriptAnalyzer
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+    - task: PowerShell@2
+      displayName: 'Install ScriptAnalyzer'
+      inputs:
+        targetType: inline
+        pwsh: true
+        script: |
+          Install-Module -Name 'PSScriptAnalyzer' -Scope 'CurrentUser' -Force
+    - task: PowerShell@2
+      displayName: 'Analyze and post PR Comment'
+      env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      inputs:
+        targetType: filePath
+        pwsh: true
+        filePath: $(Build.Repository.LocalPath)/PowerShell/tests/start-psscriptanalyzer.ps1
+        arguments: '-ScriptDirectory $(Build.Repository.LocalPath)/PowerShell'
