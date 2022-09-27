@@ -80,7 +80,7 @@ Describe 'PSScriptAnalyzer analysis' {
 
     Foreach ( $Rule in $ScriptAnalyzerRules ) {
         It "Should not return any violation for the rule : $($Rule.RuleName)" {
-            Invoke-ScriptAnalyzer -Path "..\**\*.ps1" -IncludeRule $Rule.RuleName |
+            Invoke-ScriptAnalyzer -Path "..\**.ps1" -IncludeRule $Rule.RuleName |
             Should BeNullOrEmpty
         }
     }
