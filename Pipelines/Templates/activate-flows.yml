@@ -18,8 +18,8 @@ steps:
     try {
         Invoke-ActivateFlow '$(connectionVariables.BuildTools.DataverseConnectionString)' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_PowerApps_Administration_PowerShell)' '$(PowerAppsAdminModuleVersion)' '$(connectionVariables.BuildTools.TenantId)' '$(connectionVariables.BuildTools.ApplicationId)' '$(connectionVariables.BuildTools.ClientSecret)' '${{parameters.solutionName}}' '$(BuildTools.EnvironmentId)' '${{parameters.solutionComponentOwnershipConfiguration}}' '${{parameters.connectionReferences}}' '${{parameters.activateFlowConfiguration}}' 
     } catch {
-        Write-Information "##vso[task.logissue type=warning]Errors occurred while activating flows. Please review the log for specific errors and verify your deployment configuration settings."
-        Write-Information $_
+        Write-Information -MessageData "##vso[task.logissue type=warning]Errors occurred while activating flows. Please review the log for specific errors and verify your deployment configuration settings."
+        Write-Information -MessageData $_
         exit 1;
     }
   displayName: 'Activate Flows'

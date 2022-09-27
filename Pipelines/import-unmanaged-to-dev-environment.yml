@@ -72,7 +72,7 @@ stages:
         serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
 
     - pwsh: |
-        Write-Information "##vso[task.setvariable variable=RepoName]${{parameters.Repo}}"
+        Write-Information -MessageData "##vso[task.setvariable variable=RepoName]${{parameters.Repo}}"
       displayName: 'Set Source Repo Name'
 
     - template: Templates\build-unmanaged-Solution.yml

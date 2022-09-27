@@ -202,7 +202,7 @@ steps:
    ForEach-Object {
     #skip canvas app and workflows folder because canvas and flows team already handles this
      if(-not $_.FullName.Contains('CanvasApps') -and -not $_.FullName.Contains('Workflows')) {
-       Write-Information $_.FullName
+       Write-Information -MessageData $_.FullName
        $formatted = jq . $_.FullName --sort-keys
        $formatted | Out-File $_.FullName -Encoding UTF8
      }
@@ -222,7 +222,7 @@ steps:
      ForEach-Object {
        $fileToFix = $_.Path
        if ($fileToFix -match $reGuid) {
-         Write-Information "Fixing unset GUIDs in BR" $_.Filename
+         Write-Information -MessageData "Fixing unset GUIDs in BR" $_.Filename
          # Use the GUID extracted from the filename to replace the empty GUIDs in the XAML content
          $guid = 'XrmWorkflow' + $matches[1].ToLower().Replace('-', '')
          ((Get-Content -path $fileToFix -Raw) -replace 'XrmWorkflow00000000000000000000000000000000', $guid) |
@@ -339,7 +339,7 @@ steps:
         git commit -m "${{parameters.commitMessage}}"
     }
     else {
-        Write-Information "##vso[task.logissue type=warning]There is nothing to commit. No changes have been made since the previous commit. If this is unexpected make sure your changes have been published before committing again."
+        Write-Information -MessageData "##vso[task.logissue type=warning]There is nothing to commit. No changes have been made since the previous commit. If this is unexpected make sure your changes have been published before committing again."
         exit 1;
     }
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}

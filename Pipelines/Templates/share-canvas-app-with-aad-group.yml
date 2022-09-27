@@ -37,11 +37,11 @@ steps:
             if($canvasApps.Count -gt 0) {
                 $appId = $canvasApps.CrmRecords[0].canvasappid
                 $environmentId = "$(BuildTools.EnvironmentId)"
-                Write-Information "Sharing app $appId with $aadGroupId"
+                Write-Information -MessageData "Sharing app $appId with $aadGroupId"
                 Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $appId -EnvironmentName $environmentId
             }
             else {
-                Write-Information "##vso[task.logissue type=warning]A specified canvas app was not found in the target environment. Verify your deployment configuration and try again."
+                Write-Information -MessageData "##vso[task.logissue type=warning]A specified canvas app was not found in the target environment. Verify your deployment configuration and try again."
             }
         }
     }

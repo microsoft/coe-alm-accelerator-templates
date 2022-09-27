@@ -15,7 +15,7 @@ steps:
 
     foreach ($c in $config) {
         if($c.aadGroupTeamName -ne '' -and $c.solutionComponentUniqueName -ne '') {
-            Write-Information "Sharing connector $c.solutionComponentUniqueName with $c.aadGroupTeamName"
+            Write-Information -MessageData "Sharing connector $c.solutionComponentUniqueName with $c.aadGroupTeamName"
             Grant-AccessToConnector $env:SPNTOKEN $dataverseHost $c.aadGroupTeamName $c.solutionComponentUniqueName
         }
     } 

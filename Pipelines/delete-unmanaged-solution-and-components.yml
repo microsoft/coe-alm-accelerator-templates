@@ -144,8 +144,8 @@ stages:
           $errorMessage = "Since the import failed, your environment is in an unhealthy state. "
           $errorMessage = $errorMessage + "The unmanaged container is gone, but the unmanaged solution components still exist in the environment. "
           $errorMessage = $errorMessage + "Fix whatever is causing the import to fail, then you can rerun this stage."
-          Write-Information "##vso[task.logissue type=error]$errorMessage"
-          Write-Information "##[task.complete result=Failed]DONE"
+          Write-Information -MessageData "##vso[task.logissue type=error]$errorMessage"
+          Write-Information -MessageData "##[task.complete result=Failed]DONE"
         displayName: 'Log error'
         condition: failed()
 

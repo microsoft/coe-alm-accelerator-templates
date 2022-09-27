@@ -1,15 +1,9 @@
 [CmdletBinding()]
 param (
     # Directory where PowerShell scripts to be tested are stored. Use a relative path like '../scripts'. Script Analyzer will recurse through subdirectories as well
-    [Parameter(Mandatory = $true)]
-    [string]
-    $ScriptDirectory,
-
+    [Parameter(Mandatory = $true)][string] $ScriptDirectory,
     # Comma separated list of specific PSScriptAnalyzer rules to exclude
-    [Parameter(Mandatory = $false)]
-    [string]
-    $ScriptAnalyzerExcludeRules
-
+    [Parameter(Mandatory = $false)][string]$ScriptAnalyzerExcludeRules
 )
 
 function Add-PRComment {
@@ -26,7 +20,7 @@ param (
         $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$($Env:SYSTEM_PULLREQUEST_PULLREQUESTID)/comments"
         Write-Verbose "Constructed URL: $uri"
 
-        $response = Invoke-RestMethod -Uri $uri -Method POST -Headers @{Authorization = "Bearer $(GitHubPAT)" } -Body $Body -ContentType application/json
+        $response = Invoke-RestMethod -Uri $uri -Method POST -Headers @{Authorization = "Bearer $($Env:GITHUBPAT)" } -Body $Body -ContentType application/json
 
         if ($null -eq $response) {
             Write-Verbose "Rest API posted OK"

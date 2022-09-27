@@ -29,7 +29,7 @@ steps:
     #     "dataverseSecurityRoleNames":["dataverse-security-role-name-3","dataverse-security-role-name-4"]
     #   }
     # ]
-    Write-Information '${{parameters.aadGroupTeamConfiguration}}'
+    Write-Information -MessageData '${{parameters.aadGroupTeamConfiguration}}'
 
     $config = Get-Content '${{parameters.aadGroupTeamConfiguration}}' | ConvertFrom-Json
 
@@ -69,7 +69,7 @@ steps:
                 }
             }
             else {
-                Write-Information "##vso[task.logissue type=warning]A specified security role was not found in the target environment. Verify your deployment configuration and try again."
+                Write-Information -MessageData "##vso[task.logissue type=warning]A specified security role was not found in the target environment. Verify your deployment configuration and try again."
             }
           }      
         }

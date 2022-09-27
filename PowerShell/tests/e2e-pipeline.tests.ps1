@@ -34,7 +34,7 @@ class Helper {
 
     static [void]WriteTestMessageToHost($testName) {
         $timestamp = Get-Date -Format hh:mm:ss
-        Write-Information "$timestamp - Running $testName..."
+        Write-Information -MessageData "$timestamp - Running $testName..."
     }
 
     static [bool]QueueExportToGit($org, $project, $solutionName, $body) {
@@ -61,8 +61,8 @@ class Helper {
         $body = ConvertTo-Json -Depth 10 $body -Compress
 
         $requestUrl = "$org/$project/_apis/pipelines/$pipelineId/runs$apiVersion"
-        Write-Information $requestUrl
-        Write-Information $body
+        Write-Information -MessageData $requestUrl
+        Write-Information -MessageData $body
         $response = Invoke-RestMethod $requestUrl -Method 'POST' -Headers $headers -Body $body
         $response | ConvertTo-Json -Depth 10
 
@@ -133,7 +133,7 @@ Describe 'E2E-Pipeline-Test' {
         }
 
         $modifiedData = ConvertTo-Json $dataJson
-        Write-Information "Modified Data - $modifiedData"
+        Write-Information -MessageData "Modified Data - $modifiedData"
 
         $body = @{
             resources          = @{

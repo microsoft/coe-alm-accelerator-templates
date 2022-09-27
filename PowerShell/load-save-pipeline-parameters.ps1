@@ -52,7 +52,7 @@ function Write-Pipeline-Parameters {
         [Parameter(Mandatory)] [String]$filePath,
         [Parameter(Mandatory)] [PSCustomObject]$pipelineParameterObject
     )
-    Write-Information "Saving Pipeline Parameters to $filePath"
+    Write-Information -MessageData "Saving Pipeline Parameters to $filePath"
     if (Test-Path $filePath) {
         Remove-Item $filePath
     }

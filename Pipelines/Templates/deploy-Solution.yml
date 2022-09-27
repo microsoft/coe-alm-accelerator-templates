@@ -84,7 +84,7 @@ steps:
    {
        $artifactDropPath = "$(Pipeline.Workspace)/buildPipeline/drop/"
    }
-   Write-Information "##vso[task.setVariable variable=ArtifactDropPath]$artifactDropPath"
+   Write-Information -MessageData "##vso[task.setVariable variable=ArtifactDropPath]$artifactDropPath"
   displayName: 'Get artifact drop path'
 
 # Set paths to deployment settings
@@ -141,11 +141,11 @@ steps:
             $managedSolutionPath = $_.FullName 
         }
     }
-    Write-Information "##vso[task.setVariable variable=ManagedSolutionPath]$managedSolutionPath"
+    Write-Information -MessageData "##vso[task.setVariable variable=ManagedSolutionPath]$managedSolutionPath"
 
     #Set TriggerSolutionUpgrade to false if the variable is not set
     if('$(TriggerSolutionUpgrade)'.Contains("TriggerSolutionUpgrade")) {
-        Write-Information "##vso[task.setVariable variable=TriggerSolutionUpgrade]false"
+        Write-Information -MessageData "##vso[task.setVariable variable=TriggerSolutionUpgrade]false"
     }
   displayName: 'Get managed solution zip path'
   condition: and(succeeded(), ne('${{parameters.importUnmanaged}}', 'true'))
@@ -304,7 +304,7 @@ steps:
     . "$env:POWERSHELLPATH/portal-functions.ps1"
     $websiteName = Get-Website-Name "$(Build.SourcesDirectory)" "$(Build.Repository.Name)" "${{parameters.solutionName}}"
     echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
-    Write-Information "websiteName - $websiteName"
+    Write-Information -MessageData "websiteName - $websiteName"
   displayName: "Fetch Portal Website Name"
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.upload-paportal.PowerPlatformUploadPaportal@2

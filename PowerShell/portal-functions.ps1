@@ -8,11 +8,11 @@
 
     $websiteName = "NA"
     $solutionUnpackedFolder = "$sourcesDirectory\$repo\$solutionName\PowerPages"
-    Write-Information "solutionUnpackedFolder - $solutionUnpackedFolder"
+    Write-Information -MessageData "solutionUnpackedFolder - $solutionUnpackedFolder"
     if(Test-Path "$solutionUnpackedFolder")
     {
         $matchedFolders = Get-ChildItem "$solutionUnpackedFolder" -Directory | Select-Object Name
-        Write-Information "matchedFolders - $matchedFolders"
+        Write-Information -MessageData "matchedFolders - $matchedFolders"
 
         if($matchedFolders){
           $websiteName = $matchedFolders[0].Name
@@ -20,7 +20,7 @@
     }
     else
     {
-       Write-Information "Unpacked website folder unavailable. Path - $solutionUnpackedFolder"
+       Write-Information -MessageData "Unpacked website folder unavailable. Path - $solutionUnpackedFolder"
     }
     return $websiteName
 }
@@ -38,6 +38,6 @@ function Remove-Website-Folder
       Remove-Item "$portalWebsitePath\*" -Recurse -Force
     }
     else{
-       Write-Information "Unpacked website folder unavailable. Path - $portalWebsitePath"
+       Write-Information -MessageData "Unpacked website folder unavailable. Path - $portalWebsitePath"
     }
 }

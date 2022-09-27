@@ -13,10 +13,10 @@ steps:
     # Workaround for git Filename too long issue 
     git config --system core.longpaths true
     if('${{parameters.serviceConnectionUrl}}'.Contains('$(')) {
-        Write-Information "##vso[task.setvariable variable=ServiceConnectionUrl]${{parameters.serviceConnectionName}}"
-        Write-Information "##vso[task.setvariable variable=BuildTools.EnvironmentUrl]${{parameters.serviceConnectionName}}"
+        Write-Information -MessageData "##vso[task.setvariable variable=ServiceConnectionUrl]${{parameters.serviceConnectionName}}"
+        Write-Information -MessageData "##vso[task.setvariable variable=BuildTools.EnvironmentUrl]${{parameters.serviceConnectionName}}"
     }
     else {
-        Write-Information "##vso[task.setvariable variable=BuildTools.EnvironmentUrl]${{parameters.serviceConnectionUrl}}"
+        Write-Information -MessageData "##vso[task.setvariable variable=BuildTools.EnvironmentUrl]${{parameters.serviceConnectionUrl}}"
     }
   displayName: "Set Service Connection Url"

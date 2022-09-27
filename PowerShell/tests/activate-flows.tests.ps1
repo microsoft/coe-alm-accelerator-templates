@@ -19,7 +19,7 @@ Describe 'Activate-Flows-Test' {
 
         #Deactivate the flows to test
         $activationConfigs = Get-Content $activationConfig | ConvertFrom-Json
-        Write-Information "Importing PowerShell Module: $MicrosoftXrmDataPowerShellModule - $XrmDataPowerShellVersion"
+        Write-Information -MessageData "Importing PowerShell Module: $MicrosoftXrmDataPowerShellModule - $XrmDataPowerShellVersion"
         Import-Module $MicrosoftXrmDataPowerShellModule -Force -RequiredVersion $XrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
 
         $connectionString = $DataverseConnectionString

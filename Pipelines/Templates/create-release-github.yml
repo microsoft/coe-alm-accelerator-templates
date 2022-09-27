@@ -42,7 +42,7 @@ steps:
 
     #Convert release month number to name
     $releaseMonthName = (Get-Culture).DateTimeFormat.GetMonthName(${{ parameters.releaseMonth }})
-    Write-Information "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
+    Write-Information -MessageData "##vso[task.setvariable variable=ReleaseMonthName]$releaseMonthName"
     $releaseMonthPadded = ([string]${{parameters.releaseMonth}}).PadLeft(2,'0')
     $fullReleaseNotesPath = '${{ parameters.releaseNotesPath }}/${{parameters.solutionName}}/RELEASENOTES-${{parameters.releaseYear}}' + $releaseMonthPadded + '.md'
     $releaseNotes = ''
@@ -59,7 +59,7 @@ steps:
             New-Item $fullReleaseNotesPath
         }
     }
-    Write-Information "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
+    Write-Information -MessageData "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
     $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
@@ -85,8 +85,8 @@ steps:
         $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }} - Hotfix ${{parameters.HotfixReleaseNumber}}'
     }
 
-    Write-Information "##vso[task.setvariable variable=Tag]$tag"
-    Write-Information "##vso[task.setvariable variable=Title]$title"
+    Write-Information -MessageData "##vso[task.setvariable variable=Tag]$tag"
+    Write-Information -MessageData "##vso[task.setvariable variable=Title]$title"
 
     #Build the release notes
     if($currentMilestone -ne $null){
@@ -97,7 +97,7 @@ steps:
             if(-not [string]::IsNullOrWhiteSpace($queryHeadings[$i])) {
                 $issuesRequestUrl = $issuesRequestUrl + " " + $queryHeadings[$i]
             }
-            Write-Information $issuesRequestUrl
+            Write-Information -MessageData $issuesRequestUrl
             $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
 
             if($issueResponse.items.Length -gt 0 -and -not [string]::IsNullOrWhiteSpace($queryHeadings[$i + 1])) {

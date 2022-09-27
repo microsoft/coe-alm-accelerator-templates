@@ -39,7 +39,7 @@ function Set-CanvasTestAutomationURLs {
                             if ($null -eq $appId) {
                                 $appId = $testUrl.Replace('play/',$pipeDelimeter).Replace('?',$pipeDelimeter).Split($pipeDelimeter)[1]
                                 Set-AdminPowerAppApisToBypassConsent -EnvironmentName $environmentId -AppName $appId
-                                Write-Information "Bypassed consent for $appId"
+                                Write-Information -MessageData "Bypassed consent for $appId"
                             }
                         }
                     }

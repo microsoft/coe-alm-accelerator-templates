@@ -4,19 +4,19 @@
         [Parameter(Mandatory)] [String]$source,
         [Parameter(Mandatory)] [String]$destination
     )
-    Write-Information "Loading Assemblies"
+    Write-Information -MessageData "Loading Assemblies"
     Get-ChildItem -Path "..\PowerAppsLanguageTooling\" -Recurse -Filter *.dll |
     ForEach-Object {
         [System.Reflection.Assembly]::LoadFrom($_.FullName)
     }
     if ($packOrUnpack -eq 'pack') {
-        Write-Information "Packing $source to $destination"
+        Write-Information -MessageData "Packing $source to $destination"
         $results = [Microsoft.PowerPlatform.Formulas.Tools.CanvasDocument]::LoadFromSources($source)
         if($results.HasErrors) {
             throw $results.Item2.ToString();
             return
         } else {
-            Write-Information $results.Item2.ToString()
+            Write-Information -MessageData $results.Item2.ToString()
         }
         $saveResults = $results.Item1.SaveToMsApp($destination)
         if($saveResults.HasErrors) {
@@ -24,18 +24,18 @@
             return
         }
         else {
-            Write-Information $saveResults.ToString()
+            Write-Information -MessageData $saveResults.ToString()
         }
     }
     else {
         if ($packOrUnpack -eq 'unpack') {
-            Write-Information "Unpacking $source to $destination"
+            Write-Information -MessageData "Unpacking $source to $destination"
             $results = [Microsoft.PowerPlatform.Formulas.Tools.CanvasDocument]::LoadFromMsapp($source)
             if($results.HasErrors) {
                 throw $results.Item2.ToString();
                 return
             } else {
-                Write-Information $results.Item2.ToString()
+                Write-Information -MessageData $results.Item2.ToString()
             }
             $saveResults = $results.Item1.SaveToSources($destination)
             if($saveResults.HasErrors) {
@@ -43,7 +43,7 @@
                 return
             }
             else {
-                Write-Information $saveResults.ToString()
+                Write-Information -MessageData $saveResults.ToString()
             }
         }
         else {

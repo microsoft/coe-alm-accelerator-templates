@@ -4,14 +4,14 @@
 steps:
 - pwsh: |
     . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
-    Write-Information "Loading pipeline parameters from $(Agent.BuildDirectory)\deploy-pipeline-parameters.json"
+    Write-Information -MessageData "Loading pipeline parameters from $(Agent.BuildDirectory)\deploy-pipeline-parameters.json"
     $parameters = Read-Pipeline-Parameters "$(Agent.BuildDirectory)\deploy-pipeline-parameters.json"
-    Write-Information "serviceConnectionName:" $parameters.serviceConnectionName
-    Write-Information "serviceConnectionUrl:" $parameters.serviceConnectionUrl
-    Write-Information "environmentName:" $parameters.environmentName
-    Write-Information "solutionName:" $parameters.solutionName
-    Write-Information "importUnmanaged:" $parameters.importUnmanaged
-    Write-Information "overwriteUnmanagedCustomizations:" $parameters.overwriteUnmanagedCustomizations
-    Write-Information "skipBuildToolsInstaller:" $parameters.skipBuildToolsInstaller
-    Write-Information "cacheEnabled:" $parameters.cacheEnabled
+    Write-Information -MessageData "serviceConnectionName:" $parameters.serviceConnectionName
+    Write-Information -MessageData "serviceConnectionUrl:" $parameters.serviceConnectionUrl
+    Write-Information -MessageData "environmentName:" $parameters.environmentName
+    Write-Information -MessageData "solutionName:" $parameters.solutionName
+    Write-Information -MessageData "importUnmanaged:" $parameters.importUnmanaged
+    Write-Information -MessageData "overwriteUnmanagedCustomizations:" $parameters.overwriteUnmanagedCustomizations
+    Write-Information -MessageData "skipBuildToolsInstaller:" $parameters.skipBuildToolsInstaller
+    Write-Information -MessageData "cacheEnabled:" $parameters.cacheEnabled
   displayName: 'Output Deploy Parameters'

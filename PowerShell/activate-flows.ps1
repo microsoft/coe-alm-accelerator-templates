@@ -15,12 +15,12 @@ function Invoke-ActivateFlow {
         [Parameter(Mandatory)] [String][AllowEmptyString()]$activateFlowConfiguration
     )
 
-    Write-Information "Importing PowerShell Module: $microsoftPowerAppsAdministrationPowerShellModule - $powerAppsAdminModuleVersion"
+    Write-Information -MessageData "Importing PowerShell Module: $microsoftPowerAppsAdministrationPowerShellModule - $powerAppsAdminModuleVersion"
     Import-Module $microsoftPowerAppsAdministrationPowerShellModule -Force -RequiredVersion $powerAppsAdminModuleVersion -ArgumentList @{ NonInteractive = $true }
 
     Add-PowerAppsAccount -TenantID $tenantId -ApplicationId $clientId -ClientSecret $clientSecret
 
-    Write-Information "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
+    Write-Information -MessageData "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
 
     $conn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"
@@ -42,7 +42,7 @@ function Invoke-ActivateFlow {
         foreach ($flowToActivate in $flowsToActivate) {
             try {
                 if ($flowToActivate.solutionComponent.statecode -ne 1) {
-                    Write-Information "Activating Flow: " $flowToActivate.solutionComponent.name
+                    Write-Information -MessageData "Activating Flow: " $flowToActivate.solutionComponent.name
                     $impersonationConn.OrganizationWebProxyClient.CallerId = $flowToActivate.impersonationCallerId
                     Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $flowToActivate.solutionComponent.workflowid -StateCode 1 -StatusCode 2
                     $flowToActivate.solutionComponent.statecode = 1
@@ -51,8 +51,8 @@ function Invoke-ActivateFlow {
             }
             catch {
                 $throwOnComplete = $true
-                Write-Information "##vso[task.logissue type=warning]Flow could not be activated. Continuing with flow activation until no more flows can be activated. If this is a result of a child flow not being activated before it's parent consider ordering your flows to avoid this message."
-                Write-Information $_
+                Write-Information -MessageData "##vso[task.logissue type=warning]Flow could not be activated. Continuing with flow activation until no more flows can be activated. If this is a result of a child flow not being activated before it's parent consider ordering your flows to avoid this message."
+                Write-Information -MessageData $_
             }
         }
     } while ($flowsActivatedThisPass)
@@ -96,7 +96,7 @@ function Get-UserConfiguredFlowActivation {
                         #Activate the workflow using the specified user.
                         if ($workflow.statecode_Property.Value -ne 1) {
                             if ($activateConfig.activate -ne 'false') {
-                                Write-Information "Adding flow " $activateConfig.solutionComponentName " to activation collection"
+                                Write-Information -MessageData "Adding flow " $activateConfig.solutionComponentName " to activation collection"
                                 $flowActivation = [PSCustomObject]@{}
                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $activateConfig.solutionComponentUniqueName
                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
@@ -105,12 +105,12 @@ function Get-UserConfiguredFlowActivation {
                                 $flowsToActivate.Add($flowActivation)
                             }
                             else {
-                                Write-Information "Excluding flow " $activationConfig.solutionComponentName "from activation collection"
+                                Write-Information -MessageData "Excluding flow " $activationConfig.solutionComponentName "from activation collection"
                             }
                         }
                     }
                     else {
-                        Write-Information "##vso[task.logissue type=warning]A specified user record was not found in the target environment. Verify your deployment configuration and try again."
+                        Write-Information -MessageData "##vso[task.logissue type=warning]A specified user record was not found in the target environment. Verify your deployment configuration and try again."
                     }
                 }
             }
@@ -176,7 +176,7 @@ function Get-ConnectionReferenceFlowActivation {
                                         $existingActivation = $flowsToActivate | Where-Object { $_.solutionComponentUniqueName -eq $solutionComponent.objectid } | Select-Object -First 1
                                         if ($null -eq $existingActivation) {
                                             if ($null -ne $workflow -and $null -ne $workflow.clientdata -and $workflow.clientdata.Contains($connectionRefConfig.LogicalName) -and $workflow.statecode_Property.Value -ne 1) {
-                                                Write-Information "Retrieving activation config"
+                                                Write-Information -MessageData "Retrieving activation config"
                                                 $sortOrder = [int]::MaxValue
                                                 $activateFlow = 'true'
                                                 if ($null -ne $activationConfigs) {
@@ -190,7 +190,7 @@ function Get-ConnectionReferenceFlowActivation {
                                                 }
 
                                                 if ($activateFlow -ne 'false') {
-                                                    Write-Information "Adding flow " $workflow.name " to activation collection"
+                                                    Write-Information -MessageData "Adding flow " $workflow.name " to activation collection"
                                                     $flowActivation = [PSCustomObject]@{}
                                                     $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $solutionComponent.objectid
                                                     $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
@@ -199,7 +199,7 @@ function Get-ConnectionReferenceFlowActivation {
                                                     $flowsToActivate.Add($flowActivation)
                                                 }
                                                 else {
-                                                    Write-Information "Excluding flow " $activationConfig.solutionComponentName "from activation collection"
+                                                    Write-Information -MessageData "Excluding flow " $activationConfig.solutionComponentName "from activation collection"
                                                 }
                                             }
                                         }
@@ -208,11 +208,11 @@ function Get-ConnectionReferenceFlowActivation {
                             }
                         }
                         else {
-                            Write-Information "##vso[task.logissue type=warning]A specified connection was not found in the target environment. Verify your deployment configuration and try again."
+                            Write-Information -MessageData "##vso[task.logissue type=warning]A specified connection was not found in the target environment. Verify your deployment configuration and try again."
                         }
                     }
                     else {
-                        Write-Information "##vso[task.logissue type=warning]A specified connection reference was not found in the target environment. Verify your deployment configuration and try again."
+                        Write-Information -MessageData "##vso[task.logissue type=warning]A specified connection reference was not found in the target environment. Verify your deployment configuration and try again."
                     }
                 }
             }
@@ -242,7 +242,7 @@ function Get-OwnerFlowActivation {
                             $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $ownershipConfig.solutionComponentUniqueName -Fields name, clientdata, category, statecode
                         }
                         default {
-                            Write-Information "##vso[task.logissue type=warning]NOT IMPLEMENTED - You supplied a solutionComponentType of $ownershipConfig.solutionComponentType for solutionComponentUniqueName $solutionComponentUniqueName"
+                            Write-Information -MessageData "##vso[task.logissue type=warning]NOT IMPLEMENTED - You supplied a solutionComponentType of $ownershipConfig.solutionComponentType for solutionComponentUniqueName $solutionComponentUniqueName"
                             exit 1;
                         }
                     }
@@ -255,7 +255,7 @@ function Get-OwnerFlowActivation {
                             $sortOrder = [int]::MaxValue
                             $activateFlow = 'true'
                             if ($null -ne $activationConfigs) {
-                                Write-Information "Retrieving activation config"
+                                Write-Information -MessageData "Retrieving activation config"
                                 $activationConfig = $activationConfigs | Where-Object { $_.solutionComponentUniqueName -eq $solutionComponent.objectid } | Select-Object -First 1
                                 if ($null -ne $activationConfig) {
                                     if($activationConfig.sortOrder -ne '') {
@@ -265,7 +265,7 @@ function Get-OwnerFlowActivation {
                                 }
                             }
                             if ($activateFlow -ne 'false') {
-                                Write-Information "Adding flow " $ownershipConfig.solutionComponentName " to activation collection"
+                                Write-Information -MessageData "Adding flow " $ownershipConfig.solutionComponentName " to activation collection"
                                 $flowActivation = [PSCustomObject]@{}
 
                                 $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $ownershipConfig.solutionComponentUniqueName
@@ -276,11 +276,11 @@ function Get-OwnerFlowActivation {
                             }
                         }
                         else {
-                            Write-Information "##vso[task.logissue type=warning]A specified user record was not found in the target environment. Verify your deployment configuration and try again."
+                            Write-Information -MessageData "##vso[task.logissue type=warning]A specified user record was not found in the target environment. Verify your deployment configuration and try again."
                         }
                     }
                     else {
-                        Write-Information "##vso[task.logissue type=warning]A specified flow was not found in the target environment. Verify your deployment configuration and try again."
+                        Write-Information -MessageData "##vso[task.logissue type=warning]A specified flow was not found in the target environment. Verify your deployment configuration and try again."
                     }
                 }
             }

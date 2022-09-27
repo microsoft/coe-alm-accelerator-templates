@@ -17,11 +17,11 @@
         }
     }
     else {
-		Write-Information $activateFlowConfigJson
+		Write-Information -MessageData $activateFlowConfigJson
         if ($activateFlowConfigJson -ne '') {
             #Disable / Enable flows based on configuration
             $activateFlowConfigs = Get-Content $activateFlowConfigJson | ConvertFrom-Json
-            Write-Information "Retrieved " $activateFlowConfigs.Length " flow activation configurations"
+            Write-Information -MessageData "Retrieved " $activateFlowConfigs.Length " flow activation configurations"
             foreach ($activateFlowConfig in $activateFlowConfigs) {
                 $filter = "*" + $activateFlowConfig.solutionComponentUniqueName + "*.xml"
                 Get-ChildItem -Path "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\Workflows" -Recurse -Filter $filter |
@@ -29,12 +29,12 @@
                     $xml = [xml](Get-Content $_.FullName)
                     $workflowNode = $xml.SelectSingleNode("//Workflow")
                     if ($activateFlowConfig.activate -eq 'false') {
-                        Write-Information "Disabling flow " $activateFlowConfig.solutionComponentName
+                        Write-Information -MessageData "Disabling flow " $activateFlowConfig.solutionComponentName
                         $workflowNode.StateCode = '0'
                         $workflowNode.StatusCode = '1'
                     }
                     else {
-                        Write-Information "Enabling flow " $activateFlowConfig.solutionComponentName
+                        Write-Information -MessageData "Enabling flow " $activateFlowConfig.solutionComponentName
                         $workflowNode.StateCode = '1'
                         $workflowNode.StatusCode = '2'
                     }

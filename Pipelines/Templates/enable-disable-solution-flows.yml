@@ -13,7 +13,7 @@ steps:
 - pwsh: |
       # load PowerShell files into memory
       . "$env:POWERSHELLPATH/enable-disable-solution-flows.ps1"
-      Write-Information '${{parameters.activateFlowConfiguration}}'
+      Write-Information -MessageData '${{parameters.activateFlowConfiguration}}'
       Set-EnableDisableSolutionFlows '${{parameters.buildSourceDirectory}}' '${{parameters.repo}}' '${{parameters.solutionName}}' '${{parameters.disableAllFlows}}' '${{parameters.activateFlowConfiguration}}'
   displayName: 'Disable / Enable Solution Flows'
   condition: and(succeeded(), ne('${{parameters.activateFlowConfiguration}}', ''))

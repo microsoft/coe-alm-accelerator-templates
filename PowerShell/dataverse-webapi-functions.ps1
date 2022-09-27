@@ -34,7 +34,7 @@ function Set-SpnTokenVariableWithinAgent {
       
     $spnToken = Get-SpnToken $tenantId $clientId $clientSecret $dataverseHost $aadHost
 
-    Write-Information "##vso[task.setvariable variable=SpnToken;issecret=true]$spnToken"
+    Write-Information -MessageData "##vso[task.setvariable variable=SpnToken;issecret=true]$spnToken"
 }
 
 function Set-DefaultHeaders {
