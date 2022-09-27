@@ -19,7 +19,7 @@ function Write-Export-Pipeline-Parameters {
     Write-Pipeline-Parameters $filePath $pipelineParameterObject
 }
 
-function Write-Deploy-Pipeline-Parameters {
+function Write-Deploy-Pipeline-Parameter {
     param (
         [Parameter(Mandatory)] [String]$filePath,
         [Parameter()] [String]$serviceConnectionName,

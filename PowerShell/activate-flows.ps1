@@ -27,7 +27,7 @@ function Invoke-ActivateFlow {
 
     $flowsToActivate = [System.Collections.ArrayList]@()
 
-    Get-UserConfiguredFlowActivations $activateFlowConfiguration $conn $flowsToActivate
+    Get-UserConfiguredFlowActivation $activateFlowConfiguration $conn $flowsToActivate
     Get-ConnectionReferenceFlowActivation $connectionReferences $activateFlowConfiguration $conn $flowsToActivate
     Get-OwnerFlowActivation $solutionComponentOwnershipConfiguration $activateFlowConfiguration $conn $flowsToActivate
 
@@ -73,7 +73,7 @@ function Get-ActivationConfiguration {
     }
     return $activationConfigs
 }
-function Get-UserConfiguredFlowActivations {
+function Get-UserConfiguredFlowActivation {
     param (
         [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$activateFlowConfiguration,
         [Parameter(Mandatory)] [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn,

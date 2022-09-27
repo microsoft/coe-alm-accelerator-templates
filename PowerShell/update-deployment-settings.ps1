@@ -33,7 +33,7 @@
     }
 
     #Update / Create Deployment Pipelines
-    New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS
+    New-DeploymentPipeline "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS
 
     Write-Information "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
@@ -66,20 +66,20 @@
         }
 		
         # Updating "ServiceConnection"; Required if the ''Environment URL' in the profile changes post commit.
-        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.DeploymentEnvironmentUrl) {         
+        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.DeploymentEnvironmentUrl) { 
             $DeploymentEnvironmentUrl=$configurationDataEnvironment.DeploymentEnvironmentUrl
             $ServiceConnectionName=$configurationDataEnvironment.ServiceConnectionName
             if($null -ne $newBuildDefinitionVariables){
-                Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables
+                Create-Update-ServiceConnection-Parameter $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables
             }
-        }		
+        }
 
         if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
             foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
                 $configurationVariableName = $configurationVariable.Name
                 $configurationVariableValue = $configurationVariable.Value
                 if (-not ([string]::IsNullOrEmpty($configurationVariableName)))
-                {				
+                {
                     #Set connection reference variables
                     if($configurationVariableName.StartsWith("connectionreference.user.", "CurrentCultureIgnoreCase")) {
                         $schemaName = $configurationVariableName -replace "connectionreference.user.", ""
@@ -195,11 +195,11 @@
 
                 #See if the variable already exists
                 if($null -ne $newBuildDefinitionVariables) {
-                    $found = Check-Parameter $configurationVariableName $newBuildDefinitionVariables                
+                    $found = Check-Parameter $configurationVariableName $newBuildDefinitionVariables
                     #Add the configuration variable to the list of pipeline variables if usePlaceholders is not false
                     if($usePlaceholders.ToLower() -ne 'false') {
-                        #If the variable was not found create it 
-                        if(!$found) { 
+                        #If the variable was not found create it
+                        if(!$found) {
                             $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name $configurationVariableName -Value @{value = ''}
                         }
 
@@ -212,7 +212,7 @@
                     }
                     elseif($reservedVariables -contains $configurationVariableName) {
                         #If the variable is in the reserved variables list then set the value to the value passed in on the configuration data
-                        if(!$found) { 
+                        if(!$found) {
                             $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name $configurationVariableName -Value @{value = ''}
                         }
                         $newBuildDefinitionVariables.$configurationVariableName.value = $configurationVariableValue
@@ -255,12 +255,12 @@
             Set-Content -Path $customDeploymentSettingsFilePath -Value $json
 
             #Set the build variables
-            Set-BuildDefinitionVariables $orgUrl $projectName $azdoAuthType $buildDefinitionResponseResults[0] $buildDefinitionResponseResults[0].id $newBuildDefinitionVariables
+            Set-BuildDefinitionVariable $orgUrl $projectName $azdoAuthType $buildDefinitionResponseResults[0] $buildDefinitionResponseResults[0].id $newBuildDefinitionVariables
         }
     }
 }
 
-function New-DeploymentPipelines
+function New-DeploymentPipeline
 {
     param (
         [Parameter(Mandatory)] [String]$pipelineSourceDirectory,
@@ -371,7 +371,7 @@ function New-DeploymentPipelines
                 }
 
                 if(Test-Path ".\combined.log") {
-                    Write-Information ((Get-Content ".\combined.log") -join "`n") 
+                    Write-Information ((Get-Content ".\combined.log") -join "`n")
                 }
                 Set-Location $currentPath
             }
@@ -379,7 +379,7 @@ function New-DeploymentPipelines
     }
 }
 
-function Set-BuildDefinitionVariables {
+function Set-BuildDefinitionVariable {
     param (
         [Parameter(Mandatory)] [String]$orgUrl,
         [Parameter(Mandatory)] [String]$projectName,
@@ -399,28 +399,28 @@ function Set-BuildDefinitionVariables {
         #remove tab charcters from the body
         $body = $body -replace "`t", ""
         Write-Information $buildDefinitionResourceUrl
-        Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
+        Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null
     }
 }
 
-function Create-Update-ServiceConnection-Parameters{
+function Create-Update-ServiceConnection-Parameter{
     param (
         [Parameter()] [String]$DeploymentEnvironmentUrl,
         [Parameter()] [String]$ServiceConnectionName,
         [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
     )
-    Write-Information "Inside Create-Update-ServiceConnection-Parameters"
+    Write-Information "Inside Create-Update-ServiceConnection-Parameter"
     Write-Information "newBuildDefinitionVariables - $newBuildDefinitionVariables"
      if($null -ne $newBuildDefinitionVariables){
-        #If the "ServiceConnection" variable was not found create it 
+        #If the "ServiceConnection" variable was not found create it
         $found = Check-Parameter "ServiceConnection" $newBuildDefinitionVariables
-        if(!$found) { 
+        if(!$found) {
             $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ServiceConnection" -Value @{value = ''}
         }
 
-        #If the "ServiceConnectionUrl" variable was not found create it 
+        #If the "ServiceConnectionUrl" variable was not found create it
         $found = Check-Parameter "ServiceConnectionUrl" $newBuildDefinitionVariables
-        if(!$found) { 
+        if(!$found) {
             $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ServiceConnectionUrl" -Value @{value = ''}
         }
 
