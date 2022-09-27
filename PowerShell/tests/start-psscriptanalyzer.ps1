@@ -75,7 +75,7 @@ if ( $ScriptAnalyzerResult ) {
     Write-Output "All Script Analyzer tests passed"
 
     $markdownComment = @"
-:white_check_mark: Script Analyzer found no issues with your code! High Five! :hand:
+:white_check_mark: Script Analyzer found no issues with your code! :hand:
 "@
 
     Write-Information "Posting PR Comment via AzureDevOps REST API"
