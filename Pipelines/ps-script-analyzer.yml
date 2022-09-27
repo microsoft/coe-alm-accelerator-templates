@@ -1,0 +1,35 @@
+trigger:
+  none
+pr: 
+  branches:
+    include:
+    # Replace the following with actual branch name(s) in your repo for which you want to trigger a build. The assumption here is that you only want to only trigger on a change to a specific branch rather than a change on any branch which would include your working branch for development.'
+    - main
+    - hotfix
+  paths:
+    include:
+    - PowerShell/
+
+jobs:
+- job: 'PSScriptAnalyzer'
+  displayName: PSScriptAnalyzer
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+    - task: PowerShell@2
+      displayName: 'Install ScriptAnalyzer'
+      inputs:
+        targetType: inline
+        pwsh: true
+        script: |
+          Install-Module -Name 'PSScriptAnalyzer' -Scope 'CurrentUser' -Force
+    - task: PowerShell@2
+      displayName: 'Analyze and post PR Comment'
+      env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      inputs:
+        targetType: filePath
+        pwsh: true
+        filePath: $(Build.Repository.LocalPath)/PowerShell/tests/start-psscriptanalyzer.ps1
+        arguments: '-ScriptDirectory $(Build.Repository.LocalPath)/PowerShell'
