@@ -22,7 +22,7 @@ param (
         Write-Host $uri
         $pr = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json
         if($null -ne $pr) {
-            $uri = $pr._links.comments
+            $uri = $pr._links.comments.href
             Write-Information "Constructed URL: $uri"
 
             $response = Invoke-RestMethod -Uri $uri -Method POST -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -Body $Body -ContentType application/json
