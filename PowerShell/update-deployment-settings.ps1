@@ -33,7 +33,18 @@
     }
 
     #Update / Create Deployment Pipelines
-    New-DeploymentPipeline "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS
+    New-DeploymentPipeline 
+        -pipelineSourceDirectory "$pipelineSourceDirectory" 
+        -buildProjectName "$buildProjectName" 
+        -buildRepositoryName "$buildRepositoryName" 
+        -orgUrl "$orgUrl" 
+        -projectName "$projectName" 
+        -repo "$repo" 
+        -azdoAuthType "$azdoAuthType" 
+        -pat "$pat" 
+        -solutionName "$solutionName" 
+        -configurationData $configurationData 
+        -agentOS $agentOS
 
     Write-Information -MessageData "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
@@ -64,9 +75,9 @@
         if($buildDefinitionResponseResults.length -gt 0) {
             $newBuildDefinitionVariables = $buildDefinitionResponseResults[0].variables
         }
-		
+
         # Updating "ServiceConnection"; Required if the ''Environment URL' in the profile changes post commit.
-        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.DeploymentEnvironmentUrl) { 
+        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.DeploymentEnvironmentUrl) {
             $DeploymentEnvironmentUrl=$configurationDataEnvironment.DeploymentEnvironmentUrl
             $ServiceConnectionName=$configurationDataEnvironment.ServiceConnectionName
             if($null -ne $newBuildDefinitionVariables){
