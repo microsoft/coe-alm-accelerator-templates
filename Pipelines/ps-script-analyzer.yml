@@ -32,4 +32,4 @@ jobs:
         targetType: filePath
         pwsh: true
         filePath: $(Build.Repository.LocalPath)/PowerShell/tests/start-psscriptanalyzer.ps1
-        arguments: '-ScriptDirectory $(Build.Repository.LocalPath)/PowerShell'
+        arguments: '-PRNumber $(System.PullRequest.PullRequestNumber) -ScriptDirectory $(Build.Repository.LocalPath)/PowerShell'

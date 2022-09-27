@@ -1,5 +1,7 @@
 [CmdletBinding()]
 param (
+    # Pull Request Number
+    [Parameter(Mandatory = $true)][string] $PRNumber,
     # Directory where PowerShell scripts to be tested are stored. Use a relative path like '../scripts'. Script Analyzer will recurse through subdirectories as well
     [Parameter(Mandatory = $true)][string] $ScriptDirectory,
     # Comma separated list of specific PSScriptAnalyzer rules to exclude
@@ -9,13 +11,14 @@ param (
 function Add-PRComment {
 [CmdletBinding()]
 param (
+    [Parameter(Mandatory = $true)][string]$PRNumber
     [Parameter(Mandatory = $true)][string]$Body
 )
     Write-Information "Posting PR Comment via AzureDevOps REST API"
 
     # post the comment to the pull request
     try {
-        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$(System.PullRequest.PullRequestNumber)"
+        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$PRNumber"
         Write-Host $uri
         Write-Host $env:GITHUBPAT
         $response = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json
@@ -62,7 +65,9 @@ if ( $ScriptAnalyzerResult ) {
 }
 "@
         # post to the PR
-        Add-PRComment -Body $body
+        Add-PRComment
+            -PRNumber $PRNumber
+            -Body $body
     }
 
     #Uncomment the line below to fail build based on results
@@ -83,5 +88,7 @@ if ( $ScriptAnalyzerResult ) {
 }
 "@
     # post to the PR
-    Add-PRComment -Body $body
+    Add-PRComment
+        -PRNumber $PRNumber
+        -Body $body
 }
