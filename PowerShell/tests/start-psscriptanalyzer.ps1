@@ -66,7 +66,7 @@ if ( $ScriptAnalyzerResult ) {
     Write-Host "Posting PR Comment via AzureDevOps REST API"
     $body = @'
 {
-    "body": "$markdownComment"
+    "body": $markdownComment
 }
 '@
     # post to the PR
