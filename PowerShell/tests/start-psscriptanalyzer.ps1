@@ -48,13 +48,13 @@ if ( $ScriptAnalyzerResult ) {
     # build the markdown comments
     # cannot be tabbed over to match indentation
     $markdownComment = @"
-:warning: Script Analyzer found the following issues with your code:
+Warning: Script Analyzer found the following issues with your code:
 
 $ScriptAnalyzerResultString
 "@
     $body = @"
 {
-    "body": "$markdownComment"
+    "body": "Warning: Script Analyzer found the following issues with your code:"
 }
 "@
     # post to the PR
