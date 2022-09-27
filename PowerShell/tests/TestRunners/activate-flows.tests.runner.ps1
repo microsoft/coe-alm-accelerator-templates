@@ -7,8 +7,8 @@ function Invoke-ActivateFlow-Test()
     $path = './activate-flows.tests.ps1'
     $data = @{
         MicrosoftXrmDataPowerShellModule                   = $testConfig.microsoftXrmDataPowerShellModule
-        XrmDataPowerShellVersion                           = $testConfig.xrmDataPowerShellVersion        
-        MicrosoftPowerAppsAdministrationPowerShellModule   = $testConfig.microsoftPowerAppsAdministrationPowerShellModule 
+        XrmDataPowerShellVersion                           = $testConfig.xrmDataPowerShellVersion
+        MicrosoftPowerAppsAdministrationPowerShellModule   = $testConfig.microsoftPowerAppsAdministrationPowerShellModule
         PowerAppsAdminModuleVersion                        = $testConfig.powerAppsAdminModuleVersion
         ActivationConfigPath                               = $testConfig.activationConfigPath
         ComponentOwnerConfigPath                           = $testConfig.componentOwnerConfigPath

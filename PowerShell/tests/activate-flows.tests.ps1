@@ -7,23 +7,23 @@
 Describe 'Activate-Flows-Test' {
     It 'ActivateFlows' -Tag 'ActivateFlows' {
         . ..\activate-flows.ps1
- 
+
         Install-Module $MicrosoftXrmDataPowerShellModule -RequiredVersion $XrmDataPowerShellVersion -Force -AllowClobber
         Install-Module $MicrosoftPowerAppsAdministrationPowerShellModule -RequiredVersion $PowerAppsAdminModuleVersion -Force -AllowClobber
-    
+
         . .\utilities.tests.ps1
-    
+
         $activationConfig = Invoke-SetDeploymentVariable "$ActivationConfigPath" "ActivateFlowConfiguration"
         $componentOwnerConfig = Invoke-SetDeploymentVariable "$ComponentOwnerConfigPath" "SolutionComponentOwnershipConfiguration"
         $connectionReferenceConfig = Invoke-SetDeploymentVariable "$ConnectionReferenceConfigPath" "ConnectionReferences"
-    
+
         #Deactivate the flows to test
         $activationConfigs = Get-Content $activationConfig | ConvertFrom-Json
         Write-Information "Importing PowerShell Module: $MicrosoftXrmDataPowerShellModule - $XrmDataPowerShellVersion"
         Import-Module $MicrosoftXrmDataPowerShellModule -Force -RequiredVersion $XrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
-    
+
         $connectionString = $DataverseConnectionString
-    
+
         $conn = Get-CrmConnection -ConnectionString $connectionString
         foreach ($activateConfig in $activationConfigs){
             if($activateConfig.solutionComponentUniqueName -ne ''){

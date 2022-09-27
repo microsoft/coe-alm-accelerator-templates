@@ -15,7 +15,7 @@ function Set-CanvasTestAutomationURLs {
     if(Test-Path $canvasAppsPath) {
         $canvasApps = Get-ChildItem "$canvasAppsPath\src\" -Filter "*$filter"
         $asTestCase = "As TestCase"
-        $hostUrl = Get-HostFromUrl $url        
+        $hostUrl = Get-HostFromUrl $url
         foreach ($app in $canvasApps) {
             $appName = $app.Name.Replace($filter, "")
             $appDirectory = $app.Directory.ToString()
@@ -28,7 +28,7 @@ function Set-CanvasTestAutomationURLs {
                 foreach ($testFile in $testFiles) {
                     $lines = Get-Content $testFile.FullName
 
-                    foreach ($line in $lines) {                
+                    foreach ($line in $lines) {
                         if ($line.Contains($asTestCase)) {
                             $pipeDelimeter = "|"
                             $testCaseId = $line.Replace($asTestCase,$pipeDelimeter).Split($pipeDelimeter)[0].Replace("`"", "").Replace("'", "").Trim()
@@ -37,7 +37,7 @@ function Set-CanvasTestAutomationURLs {
                             $testUrls.Add($testUrl)
                             # We need to bypass consent.  Otherwise the test might fail.
                             if ($null -eq $appId) {
-                                $appId = $testUrl.Replace('play/',$pipeDelimeter).Replace('?',$pipeDelimeter).Split($pipeDelimeter)[1]                            
+                                $appId = $testUrl.Replace('play/',$pipeDelimeter).Replace('?',$pipeDelimeter).Split($pipeDelimeter)[1]
                                 Set-AdminPowerAppApisToBypassConsent -EnvironmentName $environmentId -AppName $appId
                                 Write-Information "Bypassed consent for $appId"
                             }
