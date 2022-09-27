@@ -44,14 +44,10 @@ $ScriptAnalyzerResult = Invoke-ScriptAnalyzer -Path $ScriptDirectory -Recurse -I
 
 if ( $ScriptAnalyzerResult ) {
     $ScriptAnalyzerResultString = $ScriptAnalyzerResult | Out-String
-    $ScriptAnalyzerResultString = [System.Text.RegularExpressions.Regex]::Escape($ScriptAnalyzerResultString)
+
     # build the markdown comments
     # cannot be tabbed over to match indentation
-    $markdownComment = @"
-Warning: Script Analyzer found the following issues with your code:
-
-$ScriptAnalyzerResultString
-"@
+    $markdownComment = $ScriptAnalyzerResultString
     $body = @"
 {
     "body": "$markdownComment"
