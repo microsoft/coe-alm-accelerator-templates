@@ -20,9 +20,8 @@ param (
     try {
         $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$PRNumber"
         Write-Host $uri
-        $response = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json
-        if($null -ne $response) {
-            $pr = $response | ConvertFrom-Json
+        $pr = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json
+        if($null -ne $pr) {
             $uri = $pr._links.comments
             Write-Information "Constructed URL: $uri"
 
