@@ -50,7 +50,7 @@ if ( $ScriptAnalyzerResult ) {
     $markdownComment = @"
 :warning: Script Analyzer found the following issues with your code:
 
-``[System.Text.RegularExpressions.Regex]::Unescape($ScriptAnalyzerResultString)``
+$ScriptAnalyzerResultString
 "@
     $body = @"
 {
