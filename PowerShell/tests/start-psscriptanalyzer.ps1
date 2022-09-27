@@ -23,10 +23,10 @@ param (
 
     # post the comment to the pull request
     try {
-        $uri = "$($Env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$Env:SYSTEM_TEAMPROJECTID/_apis/git/repositories/$($Env:BUILD_REPOSITORY_NAME)/pullRequests/$($Env:SYSTEM_PULLREQUEST_PULLREQUESTID)/threads?api-version=5.1"
+        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$($Env:SYSTEM_PULLREQUEST_PULLREQUESTID)/comments"
         Write-Verbose "Constructed URL: $uri"
 
-        $response = Invoke-RestMethod -Uri $uri -Method POST -Headers @{Authorization = "Bearer $Env:SYSTEM_ACCESSTOKEN" } -Body $Body -ContentType application/json
+        $response = Invoke-RestMethod -Uri $uri -Method POST -Headers @{Authorization = "Bearer $(GitHubPAT)" } -Body $Body -ContentType application/json
 
         if ($null -eq $response) {
             Write-Verbose "Rest API posted OK"
@@ -65,27 +65,8 @@ if ( $ScriptAnalyzerResult ) {
 
         $body = @"
 {
-    "comments": [
-        {
-            "parentCommentId": 0,
-            "content": "$markdownComment",
-            "commentType": 1
-        }
-    ],
-    "status": "active",
-    "threadContext": {
-        "filePath": "$ScriptPath",
-        "leftFileEnd": null,
-        "leftFileStart": null,
-        "rightFileEnd": {
-            "line": $($result.Line),
-            "offset": 100
-        },
-        "rightFileStart": {
-            "line": $($result.Line),
-            "offset": 1
-        }
-    }
+    "body": $markdownComment,
+    "path": "$ScriptPath"
 }
 "@
         # post to the PR
