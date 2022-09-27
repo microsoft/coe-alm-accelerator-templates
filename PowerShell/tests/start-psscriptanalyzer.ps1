@@ -15,7 +15,7 @@ param (
 
     # post the comment to the pull request
     try {
-        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$Env:SYSTEM_PULLREQUEST_PULLREQUESTID"
+        $uri = "https://api.github.com/repos/microsoft/coe-alm-accelerator-templates/pulls/$(System.PullRequest.PullRequestId)"
         Write-Host $uri
         Write-Host $env:GITHUBPAT
         $response = Invoke-RestMethod -Uri $uri -Method GET -Headers @{Authorization = "Bearer $env:GITHUBPAT" } -ContentType application/json

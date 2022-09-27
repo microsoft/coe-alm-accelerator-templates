@@ -27,7 +27,7 @@ jobs:
     - task: PowerShell@2
       displayName: 'Analyze and post PR Comment'
       env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          GITHUBPAT: $(GitHubPAT)
       inputs:
         targetType: filePath
         pwsh: true
