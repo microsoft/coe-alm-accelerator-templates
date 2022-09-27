@@ -50,7 +50,7 @@ if ( $ScriptAnalyzerResult ) {
     $markdownComment = $ScriptAnalyzerResultString
     $body = @'
 {
-    "body": $markdownComment
+    "body": ``$markdownComment``
 }
 '@
     # post to the PR
