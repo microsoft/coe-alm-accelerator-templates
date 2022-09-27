@@ -46,9 +46,8 @@ if ( $ScriptAnalyzerResult ) {
     $ScriptAnalyzerResultString = $ScriptAnalyzerResult | Out-String
 
     # build the markdown comments
-    # cannot be tabbed over to match indentation
     $markdownComment = $ScriptAnalyzerResultString
-    $markdownComment = $markdownComment -replace ' {2,}', "|"
+    #$markdownComment = $markdownComment -replace ' {2,}', " | "
     $body = [PSCustomObject]@{"body"="$markdownComment"}
     $jsonBody = $body | ConvertTo-Json
     # post to the PR
@@ -61,7 +60,7 @@ if ( $ScriptAnalyzerResult ) {
     Write-Output "All Script Analyzer tests passed"
 
     $markdownComment = ":white_check_mark: Script Analyzer found no issues with your code! :hand:"
-    $markdownComment = $markdownComment -replace ' {2,}', "|"
+    #$markdownComment = $markdownComment -replace ' {2,}', "|"
     Write-Host "Posting PR Comment via AzureDevOps REST API"
     $body = [PSCustomObject]@{"body"="$markdownComment"}
     # post to the PR
