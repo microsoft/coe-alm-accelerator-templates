@@ -44,7 +44,6 @@ $ScriptAnalyzerResult = Invoke-ScriptAnalyzer -Path $ScriptDirectory -Recurse -I
 
 if ( $ScriptAnalyzerResult ) {
     $ScriptAnalyzerResultString = $ScriptAnalyzerResult | Out-String
-    Write-Warning $ScriptAnalyzerResultString
 
     # build the markdown comments
     # cannot be tabbed over to match indentation
