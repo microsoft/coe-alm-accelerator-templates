@@ -65,9 +65,7 @@ if ( $ScriptAnalyzerResult ) {
 }
 "@
         # post to the PR
-        Add-PRComment
-            -PRNumber $PRNumber
-            -Body $body
+        Add-PRComment -PRNumber $PRNumber -Body $body
     }
 
     #Uncomment the line below to fail build based on results
@@ -88,7 +86,5 @@ if ( $ScriptAnalyzerResult ) {
 }
 "@
     # post to the PR
-    Add-PRComment
-        -PRNumber $PRNumber
-        -Body $body
+    Add-PRComment -PRNumber $PRNumber -Body $body
 }
