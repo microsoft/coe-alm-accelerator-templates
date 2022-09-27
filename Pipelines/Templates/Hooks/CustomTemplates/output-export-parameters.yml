@@ -5,16 +5,16 @@ steps:
 - pwsh: |
     . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
     $parameters = Read-Pipeline-Parameters "$(Agent.BuildDirectory)\export-pipeline-parameters.json"
-    Write-Host "gitAccessUrl:" $parameters.gitAccessUrl
-    Write-Host "project:" $parameters.project
-    Write-Host "repo:" $parameters.repo
-    Write-Host "branch:" $parameters.branch
-    Write-Host "branchToCreate:" $parameters.branchToCreate
-    Write-Host "commitMessage:" $parameters.commitMessage
-    Write-Host "email:" $parameters.email
-    Write-Host "serviceConnectionName:" $parameters.serviceConnectionName
-    Write-Host "serviceConnectionUrl:" $parameters.serviceConnectionUrl
-    Write-Host "solutionName:" $parameters.solutionName
-    Write-Host "userName:" $parameters.userName
-    Write-Host "configurationData:" $parameters.configurationData | ConvertTo-Json
+    Write-Information "gitAccessUrl:" $parameters.gitAccessUrl
+    Write-Information "project:" $parameters.project
+    Write-Information "repo:" $parameters.repo
+    Write-Information "branch:" $parameters.branch
+    Write-Information "branchToCreate:" $parameters.branchToCreate
+    Write-Information "commitMessage:" $parameters.commitMessage
+    Write-Information "email:" $parameters.email
+    Write-Information "serviceConnectionName:" $parameters.serviceConnectionName
+    Write-Information "serviceConnectionUrl:" $parameters.serviceConnectionUrl
+    Write-Information "solutionName:" $parameters.solutionName
+    Write-Information "userName:" $parameters.userName
+    Write-Information "configurationData:" $parameters.configurationData | ConvertTo-Json
   displayName: 'Output Export Parameters'

@@ -1,8 +1,8 @@
 function Invoke-ArchiveConfigurationMigrationData {
     param (
-        [Parameter(Mandatory)] [String]$buildSourceDirectory, 
+        [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$artifactStagingDirectory,
-        [Parameter(Mandatory)] [String]$repo, 
+        [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName
     )
     $path = "$buildSourceDirectory\$repo\$solutionName\config\ConfigurationMigrationData"
@@ -24,7 +24,7 @@ function Invoke-ArchiveConfigurationMigrationData {
     }
 
     if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config") {
-        Get-ChildItem -Path "$buildSourceDirectory\$repo\$solutionName\config" | 
+        Get-ChildItem -Path "$buildSourceDirectory\$repo\$solutionName\config" |
         ForEach-Object {
             $environment = $_.Name
             $path = "$buildSourceDirectory\$repo\$solutionName\config\$environment\ConfigurationMigrationData"

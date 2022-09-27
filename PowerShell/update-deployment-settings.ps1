@@ -20,11 +20,11 @@
     )
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
     $reservedVariables = @("TriggerSolutionUpgrade")
-    Write-Host (ConvertTo-Json -Depth 10 $configurationData)
+    Write-Information (ConvertTo-Json -Depth 10 $configurationData)
 
 
     #Generate Deployment Settings
-    Write-Host "Update Deployment Settings"
+    Write-Information "Update Deployment Settings"
     if(!(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\")) {
         New-Item "$buildSourceDirectory\$repo\$solutionName\" -Name "config" -ItemType "directory"
     } else {
@@ -35,7 +35,7 @@
     #Update / Create Deployment Pipelines
     New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS
 
-    Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
+    Write-Information "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
     $conn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"
 
@@ -53,12 +53,12 @@
         #Getting the build definition id and variables to be updated
         $buildName = $configurationDataEnvironment.BuildName
         $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?name=$buildName&includeAllProperties=true&api-version=6.0"
-        Write-Host $buildDefinitionResourceUrl
+        Write-Information $buildDefinitionResourceUrl
         $fullBuildDefinitionResponse = Invoke-RestMethod $buildDefinitionResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
         $buildDefinitionResponseResults = $fullBuildDefinitionResponse.value
-        Write-Host "Retrieved " $buildDefinitionResponseResults.length " builds"
+        Write-Information "Retrieved " $buildDefinitionResponseResults.length " builds"
 
         $newBuildDefinitionVariables = $null
         if($buildDefinitionResponseResults.length -gt 0) {
@@ -222,11 +222,11 @@
 
             $environmentName = $configurationDataEnvironment.DeploymentEnvironmentName
             if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\") {
-                Write-Host "Deleting $buildSourceDirectory\$repo\$solutionName\config\$environmentName\*eploymentSettings.json"
+                Write-Information "Deleting $buildSourceDirectory\$repo\$solutionName\config\$environmentName\*eploymentSettings.json"
                 Remove-Item -Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\*eploymentSettings.json" -Force
             }
             else {
-                Write-Host "Creating $buildSourceDirectory\$repo\$solutionName\config" -Name "$environmentName" -ItemType "directory"
+                Write-Information "Creating $buildSourceDirectory\$repo\$solutionName\config" -Name "$environmentName" -ItemType "directory"
                 New-Item "$buildSourceDirectory\$repo\$solutionName\config" -Name "$environmentName" -ItemType "directory"
             }
 
@@ -236,7 +236,7 @@
             $newConfiguration | Add-Member -MemberType NoteProperty -Name 'EnvironmentVariables' -Value $environmentVariables
             $newConfiguration | Add-Member -MemberType NoteProperty -Name 'ConnectionReferences' -Value $connectionReferences
 
-            Write-Host "Creating deployment settings"
+            Write-Information "Creating deployment settings"
             $json = ConvertTo-Json -Depth 10 $newConfiguration
             Set-Content -Path $deploymentSettingsFilePath -Value $json
 
@@ -250,7 +250,7 @@
             $newCustomConfiguration | Add-Member -MemberType NoteProperty -Name 'AadGroupCanvasConfiguration' -Value $canvasApps
             $newCustomConfiguration | Add-Member -MemberType NoteProperty -Name 'AadGroupTeamConfiguration' -Value $groupTeams
             #Convert the updated configuration to json and store in customDeploymentSettings.json
-            Write-Host "Creating custom deployment settings"
+            Write-Information "Creating custom deployment settings"
             $json = ConvertTo-Json -Depth 10 $newCustomConfiguration
             Set-Content -Path $customDeploymentSettingsFilePath -Value $json
 
@@ -276,26 +276,26 @@ function New-DeploymentPipelines
         [Parameter()] [String]$agentOS
     )
     if($null -ne $configurationData -and $configurationData.length -gt 0) {
-        Write-Host "Retrieved " $configurationData.length " deployment environments"
+        Write-Information "Retrieved " $configurationData.length " deployment environments"
         $branchResourceUrl = "$orgUrl$projectName/_apis/git/repositories/$repo/refs?filter=heads/$solutionName&api-version=6.0"
-        Write-Host $branchResourceUrl
+        Write-Information $branchResourceUrl
         $branchResourceResponse = Invoke-RestMethod $branchResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
         $branchResourceResults = $branchResourceResponse.value
-        Write-Host "Retrieved " $branchResourceResults.length " branch"
+        Write-Information "Retrieved " $branchResourceResults.length " branch"
 
         #Update / Create Deployment Pipelines
         $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"
-        Write-Host $buildDefinitionResourceUrl
+        Write-Information $buildDefinitionResourceUrl
         $fullBuildDefinitionResponse = Invoke-RestMethod $buildDefinitionResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
         $buildDefinitionResponseResults = $fullBuildDefinitionResponse.value
-        Write-Host "Retrieved " $buildDefinitionResponseResults.length " builds"
+        Write-Information "Retrieved " $buildDefinitionResponseResults.length " builds"
 
         $deploymentConfigurationData = $configurationData | Where-Object -FilterScript { [string]::IsNullOrWhiteSpace($_.StepType) -or $_.StepType -ne 809060000 }
-        Write-Host "Retrieved " $deploymentConfigurationData.length " deployment configurations"
+        Write-Information "Retrieved " $deploymentConfigurationData.length " deployment configurations"
 
         if($branchResourceResults.length -eq 0 -or $buildDefinitionResponseResults.length -lt $deploymentConfigurationData.length) {
             $settings= ""
@@ -344,7 +344,7 @@ function New-DeploymentPipelines
             }
             if(-Not [string]::IsNullOrWhiteSpace($settings)) {
                 $settings = $settings + ",environments=" + $environmentNames
-                Write-Host "environments: " $settings
+                Write-Information "environments: " $settings
 
                 $currentPath = Get-Location
                 Set-Location "$pipelineSourceDirectory"
@@ -371,7 +371,7 @@ function New-DeploymentPipelines
                 }
 
                 if(Test-Path ".\combined.log") {
-                    Write-Host ((Get-Content ".\combined.log") -join "`n") 
+                    Write-Information ((Get-Content ".\combined.log") -join "`n") 
                 }
                 Set-Location $currentPath
             }
@@ -398,7 +398,7 @@ function Set-BuildDefinitionVariables {
         $body = ConvertTo-Json -Depth 10 $buildDefinitionResult
         #remove tab charcters from the body
         $body = $body -replace "`t", ""
-        Write-Host $buildDefinitionResourceUrl
+        Write-Information $buildDefinitionResourceUrl
         Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
     }
 }
@@ -409,8 +409,8 @@ function Create-Update-ServiceConnection-Parameters{
         [Parameter()] [String]$ServiceConnectionName,
         [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
     )
-    Write-Host "Inside Create-Update-ServiceConnection-Parameters"
-    Write-Host "newBuildDefinitionVariables - $newBuildDefinitionVariables"
+    Write-Information "Inside Create-Update-ServiceConnection-Parameters"
+    Write-Information "newBuildDefinitionVariables - $newBuildDefinitionVariables"
      if($null -ne $newBuildDefinitionVariables){
         #If the "ServiceConnection" variable was not found create it 
         $found = Check-Parameter "ServiceConnection" $newBuildDefinitionVariables

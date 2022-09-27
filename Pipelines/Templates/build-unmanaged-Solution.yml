@@ -38,6 +38,6 @@ steps:
          $unmanagedSolutionPath = $_.FullName 
        }
    }
-   Write-Host "##vso[task.setVariable variable=UnmanagedSolutionPath]$unmanagedSolutionPath"
-   Write-Host $unmanagedSolutionPath
+   Write-Information "##vso[task.setVariable variable=UnmanagedSolutionPath]$unmanagedSolutionPath"
+   Write-Information $unmanagedSolutionPath
   displayName: 'Get unmanaged solution zip path'

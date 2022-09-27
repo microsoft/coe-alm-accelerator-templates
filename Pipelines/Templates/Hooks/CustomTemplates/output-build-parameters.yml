@@ -4,10 +4,10 @@
 steps:
 - pwsh: |
     . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
-    Write-Host "Loading pipeline parameters from $(Agent.BuildDirectory)\build-pipeline-parameters.json"
+    Write-Information "Loading pipeline parameters from $(Agent.BuildDirectory)\build-pipeline-parameters.json"
     $parameters = Read-Pipeline-Parameters "$(Agent.BuildDirectory)\build-pipeline-parameters.json"
-    Write-Host "buildType:" $parameters.buildType
-    Write-Host "serviceConnectionName:" $parameters.serviceConnectionName
-    Write-Host "serviceConnectionUrl:" $parameters.serviceConnectionUrl
-    Write-Host "solutionName:" $parameters.solutionName
+    Write-Information "buildType:" $parameters.buildType
+    Write-Information "serviceConnectionName:" $parameters.serviceConnectionName
+    Write-Information "serviceConnectionUrl:" $parameters.serviceConnectionUrl
+    Write-Information "solutionName:" $parameters.solutionName
   displayName: 'Output Build Parameters'

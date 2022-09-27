@@ -51,7 +51,7 @@ steps:
 - pwsh: |
     $splitName = "$(Build.Repository.Name)".Split("/")
     $repoName = $splitName[$splitName.Length - 1]
-    Write-Host "##vso[task.setvariable variable=RepoName]$repoName"
+    Write-Information "##vso[task.setvariable variable=RepoName]$repoName"
   displayName: 'Set Source Repo Name'
   condition: and(succeeded(), ne('${{parameters.buildType}}', 'Unmanaged'))
 
@@ -101,11 +101,11 @@ steps:
      $packedFileName = $unpackedPath.Replace("_msapp_src", ".msapp")
      if(!(Test-Path $packedFileName)) {
         #Temporarily unpacking with latest version of Power Apps Language Tooling
-        Write-Host "Packing cavas app source files into msapp"
+        Write-Information "Packing cavas app source files into msapp"
        pac canvas pack --sources $unpackedPath --msapp $packedFileName
      }
      else {
-        Write-Host "$packedFileName already exists. Skipping packing of the app."
+        Write-Information "$packedFileName already exists. Skipping packing of the app."
      }
 
     # We need to copy the old folder structure for canvas app source into the new

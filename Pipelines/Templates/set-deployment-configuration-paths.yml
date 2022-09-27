@@ -17,7 +17,7 @@ steps:
     foreach ($settingFile in $settingFiles) {
         $deploymentSettingsPath = ''
         $path = "${{ parameters.configPath }}$settingFile-$environmentName.json"
-        Write-Host "Artifact Path: $path"
+        Write-Information "Artifact Path: $path"
         if(Test-Path $path)
         {
             $deploymentSettingsPath = $path
@@ -25,14 +25,14 @@ steps:
         else
         {
             $path = "${{ parameters.configPath }}$environmentName\$settingFile.json"
-            Write-Host "Environment Path: $path"
+            Write-Information "Environment Path: $path"
             if(Test-Path $path) {
                 $deploymentSettingsPath = $path
             }
             else
             {
                 $path = "${{ parameters.configPath }}$settingFile.json"
-                Write-Host "Default Path: $path"
+                Write-Information "Default Path: $path"
                 if(Test-Path $path)
                 {
                     $deploymentSettingsPath = $path
@@ -40,20 +40,20 @@ steps:
             }
         }
 
-        Write-Host "Deployment Settings Path: $deploymentSettingsPath"
+        Write-Information "Deployment Settings Path: $deploymentSettingsPath"
         
         if($settingFile -eq "deploymentSettings")
         {
-            Write-Host "##vso[task.setVariable variable=DeploymentSettingsPath]$deploymentSettingsPath"
+            Write-Information "##vso[task.setVariable variable=DeploymentSettingsPath]$deploymentSettingsPath"
             $useDeploymentSettings = 'false'
             if($deploymentSettingsPath -ne '') {
                 $useDeploymentSettings = 'true'
             }
-            Write-Host "##vso[task.setVariable variable=UseDeploymentSettings]$useDeploymentSettings"
+            Write-Information "##vso[task.setVariable variable=UseDeploymentSettings]$useDeploymentSettings"
         }
         else
         {
-            Write-Host "##vso[task.setVariable variable=CustomDeploymentSettingsPath]$deploymentSettingsPath"
+            Write-Information "##vso[task.setVariable variable=CustomDeploymentSettingsPath]$deploymentSettingsPath"
         }
     }
   displayName: 'Check if Deployment Settings Exist'

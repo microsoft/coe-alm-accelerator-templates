@@ -29,7 +29,7 @@ steps:
             $solutionComponents = $result.CrmRecords
             foreach ($c in $solutionComponents){
                 if ($c.componenttype -eq "Canvas App" -and $c.objectid -ne ""){
-                    Write-Host "Setting canvas app owner $c.objectid with $azureactivedirectoryobjectid"
+                    Write-Information "Setting canvas app owner $c.objectid with $azureactivedirectoryobjectid"
                     Set-AdminPowerAppOwner –AppName $c.objectid -AppOwner $azureactivedirectoryobjectid –EnvironmentName $environmentName
                 }
             }

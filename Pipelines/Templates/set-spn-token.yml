@@ -11,7 +11,7 @@ steps:
 - pwsh: |
     $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
     $powerShellPath = "$pipelineUtilsPath/PowerShell"
-    Write-Host "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
+    Write-Information "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
 
     if('$(SpnToken)'.Contains('$(')) {
         . "$powerShellPath/dataverse-webapi-functions.ps1"

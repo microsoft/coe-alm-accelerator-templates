@@ -15,7 +15,7 @@ steps:
 
     foreach ($c in $config) {
         if($c.aadGroupTeamName -ne '' -and $c.solutionComponentUniqueName -ne '') {
-            Write-Host "Sharing flow $c.solutionComponentUniqueName with $c.aadGroupTeamName"
+            Write-Information "Sharing flow $c.solutionComponentUniqueName with $c.aadGroupTeamName"
             Grant-AccessToWorkflow $env:SPNTOKEN $dataverseHost $c.aadGroupTeamName $c.solutionComponentUniqueName
         }
     } 

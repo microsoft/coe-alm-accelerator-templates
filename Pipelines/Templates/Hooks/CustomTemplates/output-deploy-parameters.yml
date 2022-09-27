@@ -4,14 +4,14 @@
 steps:
 - pwsh: |
     . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
-    Write-Host "Loading pipeline parameters from $(Agent.BuildDirectory)\deploy-pipeline-parameters.json"
+    Write-Information "Loading pipeline parameters from $(Agent.BuildDirectory)\deploy-pipeline-parameters.json"
     $parameters = Read-Pipeline-Parameters "$(Agent.BuildDirectory)\deploy-pipeline-parameters.json"
-    Write-Host "serviceConnectionName:" $parameters.serviceConnectionName
-    Write-Host "serviceConnectionUrl:" $parameters.serviceConnectionUrl
-    Write-Host "environmentName:" $parameters.environmentName
-    Write-Host "solutionName:" $parameters.solutionName
-    Write-Host "importUnmanaged:" $parameters.importUnmanaged
-    Write-Host "overwriteUnmanagedCustomizations:" $parameters.overwriteUnmanagedCustomizations
-    Write-Host "skipBuildToolsInstaller:" $parameters.skipBuildToolsInstaller
-    Write-Host "cacheEnabled:" $parameters.cacheEnabled
+    Write-Information "serviceConnectionName:" $parameters.serviceConnectionName
+    Write-Information "serviceConnectionUrl:" $parameters.serviceConnectionUrl
+    Write-Information "environmentName:" $parameters.environmentName
+    Write-Information "solutionName:" $parameters.solutionName
+    Write-Information "importUnmanaged:" $parameters.importUnmanaged
+    Write-Information "overwriteUnmanagedCustomizations:" $parameters.overwriteUnmanagedCustomizations
+    Write-Information "skipBuildToolsInstaller:" $parameters.skipBuildToolsInstaller
+    Write-Information "cacheEnabled:" $parameters.cacheEnabled
   displayName: 'Output Deploy Parameters'

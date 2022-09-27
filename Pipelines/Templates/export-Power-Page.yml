@@ -21,7 +21,7 @@ steps:
     . "$env:POWERSHELLPATH/portal-functions.ps1"
     $websiteName = Get-Website-Name "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}"
     echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
-    Write-Host "websiteName - $websiteName"
+    Write-Information "websiteName - $websiteName"
   displayName: "Fetch Portal Website Name"
   condition: and(succeeded(), ne(variables['websiteId'], 'NA'))
 

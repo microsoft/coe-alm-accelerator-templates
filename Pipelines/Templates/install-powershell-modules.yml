@@ -13,7 +13,7 @@ steps:
             [string][ValidateNotNullOrEmpty()]$SubPath
         )
   
-        Write-Host "Installing PS module $ModuleName - $ModuleVersion ..."
+        Write-Information "Installing PS module $ModuleName - $ModuleVersion ..."
         $savedModulePath = [IO.Path]::Combine($RootPath, $ModuleName, $ModuleVersion)
         # MAX_PATH limitation could be lifted by prefixing with: '\\?\', but is not compatible with PowerShell
         # see: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#paths
@@ -34,7 +34,7 @@ steps:
 
         # Set pipeline variable to be used in subsequent tasks when importing module
         $modulePath = Join-Path ([IO.Path]::GetDirectoryName($($fixedModulePath))) $ModuleName
-        Write-Host "##vso[task.setvariable variable=CoETools_$($ModuleName.Replace('.','_'))]$modulePath"
+        Write-Information "##vso[task.setvariable variable=CoETools_$($ModuleName.Replace('.','_'))]$modulePath"
       }
 
       New-Item $(powerPlatformToolsPath) -ItemType Directory -Force | Out-Null
