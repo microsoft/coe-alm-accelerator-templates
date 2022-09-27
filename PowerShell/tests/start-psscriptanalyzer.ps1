@@ -46,25 +46,20 @@ if ( $ScriptAnalyzerResult ) {
     $ScriptAnalyzerResultString = $ScriptAnalyzerResult | Out-String
     Write-Warning $ScriptAnalyzerResultString
 
-    # loop through each result and post to the azuredevops rest api
-    foreach ($result in $ScriptAnalyzerResult) {
-        # build the markdown comments
-        # cannot be tabbed over to match indentation
-        $markdownComment = @"
+    # build the markdown comments
+    # cannot be tabbed over to match indentation
+    $markdownComment = @"
 :warning: Script Analyzer found the following issues with your code:
 
 ``$($result.Message)``
 "@
-
-
     $body = @"
 {
-    "body": "$markdownComment"
+    "body": "$ScriptAnalyzerResultString"
 }
 "@
-        # post to the PR
-        Add-PRComment -PRNumber $PRNumber -Body $body
-    }
+    # post to the PR
+    Add-PRComment -PRNumber $PRNumber -Body $body
 
     #Uncomment the line below to fail build based on results
     #throw "PSScriptAnalyzer found issues with your code"
@@ -72,12 +67,8 @@ if ( $ScriptAnalyzerResult ) {
 } else {
     Write-Output "All Script Analyzer tests passed"
 
-    $markdownComment = @"
-:white_check_mark: Script Analyzer found no issues with your code! :hand:
-"@
-
+    $markdownComment = ":white_check_mark: Script Analyzer found no issues with your code! :hand:"
     Write-Host "Posting PR Comment via AzureDevOps REST API"
-
     $body = @"
 {
     "body": "$markdownComment"
