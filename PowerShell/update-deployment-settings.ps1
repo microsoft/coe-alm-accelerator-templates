@@ -5,7 +5,7 @@
         [Parameter(Mandatory)] [String]$pipelineSourceDirectory,
         [Parameter(Mandatory)] [String]$buildProjectName,
         [Parameter(Mandatory)] [String]$buildRepositoryName,
-        [Parameter(Mandatory)] [String]$dataverseConnectionString,
+        [Parameter(Mandatory)] [String]$cdsBaseConnectionString,
         [Parameter(Mandatory)] [String]$xrmDataPowerShellVersion,
         [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule,
         [Parameter(Mandatory)] [String]$orgUrl,
@@ -37,7 +37,7 @@
 
     Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
-    $conn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"
+    $conn = Get-CrmConnection -ConnectionString "$cdsBaseConnectionString$serviceConnection"
 
     #Loop through the build definitions we found and update the pipeline variables based on the placeholders we put in the deployment settings files.
     foreach($configurationDataEnvironment in $configurationData)
@@ -64,22 +64,12 @@
         if($buildDefinitionResponseResults.length -gt 0) {
             $newBuildDefinitionVariables = $buildDefinitionResponseResults[0].variables
         }
-		
-        # Updating "ServiceConnection"; Required if the ''Environment URL' in the profile changes post commit.
-        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.DeploymentEnvironmentUrl) {         
-            $DeploymentEnvironmentUrl=$configurationDataEnvironment.DeploymentEnvironmentUrl
-            $ServiceConnectionName=$configurationDataEnvironment.ServiceConnectionName
-            if($null -ne $newBuildDefinitionVariables){
-                Create-Update-ServiceConnection-Parameters $DeploymentEnvironmentUrl $ServiceConnectionName $newBuildDefinitionVariables
-            }
-        }		
-
         if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
             foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
                 $configurationVariableName = $configurationVariable.Name
                 $configurationVariableValue = $configurationVariable.Value
                 if (-not ([string]::IsNullOrEmpty($configurationVariableName)))
-                {				
+                {					
                     #Set connection reference variables
                     if($configurationVariableName.StartsWith("connectionreference.user.", "CurrentCultureIgnoreCase")) {
                         $schemaName = $configurationVariableName -replace "connectionreference.user.", ""
@@ -179,15 +169,10 @@
                     elseif($configurationVariableName.StartsWith("groupTeam.", "CurrentCultureIgnoreCase")) {
                         $teamName = $configurationVariableName.split('.')[-1]
                         $teamGroupRoles = $configurationVariable.Data.split(',')
-                        $businessUnitVariableName = $configurationVariableName.Replace("groupTeam", "businessUnit")
-                        $teamBusinessUnit = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq $businessUnitVariableName } | Select-Object -First 1
-                        $teamBusinessUnitValue = ""
-                        if($null -ne $teamBusinessUnit) {
-                            $teamBusinessUnitValue = $teamBusinessUnit.Value
-                        }
-                        $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadGroupTeamBusinessUnitId"="#{$businessUnitVariableName}#"; "aadSecurityGroupId"="#{$configurationVariableName}#"; "dataverseSecurityRoleNames"=@($teamGroupRoles)}
+
+                        $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadSecurityGroupId"="#{$configurationVariableName}#"; "dataverseSecurityRoleNames"=@($teamGroupRoles)}
                         if($usePlaceholders.ToLower() -eq 'false') {
-                            $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadGroupTeamBusinessUnitId"="$teamBusinessUnitValue"; "aadSecurityGroupId"="$configurationVariableValue"; "dataverseSecurityRoleNames"=@($teamGroupRoles)}
+                            $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadSecurityGroupId"="$configurationVariableValue"; "dataverseSecurityRoleNames"=@($teamGroupRoles)}
                         }
                         $groupTeams.Add($groupTeamConfig)
                     }
@@ -195,7 +180,13 @@
 
                 #See if the variable already exists
                 if($null -ne $newBuildDefinitionVariables) {
-                    $found = Check-Parameter $configurationVariableName $newBuildDefinitionVariables                
+                    $found = $false
+                    foreach($buildVariable in $newBuildDefinitionVariables.PSObject.Properties) {
+                        if($buildVariable.Name -eq $configurationVariableName) {
+                            $found = $true
+                            break
+                        }
+                    }                
                     #Add the configuration variable to the list of pipeline variables if usePlaceholders is not false
                     if($usePlaceholders.ToLower() -ne 'false') {
                         #If the variable was not found create it 
@@ -401,53 +392,4 @@ function Set-BuildDefinitionVariables {
         Write-Host $buildDefinitionResourceUrl
         Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
     }
-}
-
-function Create-Update-ServiceConnection-Parameters{
-    param (
-        [Parameter()] [String]$DeploymentEnvironmentUrl,
-        [Parameter()] [String]$ServiceConnectionName,
-        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
-    )
-    Write-Host "Inside Create-Update-ServiceConnection-Parameters"
-    Write-Host "newBuildDefinitionVariables - $newBuildDefinitionVariables"
-     if($null -ne $newBuildDefinitionVariables){
-        #If the "ServiceConnection" variable was not found create it 
-        $found = Check-Parameter "ServiceConnection" $newBuildDefinitionVariables
-        if(!$found) { 
-            $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ServiceConnection" -Value @{value = ''}
-        }
-
-        #If the "ServiceConnectionUrl" variable was not found create it 
-        $found = Check-Parameter "ServiceConnectionUrl" $newBuildDefinitionVariables
-        if(!$found) { 
-            $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ServiceConnectionUrl" -Value @{value = ''}
-        }
-
-		# If the "$ServiceConnectionName" variable was not found, use $DeploymentEnvironmentUrl
-		if([string]::IsNullOrEmpty($ServiceConnectionName))
-		{
-			$ServiceConnectionName = $DeploymentEnvironmentUrl
-        }
-        $newBuildDefinitionVariables.ServiceConnection.value = $ServiceConnectionName
-        $newBuildDefinitionVariables.ServiceConnectionUrl.value = $DeploymentEnvironmentUrl
-    }
-}
-
-function Check-Parameter{
-    param (
-        [Parameter()] [String]$configurationVariableName,
-        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
-    )
-    $found = $false
-    if($null -ne $newBuildDefinitionVariables){
-        foreach($buildVariable in $newBuildDefinitionVariables.PSObject.Properties) {
-            if($buildVariable.Name -eq $configurationVariableName) {
-                $found = $true
-                break
-            }
-         }
-     }
-
-     return $found
 }
