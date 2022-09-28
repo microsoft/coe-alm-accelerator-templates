@@ -49,12 +49,13 @@ steps:
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      restructure-legacy-folders '$(Build.ArtifactStagingDirectory)' '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)' '${{parameters.serviceConnectionUrl}}'
+      restructure-legacy-folders '$(Build.ArtifactStagingDirectory)' '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)' '${{parameters.serviceConnectionUrl}}' '$(Agent.BuildDirectory)'
   displayName: 'Restructure legacy folders'
 
 # Solution version in source control is not used.  Instead, create version at build time from the current build number.
 - pwsh: |
-   $solutionXMLPath = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\Other\Solution.xml"
+   #$solutionXMLPath = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\Other\Solution.xml"
+   $solutionXMLPath = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\src\Other\Solution.xml"
    Get-ChildItem -Path "$solutionXMLPath" | 
    ForEach-Object {
         (Get-Content $_.FullName) `
@@ -187,7 +188,8 @@ steps:
 
 - task: VSBuild@1
   inputs:
-    solution: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\${{parameters.solutionName}}.cdsproj'
+    #solution: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\${{parameters.solutionName}}.cdsproj'
+    solution: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}.cdsproj'
     msbuildArgs: '/t:build /restore'
     #platform: '$(buildPlatform)'
     #configuration: '$(buildConfiguration)'
@@ -198,23 +200,26 @@ steps:
     platform: 'Any CPU'
     configuration: 'Release'
     codeCoverageEnabled: True
+    resultsFolder: '$(build.ArtifactStagingDirectory)\Test\Results'
     searchFolder: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}'
     testAssemblyVer2: |
       **\*test*.dll
       !**\*TestAdapter.dll
       !**\obj\**
-    condition: and(succeeded(), eq(variables.pluginsexists, 'true'))
+    condition: and(succeeded(), eq(variables.codefirstexists, 'true'))
   displayName: 'Run Unit Test Case Projects'
 
 - pwsh: |
-    $sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\bin\Debug\*"
+    #$sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\bin\Debug\*"
+    $sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\bin\Debug\*"
     Get-ChildItem "$sourceDirectory" -Recurse
   displayName: 'Display Bin Files' 
 
   # Using cdsproj approach Solutions gets created post building cdsproj file.
   # Copy the Solution from bin to ArtifactStagingDirectory
 - pwsh: |
-    $sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\bin\Debug\*"
+    #$sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\bin\Debug\*"
+    $sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\bin\Debug\*"
     $destinationDirectory = "$(Build.ArtifactStagingDirectory)"
     If(Test-Path "$sourceDirectory")
     {
@@ -240,14 +245,14 @@ steps:
   displayName: 'Display ArtifactStagingDirectory Files-2'
 
 #Run Solution Checker against our solution. This is currently only triggered for pipelines that trigger for Pull Requests
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
-  displayName: 'Run Solution Checker'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
-    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
-    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
-  condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
+#- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.checker.PowerPlatformChecker@2
+#  displayName: 'Run Solution Checker'
+#  inputs:
+#    authenticationType: PowerPlatformSPN
+#    PowerPlatformSPN: ${{parameters.serviceConnectionName}}
+#    FilesToAnalyze: '$(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_$(Build.BuildNumber).zip'
+#    RuleSet: '0ad12346-e108-40b8-a956-9a8f95ea18c9'
+#  condition: and(succeeded(), and(ne(variables['DisableSolutionChecker'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
 
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Artifacts'

@@ -6,7 +6,8 @@
         [Parameter(Mandatory)] [String]$disableAllFlows,
         [Parameter()] [String]$activateFlowConfigJson
     )
-    $workflowspath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src\Workflows";
+    #$workflowspath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src\Workflows";
+    $workflowspath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\src\Workflows";
 
     if(-not [string]::IsNullOrEmpty($workflowspath))
     {

@@ -83,7 +83,8 @@ function add-codefirst-projects-to-cdsproj{
         Invoke-Expression -Command "$pacexepath $authCommand"
 
         # Set location to .cdsproj Path
-        $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+        #$cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+        $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName.cdsproj"
         Write-Host "cdsProjPath - $cdsProjPath"
         if(Test-Path $cdsProjPath)
         {
@@ -125,31 +126,6 @@ function add-codefirst-projects-to-cdsproj{
     else
     {
         Write-Host "pac not installed!!!"
-    }
-}
-
-function build-cdsproj{
-    param (
-        [Parameter(Mandatory)] [String]$buildSourceDirectory,
-        [Parameter(Mandatory)] [String]$repo,
-        [Parameter(Mandatory)] [String]$solutionName,
-        [Parameter(Mandatory)] [String]$pacexePath
-    )
-    # Set location to .cdsproj Path
-    $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
-    Write-Host "cdsProjPath - $cdsProjPath"
-    if(Test-Path $cdsProjPath)
-    {
-        Write-Host "Cds Proj File Found!!!"
-        $cdsProjectRootPath = [System.IO.Path]::GetDirectoryName($cdsProjPath)
-        Set-Location -Path $cdsProjectRootPath
-
-        # Run Build Command
-        msbuild /t:build /restore
-    }
-    else
-    {
-        Write-Host "Cds Proj File not Found!!!"
     }
 }
 
@@ -215,7 +191,8 @@ function clone-or-sync-solution{
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName,
-        [Parameter(Mandatory)] [String]$pacPath
+        [Parameter(Mandatory)] [String]$pacPath,
+        [Parameter(Mandatory)] [String]$buildDirectory
     )
 	
 	$legacyFolderPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
@@ -227,8 +204,10 @@ function clone-or-sync-solution{
         $unpackfolderpath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
 
         # Trigger Clone or Sync
-        $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
-        $cdsProjFolderPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName"
+        #$cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+        #$cdsProjFolderPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName"
+        $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName.cdsproj"
+        $cdsProjFolderPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
         # If .cds project file exists (i.e., Clone performed already) trigger Sync
         if(Test-Path "$cdsProjPath")
         {
@@ -248,7 +227,17 @@ function clone-or-sync-solution{
             $cloneCommand = "solution clone -n $solutionName -pca true -o ""$unpackfolderpath"" -p Both"
             Write-Host "Clone Command - $pacexepath $cloneCommand"
             Invoke-Expression -Command "$pacexepath $cloneCommand"
-        }        
+        }
+        
+		If(Test-Path "$cdsProjFolderPath\$solutionName")
+		{
+		    # Move items from SolutionPackage/Solution folder to SolutionPackage
+            Write-Host "Moving items from $cdsProjFolderPath\$solutionName to $cdsProjFolderPath"
+            Get-ChildItem -Path "$cdsProjFolderPath\$solutionName" | Copy-Item -Destination "$cdsProjFolderPath" -Recurse -Container
+            Write-Host "Removing redundant folder $cdsProjFolderPath\$solutionName"
+            # Remove the redundant SolutionPackage/Solution folder
+            Remove-Item "$cdsProjFolderPath\$solutionName" -Recurse
+		}
     }
 }
 
@@ -258,7 +247,8 @@ function add-packagetype-node-to-cdsproj{
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName
     )
-    $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+    #$cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+    $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName.cdsproj"
 
     if(Test-Path $cdsProjPath){
         [xml]$xmlDoc = Get-Content -Path $cdsProjPath
@@ -291,9 +281,11 @@ function restructure-legacy-folders{
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$pacPath,
-        [Parameter(Mandatory)] [String]$serviceConnection
+        [Parameter(Mandatory)] [String]$serviceConnection,
+        [Parameter(Mandatory)] [String]$buildDirectory
     )
-    $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+    #$cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\$solutionName.cdsproj"
+    $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName.cdsproj"
 
     # Legacy folder structure "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\{unpackedcomponents}"
     # New folder structure "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src\{unpackedcomponents}"
@@ -310,22 +302,22 @@ function restructure-legacy-folders{
         # While moving Destination path cannot be a subdirectory of the source
         # Hence copy files to temp location first and then to new folder location
         $sourceDirectory  = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\"
-        $tempSolPackageDirectory  = "$artifactStagingDirectory\temp_SolutionPackage"
+        $tempSolPackageDirectory  = "$buildDirectory\temp_SolutionPackage"
         Write-Host "Moving files to temp directory"
         Get-ChildItem -Path "$sourceDirectory" -Recurse | Move-Item -Destination "$tempSolPackageDirectory" -Force
 
         # Create new folder structure
-        New-Item -ItemType "directory" -Path "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src"
+        #New-Item -ItemType "directory" -Path "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src"
+        New-Item -ItemType "directory" -Path "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\src"
 
-        # Move unpacked files from legacy to new folder
-        # While moving Destination path cannot be a subdirectory of the source
-        # Hence copy files to temp location first and then to new folder location
-        $destinationDirectory = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src\"
+        # Move files from temp to new folder
+        #$destinationDirectory = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\src\"
+        $destinationDirectory = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\src\"
         Write-Host "Moving files to $destinationDirectory directory"
         Get-ChildItem -Path "$tempSolPackageDirectory" -Recurse | Move-Item -Destination "$destinationDirectory" -Force
 
         # Generate .cdsproj file by triggering Clone
-        $temp_init_path = "$artifactStagingDirectory\temp_init"
+        $temp_init_path = "$buildDirectory\temp_init"
 
         $solInitCommand = "solution init -pn $publisherName -pp $publisherPrefix -o $temp_init_path\$solutionName"
         Write-Host "Solution Init Command - $pacPath\pac.exe $solInitCommand"
@@ -336,7 +328,8 @@ function restructure-legacy-folders{
         Write-Host "temp_cdsProjPath - $temp_cdsProjPath"
         if(Test-Path "$temp_cdsProjPath")
         {
-            Copy-Item "$temp_cdsProjPath" -Destination "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\"
+            #Copy-Item "$temp_cdsProjPath" -Destination "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\"
+            Copy-Item "$temp_cdsProjPath" -Destination "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\"
             Write-Host "Adding Package Type 'Both' to .cds proj file"
             add-packagetype-node-to-cdsproj "$buildSourceDirectory" "$repo" "$solutionName"
         }
@@ -374,7 +367,6 @@ function get-publisher-name{
        Write-Host "Solution xml file unavailble at path - $solutionFilePath"
     }
 
-    Write-Host "publisherName - $publisherName"
     return $publisherName
 }
 
@@ -392,7 +384,6 @@ function get-publisher-prefix{
        Write-Host "Solution xml file unavailble at path - $solutionFilePath"
     }
 
-    Write-Host "publisher Prefix - $publisherPrefix"
     return $publisherPrefix
 }
 

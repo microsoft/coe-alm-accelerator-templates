@@ -144,7 +144,7 @@ steps:
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      clone-or-sync-solution "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)" "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)"
+      clone-or-sync-solution "${{parameters.serviceConnectionUrl}}" "$(ClientId)" "$(ClientSecret)" "$(TenantID)" "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)" "$(Agent.BuildDirectory)"
   displayName: 'pac - Clone or Sync Solution'
 
 - pwsh: |
@@ -161,7 +161,8 @@ steps:
       echo '##vso[task.setvariable variable=localProcessCanvasApps]$(ProcessCanvasApps)'
     }
     
-    $canvasAppsFolderPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\CanvasApps"
+    #$canvasAppsFolderPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\CanvasApps"
+    $canvasAppsFolderPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\src\CanvasApps"
     if(Test-Path "$canvasAppsFolderPath") {
         Remove-Item "$canvasAppsFolderPath" -Force -Recurse
     }
@@ -170,12 +171,14 @@ steps:
 - template: Hooks\export-solution-manipulate-pre-hook.yml
 
 - pwsh: |
-    $sourceDirectory = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}"
+    #$sourceDirectory = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}"
+    $sourceDirectory = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\"
     Get-ChildItem "$sourceDirectory" -Recurse
   displayName: 'Display SolutionPackage Files' 
 
 - pwsh: |
-   $solutionXMLPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\Other\Solution.xml"
+   #$solutionXMLPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\Other\Solution.xml"
+   $solutionXMLPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\src\Other\Solution.xml"
    if(Test-Path "$solutionXMLPath"){
        Get-ChildItem -Path "$solutionXMLPath" | 
        ForEach-Object {
@@ -215,7 +218,8 @@ steps:
 # update all the json files to be pretty-print / formatted so they are easier to read in source control.
 # This also makes it easier to read changes from one commit to another
 - pwsh: |
-   $solutionComponentsPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src"
+   #$solutionComponentsPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src"
+   $solutionComponentsPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\src"
 
    Get-ChildItem -Path "$solutionComponentsPath" -Recurse -Filter *.json | 
    ForEach-Object {
@@ -233,7 +237,8 @@ steps:
 # We need to set empty GUIDs output when a business rule is first exported.  This is to ensure that
 # there aren't noisy diffs when the business rule is subsequently imported and exported.
 - pwsh: |
-   $workflowsPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\Workflows"
+   #$workflowsPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\Workflows"
+   $workflowsPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\src\Workflows"
    # Regex to extract GUID from the end of the filename
    $reGuid = '(([0-9a-f]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12})\.xaml$'
    Get-ChildItem -Path "$workflowsPath" -Recurse -File -Filter *.xaml | 
@@ -252,7 +257,8 @@ steps:
   displayName: 'Fix unset GUIDs in new Business Rules'
 
 - pwsh: |
-   $envvardefinitionPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\environmentvariabledefinitions"
+   #$envvardefinitionPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\environmentvariabledefinitions"
+   $envvardefinitionPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\src\environmentvariabledefinitions"
    Get-ChildItem -Path "$envvardefinitionPath" -Recurse -Filter environmentvariablevalues.json | Remove-Item
   displayName: 'Verify Environment Variable Current Value Not Exported'
   condition: and(succeeded(), eq(variables.DoNotExportCurrentEnvironmentVariableValues, 'true'))
@@ -303,7 +309,8 @@ steps:
 
 - pwsh: |
    if('$(outDefaultEnvironmentVariables)' -ne '') {
-       $envvardefinitionPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\environmentvariabledefinitions"
+       #$envvardefinitionPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\src\environmentvariabledefinitions"
+       $envvardefinitionPath = "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\src\environmentvariabledefinitions"
        $config = Get-Content $(outDefaultEnvironmentVariables) | ConvertFrom-Json
        foreach ($c in $config) {
            $envVariableName = $c[0]
