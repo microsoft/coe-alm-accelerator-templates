@@ -90,8 +90,8 @@ steps:
 # Set paths to deployment settings
 - template: set-deployment-configuration-paths.yml
   parameters:
-    configPath: $(ArtifactDropPath)
-    environmentName: ${{parameters.environmentName}}
+    configPath: '$(ArtifactDropPath)'
+    environmentName: '${{parameters.environmentName}}'
 
 # Update any deploymentSettings.json via FileTransform task. This task will replace values in a JSON file based on their path. See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/transforms-variable-substitution?view=azure-devops&tabs=Classic#jsonvarsubs
 - task: FileTransform@1

@@ -100,8 +100,8 @@ steps:
 # Set paths to deployment settings
 - template: set-deployment-configuration-paths.yml
   parameters:
-    configPath: $(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\config\
-    environmentName: $(EnvironmentName)
+    configPath: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\config\'
+    environmentName: '$(EnvironmentName)'
 
 # We'll store configuration data as artifacts on the build pipeline to be used during deployment. This includes configuration data created via Configuration data migration tool and deploymentSettings.json and customDeploymentSettings.json 
 - pwsh: |
