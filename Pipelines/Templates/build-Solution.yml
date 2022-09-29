@@ -75,7 +75,7 @@ steps:
 # Solution version in source control is not used.  Instead, create version at build time from the current build number.
 - pwsh: |
    $solutionXMLPath = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\src\Other\Solution.xml"
-   "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
+   . "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
    update-solution-xml-with-build-number "$solutionXMLPath" "$(Build.BuildNumber)"
   displayName: 'Update Solution XML with Build Number'
   condition: and(succeeded(), ne('${{parameters.buildType}}', 'Unmanaged'))
@@ -84,7 +84,7 @@ steps:
 - pwsh: |
     #When we unpack the solution files, we format the json, but it causes solution import failures so we need to flatten the files
     $solutionFolderPath = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}"
-    "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
+    . "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
     flatten-JSON-files "$solutionFolderPath"
   displayName: 'Flatten JSON files'
   enabled: true
