@@ -29,11 +29,10 @@ steps:
       # Parsing this could be brittle and have side effects so we've included the ability to set variables to override this parsing (i.e. PipelineProject and PipelineRepository)
       # These can be set as global variables in the alm-accelerator-variable-group.
 
-      #Default to pipeline project and repo
+      #Default to pipeline project and repo to the project where the pipeline is running and the and repo of this yaml
       $pipelineProject = "$(System.TeamProject)"
       $pipelineRepo = "$(Build.Repository.Name)"
 
-      $repoUri = 
       $segments = ([System.Uri]"$(Build.Repository.Uri)").LocalPath.Split("/")
 
       #Use the parsed value from the repo uri if it follows the expected format
