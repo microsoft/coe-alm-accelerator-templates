@@ -75,7 +75,6 @@ function Check-if-Deployment-Settings-Exist
     )
 
     $settingFiles = @("deploymentSettings","customDeploymentSettings")
-    #$environmentName = '${{ parameters.environmentName }}'
     #Temporary workaround for naming convention mismatches. Needs to fix this issue with convention vs. configuration. This will be cleaned up via https://github.com/microsoft/coe-starter-kit/issues/1960
     if($environmentName -eq 'Validate') { $environmentName = 'Validation' }
     if($environmentName -eq 'Production') { $environmentName = 'Prod' }

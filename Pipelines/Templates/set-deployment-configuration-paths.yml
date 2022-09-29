@@ -8,5 +8,5 @@ steps:
   #Check for deployment settings for this environment
 - pwsh: |
     . "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
-     Check-if-Deployment-Settings-Exist "${{parameters.environmentName}}" "${{parameters.configPath}}"
+     Check-if-Deployment-Settings-Exist '${{parameters.environmentName}}' '${{parameters.configPath}}'
   displayName: 'Check if Deployment Settings Exist'
