@@ -152,8 +152,8 @@ steps:
 - task: qetza.replacetokens.replacetokens-task.replacetokens@3
   displayName: 'Replace Tokens: deploymentSettings.json'
   inputs:
-    rootDirectory: $(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\config\
-    targetFiles: '**\*deploymentSettings*.json'
+    rootDirectory: $(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\config\**
+    targetFiles: '*deploymentSettings*.json'
     actionOnMissing: 'silently continue'
     writeBOM: false
     encoding: 'utf-8'
