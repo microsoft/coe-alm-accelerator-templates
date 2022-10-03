@@ -7,6 +7,3 @@ steps:
   - script: echo Build Solution Pre Hook
     displayName: 'Build Solution Pre Hook'
     enabled: false
-  - pwsh: |
-      $fileContent = Get-Content "$(Build.SourcesDirectory)\coe-starter-kit\CenterofExcellenceCoreComponents\SolutionPackage\src\Workflows\AdminSyncTemplatev3-9E9FFF08-A643-EB11-A813-000D3A1BB495.json.data.xml"
-      Write-Host $fileContent
