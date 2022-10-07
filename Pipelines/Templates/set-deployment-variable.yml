@@ -27,7 +27,7 @@ steps:
                 }
                 Write-Host "Writing to file $variableValue"
                 Write-Host $settingsJson
-                $settingsJson | Out-File $variableValue
+                $settingsJson | Out-File $variableValue -Encoding utf8NoBOM
             }
         }
     }

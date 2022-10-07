@@ -91,7 +91,7 @@ steps:
     ForEach-Object {
         $fileContent = (Get-Content $_.FullName) -join ' '
         if(-not [string]::IsNullOrWhiteSpace($fileContent)) {
-            Set-Content $_.FullName $fileContent
+            Set-Content $_.FullName $fileContent -Encoding utf8NoBOM
         }
     }
   displayName: 'Flatten JSON files'
