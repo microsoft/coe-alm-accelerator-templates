@@ -168,7 +168,7 @@ steps:
       Clear-Content $_.FullName
    }
   displayName: 'Clear contents of *_connectionparameters.json files'
-  enabled: true
+  enabled: false
 
 - pwsh: |
     if (Test-Path $(Build.ArtifactStagingDirectory)\${{parameters.solutionName}}_managed.zip) {
