@@ -100,6 +100,14 @@ steps:
 #  condition: and(succeeded(), eq(variables.UseSolutionVersionFromDataverse, 'true'))
 
 
+- pwsh: |   
+    Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}" -Recurse -Filter *_connectionparameters.json | 
+    ForEach-Object {
+      Clear-Content $_.FullName
+    }
+  displayName: 'Clear contents of *_connectionparameters.json files'
+  enabled: true
+
 # Before we committed changes, we formatted all json files for readability in source control.  This breaks solution package, so we need to flatten them before packing   
 - pwsh: |
     #When we unpack the solution files, we format the json, but it causes solution import failures so we need to flatten the files
