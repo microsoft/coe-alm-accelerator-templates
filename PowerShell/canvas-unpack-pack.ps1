@@ -119,7 +119,7 @@ function Update-Canvas-App-Ownership
         [Parameter(Mandatory)] [String]$clientSecret,
         [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule,
         [Parameter(Mandatory)] [String]$XrmDataPowerShellVersion,
-        [Parameter(Mandatory)] [String]$serviceConnection,
+        [Parameter(Mandatory)] [String]$dataverseConnectionString,
         [Parameter(Mandatory)] [String]$environmentId,
         [Parameter(Mandatory)] [String]$requestedForEmail,
         [Parameter(Mandatory)] [String]$solutionName
@@ -129,7 +129,7 @@ function Update-Canvas-App-Ownership
     Add-PowerAppsAccount -TenantID $tenantId -ApplicationId $clientId -ClientSecret $clientSecret
     #$microsoftXrmDataPowerShellModule = '$(CoETools_Microsoft_Xrm_Data_PowerShell)'
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $XrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
-    $conn = Get-CrmConnection -ConnectionString "$(connectionVariables.BuildTools.DataverseConnectionString)"
+    $conn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"
 
     $environmentName = "$environmentId"
 
