@@ -17,7 +17,7 @@
     Add-PowerAppsAccount -TenantID $tenantId -ApplicationId $clientId -ClientSecret $clientSecret
     #$microsoftXrmDataPowerShellModule = '$(CoeTools_Microsoft_Xrm_Data_Powershell)'
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $XrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
-    $conn = Get-CrmConnection -ConnectionString "$CdsBaseConnectionString$serviceConnection"
+    $conn = Get-CrmConnection -ConnectionString "$(connectionVariables.BuildTools.DataverseConnectionString)"
 
     # json config value must follow this format
     # [
