@@ -64,7 +64,6 @@ function Share-Canvas-App-with-AAD-Group
         [Parameter(Mandatory)] [String]$clientSecret,
         [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule,
         [Parameter(Mandatory)] [String]$XrmDataPowerShellVersion,
-        [Parameter(Mandatory)] [String]$CdsBaseConnectionString,
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$aadGroupCanvasConfiguration,
         [Parameter(Mandatory)] [String]$environmentId
@@ -120,7 +119,6 @@ function Update-Canvas-App-Ownership
         [Parameter(Mandatory)] [String]$clientSecret,
         [Parameter(Mandatory)] [String]$microsoftXrmDataPowerShellModule,
         [Parameter(Mandatory)] [String]$XrmDataPowerShellVersion,
-        [Parameter(Mandatory)] [String]$CdsBaseConnectionString,
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$environmentId,
         [Parameter(Mandatory)] [String]$requestedForEmail,
