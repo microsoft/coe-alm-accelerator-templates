@@ -59,7 +59,7 @@ class Helper {
 
         $body.templateParameters.PipelineId = $pipelineId
         $body = ConvertTo-Json -Depth 100 $body -Compress
-
+        $body = [System.Text.Encoding]::UTF8.GetBytes($body)
         $requestUrl = "$org/$project/_apis/pipelines/$pipelineId/runs$apiVersion"
         Write-Host $requestUrl
         Write-Host $body
