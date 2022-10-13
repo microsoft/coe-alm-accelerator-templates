@@ -18,10 +18,12 @@ steps:
         foreach ($c in $config) {
             if($c.aadGroupTeamName -ne '' -and $c.solutionComponentUniqueName -ne '') {
                 Write-Host "Sharing flow $c.solutionComponentUniqueName with $c.aadGroupTeamName"
-                Grant-AccessToWorkflow $env:SPNTOKEN $dataverseHost $c.aadGroupTeamName $c.solutionComponentUniqueName
+                Grant-AccessToWorkflow "$env:MAPPED_SPN_Token" "$dataverseHost" "$c.aadGroupTeamName" "$c.solutionComponentUniqueName"
             }
         }
     }
   displayName: "Share Flows with Group Team"
   condition: and(succeeded(), not(contains(variables['outFlowShareWithGroupTeamConfiguration'], '$(')))
   #condition: and(succeeded(), not(contains('${{parameters.flowShareWithGroupTeamConfiguration}}', '$(')))
+  env:
+    MAPPED_SPN_Token: $(SpnToken)                
