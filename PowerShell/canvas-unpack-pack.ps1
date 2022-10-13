@@ -66,14 +66,15 @@ function Share-Canvas-App-with-AAD-Group
         [Parameter(Mandatory)] [String]$XrmDataPowerShellVersion,
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$aadGroupCanvasConfiguration,
-        [Parameter(Mandatory)] [String]$environmentId
+        [Parameter(Mandatory)] [String]$environmentId,
+        [Parameter(Mandatory)] [String]$dataverseConnectionString
     )
     #$microsoftPowerAppsAdministrationPowerShellModule = '$(CoETools_Microsoft_PowerApps_Administration_PowerShell)'
     Import-Module $microsoftPowerAppsAdministrationPowerShellModule -Force -RequiredVersion $powerAppsAdminModuleVersion -ArgumentList @{ NonInteractive = $true }
     Add-PowerAppsAccount -TenantID $tenantId -ApplicationId $clientId -ClientSecret $clientSecret
     #$microsoftXrmDataPowerShellModule = '$(CoETools_Microsoft_Xrm_Data_PowerShell)'
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $XrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
-    $conn = Get-CrmConnection -ConnectionString "$(connectionVariables.BuildTools.DataverseConnectionString)"
+    $conn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"
 
     # json config value must follow this format
     #[
