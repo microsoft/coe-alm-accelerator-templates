@@ -74,6 +74,7 @@ steps:
       displayName: 'Checkout Source Branch'
       condition: and(succeeded(), ne('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter'), ne('${{parameters.branchToCreate}}', '${{parameters.solutionName}}')) # If an empty value is passed for the BranchToCreate variable, then skip this task
 
+
   # If BranchToCreate variable value is not '', then push to the branch specified in the BranchToCreate variable
     - script: |
        git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" fetch --all
@@ -82,3 +83,4 @@ steps:
       workingDirectory: $(Pipeline.Workspace)\DevopsSource
       displayName: 'Push to Azure DevOps ${{parameters.branchToCreate}} Remote Branch'
       condition: and(succeeded(), ne('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter'), ne('${{parameters.branchToCreate}}', '${{parameters.solutionName}}')) # If an empty value is not passed for the BranchToCreate variable, then run this task
+
