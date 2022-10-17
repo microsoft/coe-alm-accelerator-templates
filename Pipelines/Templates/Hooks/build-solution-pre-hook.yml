@@ -7,8 +7,3 @@ steps:
   - script: echo Build Solution Pre Hook
     displayName: 'Build Solution Pre Hook'
     enabled: false
-
-  - template: CustomTemplates\FocusCenterPRChecker\pr-checker.yml
-    parameters:
-      solution: $(BuildSolutionPreHook.Solution)
-    displayName: 'Run PR Checker'
