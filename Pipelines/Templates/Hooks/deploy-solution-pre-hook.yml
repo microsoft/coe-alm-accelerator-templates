@@ -1,56 +1,9 @@
 # The step(s) below can be replaced with your custom steps. You must have at least one step in your hook. The step(s) below demonstrate examples of custom hooks.
-# Be sure when upgrading to the latest pipelines that you don't overwrite your custom hooks with these samples hooks
+# Be sure when upgrading to the latest pipelines that you don't overwrite your custom hooks with these samples hooks.
 # Parameters passed to the parent pipeline (deploy-Solution.yml) can be accessed via the following command.
 # . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
 # $parameters = Read-Pipeline-Parameters "$(Agent.BuildDirectory)\deploy-pipeline-parameters.json"
-
-#Your build pipeline references a variable named ‘PAT-shplat’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. 
-#See https://github.com/microsoft/Microsoft-Focus-Center/blob/main/Tools/FocusCenterPRChecker/Readme.md and https://go.microsoft.com/fwlink/?linkid=865972
-parameters:
-- name: checkduplicatecomponents
-  type: string
-  default: "false"
-- name: checkduplicateconnectionreferences
-  type: string
-  default: "false"
-- name: checklastupdatedprocessfield
-  type: string
-  default: "false"
-- name: checkmissingconnectionreferences
-  type: string
-  default: "true"
-- name: checkpublisher
-  type: string
-  default: "false"
-- name: checksecurityroles
-  type: string
-  default: "true"
-- name: checksolutionversion
-  type: string
-  default: "false"
-- name: enablecommentstopullrequest
-  type: string
-  default: "false"
-- name: exclusionlistpath
-  type: string
-  default: "DuplicatesComponentTool\ExclusionList.xml"
-- name: flowauditingattribute
-  type: string
-  default: "<prefix_customattribute>"
-- name: masterbranchname
-  type: string
-  default: "main"
-- name: solutionpublisheroptionvalueprefix
-  type: string  
-- name: solutionpublisherprefix
-  type: string  
-- name: solutionpublisheruniquename
-  type: string
-- name: solutionsrepopath
-  type: string
-  default: "/<yourRelativeRepoPath>/"
 steps:
-- script: '.\FocusCenterPRChecker.exe ..\..\..\Extracted $(PAT-shplat) $(System.PullRequest.PullRequestId)'
-  workingDirectory: 'Pipelines/Templates/Hooks/HookExecutables/FocusCenterPRChecker'
-  displayName: 'Focus Center PR Checker'
-  continueOnError: true
+  - script: echo Deploy Solution Pre Hook
+    displayName: 'Deploy Solution Pre Hook'
+    enabled: false
