@@ -25,29 +25,49 @@ parameters:
   default: "false"
 - name: exclusionlistpath
   type: string
-  default: ".\DuplicatesComponentTool\ExclusionList.xml"
+  default: "./DuplicatesComponentTool/ExclusionList.xml"
 - name: flowauditingattribute
   type: string
-  default: "<prefix_customattribute>"
+  default: ""
 - name: masterbranchname
   type: string
   default: "main"
 - name: solutionpublisheroptionvalueprefix
   type: string  
+  default: ""
 - name: solutionpublisherprefix
   type: string  
+  default: ""
 - name: solutionpublisheruniquename
   type: string
+  default: ""
 - name: solutionsrepopath
   type: string
-  default: "/<yourRelativeRepoPath>/"
+  default: ""
+
 steps:
 - pwsh: |
-    . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
-    Write-Host "Loading pipeline parameters from $(Agent.BuildDirectory)\build-pipeline-parameters.json"
-    $parameters = Read-Pipeline-Parameters "$(Agent.BuildDirectory)\build-pipeline-parameters.json"
+    Write-Host ${{parameters.solutionsrepopath}}
 
-    '.\FocusCenterPRChecker.exe $(Build.SourcesDirectory)\$(RepoName)\$parameters.solutionName\SolutionPackage\ $(System.AccessToken) $(System.PullRequest.PullRequestId)'
-  workingDirectory: 'Pipelines/Templates/Hooks/CustomTemplates/FocusCenterPRChecker'
+    [System.Environment]::SetEnvironmentVariable('checkduplicatecomponents', '${{parameters.checkduplicatecomponents}}', 0)
+    [System.Environment]::SetEnvironmentVariable('checkduplicateconnectionreferences', '${{parameters.checkduplicateconnectionreferences}}', 0)
+    [System.Environment]::SetEnvironmentVariable('checklastupdatedprocessfield', '${{parameters.checklastupdatedprocessfield}}', 0)
+    [System.Environment]::SetEnvironmentVariable('checkmissingconnectionreferences', '${{parameters.checkmissingconnectionreferences}}', 0)
+    [System.Environment]::SetEnvironmentVariable('checkpublisher', '${{parameters.checkpublisher}}', 0)
+    [System.Environment]::SetEnvironmentVariable('checksecurityroles', '${{parameters.checksecurityroles}}', 0)
+    [System.Environment]::SetEnvironmentVariable('checksolutionversion', '${{parameters.checksolutionversion}}', 0)
+    [System.Environment]::SetEnvironmentVariable('enablecommentstopullrequest', '${{parameters.enablecommentstopullrequest}}', 0)
+
+    [System.Environment]::SetEnvironmentVariable('flowauditingattribute', '${{parameters.flowauditingattribute}}', 0)
+    [System.Environment]::SetEnvironmentVariable('masterbranchname', '${{parameters.masterbranchname}}', 0)
+    [System.Environment]::SetEnvironmentVariable('solutionpublisheroptionvalueprefix', '${{parameters.solutionpublisheroptionvalueprefix}}', 0)
+    [System.Environment]::SetEnvironmentVariable('solutionpublisherprefix', '${{parameters.solutionpublisherprefix}}', 0)
+    [System.Environment]::SetEnvironmentVariable('solutionpublisheruniquename', '${{parameters.solutionpublisheruniquename}}', 0)
+
+    [System.Environment]::SetEnvironmentVariable('solutionsrepopath', '${{parameters.solutionsrepopath}}', 0)
+    [System.Environment]::SetEnvironmentVariable('exclusionlistpath', '${{parameters.exclusionlistpath}}', 0)
+
+    .\FocusCenterPRChecker.exe "$(Build.SourcesDirectory)\$(RepoName)" "$(System.AccessToken)" "$(System.PullRequest.PullRequestId)"
   displayName: 'Run PR Checker'
+  workingDirectory: $(Pipeline.Workspace)\PipelineUtils\Pipelines\Templates\Hooks\CustomTemplates\FocusCenterPRChecker\
   continueOnError: true

@@ -7,3 +7,27 @@ steps:
   - script: echo Build Solution Pre Hook
     displayName: 'Build Solution Pre Hook'
     enabled: false
+  - pwsh: |
+        . "$env:POWERSHELLPATH/load-save-pipeline-parameters.ps1"
+        Write-Host "Loading pipeline parameters from $(Agent.BuildDirectory)\build-pipeline-parameters.json"
+        $parameters = Read-Pipeline-Parameters "$(Agent.BuildDirectory)\build-pipeline-parameters.json"
+        $solutionName = $parameters.solutionName
+        Write-Host "##vso[task.setvariable variable=PreBuild.SolutionName]$solutionName"
+    displayName: 'Set Solution Variable'
+
+  - template: CustomTemplates\FocusCenterPRChecker\pr-checker.yml
+    parameters:
+      checkduplicatecomponents: 'true'
+      checkduplicateconnectionreferences: 'true'
+      checklastupdatedprocessfield: 'false'
+      checkmissingconnectionreferences: 'true'
+      checkpublisher: 'true'
+      checksecurityroles: 'true'
+      checksolutionversion: 'true'
+      enablecommentstopullrequest: 'true'
+      flowauditingattribute: ''
+      masterbranchname: 'main'
+      solutionpublisheroptionvalueprefix: '80906'
+      solutionpublisherprefix: 'cat'
+      solutionpublisheruniquename: 'catteam'
+      solutionsrepopath: $(PreBuild.SolutionName)/SolutionPackage
