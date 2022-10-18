@@ -21,10 +21,13 @@ parameters:
   default: "[]"
 - name: Email
   type: string
+  default: "NA"
 - name: Project
   type: string
+  default: "NA"
 - name: Repo
   type: string
+  default: "NA"
 - name: ServiceConnectionName
   type: string
 - name: ServiceConnectionUrl
@@ -33,6 +36,7 @@ parameters:
   type: string
 - name: UserName
   type: string
+  default: "NA"
 - name: PipelineId
   type: string
   default: "NA"
@@ -43,6 +47,9 @@ parameters:
   type: string
   default: "NA"
 - name: ImportUnmanaged
+  type: string
+  default: "NA"
+- name: PortalSiteName
   type: string
   default: "NA"
 trigger: none
@@ -82,7 +89,7 @@ stages:
           PowerPlatformSPN: ${{parameters.ServiceConnectionName}}
           SolutionName: ${{parameters.SolutionName}}
           Managed: true
-          SolutionOutputFile: '$(Pipeline.Workspace)\exported\${{parameters.SolutionName}}.zip'
+          SolutionOutputFile: '$(Pipeline.Workspace)\exported\${{parameters.SolutionName}}_managed.zip'
 
       - task: PublishPipelineArtifact@1
         inputs:
@@ -128,7 +135,7 @@ stages:
         inputs:
           authenticationType: PowerPlatformSPN
           PowerPlatformSPN: ${{parameters.ServiceConnectionName}}
-          SolutionInputFile: '$(Pipeline.Workspace)\${{parameters.SolutionName}}.zip'
+          SolutionInputFile: '$(Pipeline.Workspace)\${{parameters.SolutionName}}_managed.zip'
           OverwriteUnmanagedCustomizations: true
           PublishWorkflows: false
           ConvertToManaged: true

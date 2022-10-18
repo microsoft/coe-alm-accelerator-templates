@@ -7,28 +7,15 @@ parameters:
 steps:
 - pwsh: |
    $path = "$(Pipeline.Workspace)/drop/ConfigurationMigrationData-${{parameters.environmentName}}.zip"
-   if(Test-Path $path)
-   {
-        Write-Host "##vso[task.setvariable variable=ConfigurationMigrationFilePath]$path"
-   }
-   else
-   {
-        $path = "$(Pipeline.Workspace)/drop/ConfigurationMigrationData.zip"
-        if(Test-Path $path)
-        {
-            Write-Host "##vso[task.setvariable variable=ConfigurationMigrationFilePath]$path"
-        }
-        else
-        {
-            Write-Host "##vso[task.setvariable variable=ConfigurationMigrationFilePath]"
-        }
-   }
+   . "$env:POWERSHELLPATH/export-solution-functions.ps1"
+    Check-if-Configuration-Migration-Data-Exists "$path" "$(Pipeline.Workspace)"
   displayName: 'Check if Configuration Migration Data exists'
-
-- powershell: |
-    $microsoftConfigurationMigrationPowerShellModule = '$(CoETools_Microsoft_Xrm_Tooling_ConfigurationMigration)'
-    Import-Module $microsoftConfigurationMigrationPowerShellModule -RequiredVersion $(configurationMigrationPowerShellVersion) -Force
-    Import-CrmDataFile -CrmConnection "$(CdsBaseConnectionString)${{parameters.serviceConnection}}" -Datafile "$(ConfigurationMigrationFilePath)" -Verbose
-  displayName: 'Import Configuration Migration Data'
-  condition: and(succeeded(), ne(variables['ConfigurationMigrationFilePath'], ''))
+  
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-data.PowerPlatformImportData@2
   #skip task if there is no ConfigurationMigrationData in the downloaded artifact
+  condition: and(succeeded(), ne(variables['ConfigurationMigrationFilePath'], ''))
+  displayName: 'Import Configuration Migration Data'  
+  inputs:
+    authenticationType: 'PowerPlatformSPN'
+    PowerPlatformSPN: ${{ parameters.serviceConnection }}
+    DataFile: $(ConfigurationMigrationFilePath)

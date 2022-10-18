@@ -1,0 +1,21 @@
+#We are going to set websiteId as a pipeline variable only if there is a Power Page in the Dataverse
+parameters:
+- name: serviceConnectionUrl
+  type: string
+- name: websiteName
+  type: string
+
+steps:
+- pwsh: |
+    Write-Host "Portal Website provided as variable. Website ID - $(PowerPageWebsiteId)"
+    echo "##vso[task.setvariable variable=WebsiteId;]$(PowerPageWebsiteId)"
+  condition: ne(variables['PowerPageWebsiteId'], '')
+  displayName: "Fetch Power Pages Website ID from Variable"
+
+- pwsh: |
+    . "$env:POWERSHELLPATH/portal-functions.ps1"
+     Fetch-Website-ID "${{parameters.websiteName}}" "${{parameters.serviceConnectionUrl}}" "$env:MAPPED_SPN_Token"
+  condition: eq(variables['PowerPageWebsiteId'], '')
+  displayName: "Fetch Power Pages Website ID from Dataverse"
+  env:
+    MAPPED_SPN_Token: $(SpnToken)
