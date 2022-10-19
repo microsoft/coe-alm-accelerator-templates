@@ -20,12 +20,8 @@ steps:
       # load PowerShell files into memory
       . "$env:POWERSHELLPATH/update-deployment-settings.ps1"
 
-      # We need the project and repository where the yaml for this pipeline exists. Unfortunately, there's no way to get this directly from any of the available 
-      # predefined variables. We can get the repository name from $(Build.Repository.Name). However, there's no similar variable for the project name associated 
-      # with the repository as $(System.TeamProject) refers to where the pipeline that consumes this YAML was created. In the case that the pipelines are hosted in
-      # another project the only way to get both of these is to parse $(Build.Repository.Uri) which has both the project and repo name.
-      # Name  : $(Build.Repository.Uri)
-      # Value : https://[ORGNAME]@dev.azure.com/[ORGNAME]/[PROJECTNAME]/_git/[REPONAME]
+      # We need the project and repository where the yaml for this pipeline exists.
+      # We can get the repository name from $(Build.Repository.Name) and $(System.TeamProject). However, there are situations where we need to override this
       # We've included the ability to set variables to override this parsing (i.e. PipelineProject and PipelineRepository)
       # These can be set as global variables in the alm-accelerator-variable-group.
 
