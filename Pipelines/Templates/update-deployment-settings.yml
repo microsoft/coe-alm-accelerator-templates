@@ -34,10 +34,10 @@ steps:
       $pipelineRepo = "$(Build.Repository.Name)"
 
       # Use the override variables to bypass the options above
-      if(!'$(PipelineProject)'.Contains("PipelineProject")) {
+      if(!'$(PipelineProject)'.StartsWith("`$(")) {
         $pipelineProject = "$(PipelineProject)"
       }
-      if(!'$(PipelineRepository)'.Contains("PipelineRepository")) {
+      if(!'$(PipelineRepository)'.StartsWith("`$(")) {
         $pipelineRepo = "$(PipelineRepository)"
       }
 
