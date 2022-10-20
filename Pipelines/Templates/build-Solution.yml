@@ -101,11 +101,26 @@ steps:
 
 
 - pwsh: |   
+    [PSCustomObject[]]$SolutionCustomConnectorDetails = `
     Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}" -Recurse -Filter *_connectionparameters.json | 
     ForEach-Object {
-      Clear-Content $_.FullName
-    }
-  displayName: 'Clear contents of *_connectionparameters.json files'
+      [string]$ConnectorFileBaseName = $_.BaseName -split "_connectionparameters" | Select-Object -First 1
+      [string]$ConnectorXmlPath = Join-Path -Resolve $_.Directory.FullName "${ConnectorFileBaseName}.xml"
+      [xml]$ConnectorDefinition = Get-Content -LiteralPath $ConnectorXmlPath
+      [string]$ConnectorId = $ConnectorDefinition.Connector.connectorid
+      [string]$ConnectorConnectionParametersJson = (Get-Content -LiteralPath $_.FullName -Encoding utf8NoBOM -Raw) -replace [System.Environment]::NewLine, "`n"
+      [void](Clear-Content -LiteralPath $_.FullName)
+      [PSCustomObject]@{
+        ConnectorId = $ConnectorId
+        CustomParameters = $ConnectorConnectionParametersJson
+      }
+    } |
+    Where-Object { $_.CustomParameters }
+    # Depth not important here, only ever 2 levels
+    [string]$SolutionCustomConnectorDetailsJson = $SolutionCustomConnectorDetails | ConvertTo-Json -Depth 5
+    $SolutionCustomConnectorDetailsJson | 
+    Out-File -Encoding utf8NoBOM "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\customConnectorsConnectionParameters.json"
+  displayName: 'Clear contents of *_connectionparameters.json files and save data in temporary file'
   enabled: true
 
 # Before we committed changes, we formatted all json files for readability in source control.  This breaks solution package, so we need to flatten them before packing   
