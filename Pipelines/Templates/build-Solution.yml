@@ -102,7 +102,7 @@ steps:
 
 - pwsh: |   
     [PSCustomObject[]]$SolutionCustomConnectorDetails = `
-    Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}" -Recurse -Filter *_connectionparameters.json | 
+    Get-ChildItem -Path "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}" -Recurse -Filter *_connectionparameters.json | 
     ForEach-Object {
       [string]$ConnectorFileBaseName = $_.BaseName -split "_connectionparameters" | Select-Object -First 1
       [string]$ConnectorXmlPath = Join-Path -Resolve $_.Directory.FullName "${ConnectorFileBaseName}.xml"
