@@ -91,17 +91,17 @@ function Repack-Canvas-Apps
            }
 
        # Delete old .msapp files
-       Get-ChildItem -Path "$canvasUnpackPath" -Recurse  -Include *.msapp | 
-           ForEach-Object {
-               Write-Host "Deleting msapp file - " $_.Name
-               Remove-Item -Path $_.FullName -Force           
-           }
+       #Get-ChildItem -Path "$canvasUnpackPath" -Recurse  -Include *.msapp | 
+       #    ForEach-Object {
+       #        Write-Host "Deleting msapp file - " $_.Name
+       #        Remove-Item -Path $_.FullName -Force           
+       #    }
        
         # Move new msapp files to solution\src folder
         if(Test-Path "$tempDirectory\msapps")
         {
-            Write-Host "Moving rebuilt msapp files to unpacked folder"
-            Copy-Item -Path "$tempDirectory\msapps\*" -Destination "$canvasUnpackPath" -PassThru
+            Write-Host "Copying rebuilt msapp files to unpacked folder"
+            Copy-Item -Path "$tempDirectory\msapps\*" -Destination "$canvasUnpackPath" -PassThru -Force
             # Delete tempDirectory\msapps folder
             Write-Host "Deleting tempDirectory\msapps folder"
             Remove-Item -Path "$tempDirectory\msapps" -Recurse
