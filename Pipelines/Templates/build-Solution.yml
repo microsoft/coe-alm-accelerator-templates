@@ -118,9 +118,11 @@ steps:
     Where-Object { $_.CustomParameters }
     # Depth not important here, only ever 2 levels
     [string]$SolutionCustomConnectorDetailsJson = $SolutionCustomConnectorDetails | ConvertTo-Json -Depth 5
-    $SolutionCustomConnectorDetailsJson | 
-    Out-File -Encoding utf8NoBOM "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\customConnectorsConnectionParameters.json"
-  displayName: 'Clear contents of *_connectionparameters.json files and save data in temporary file'
+    if ($SolutionCustomConnectorDetailsJson) {
+      $SolutionCustomConnectorDetailsJson | 
+      Out-File -Encoding utf8NoBOM "$(Build.ArtifactStagingDirectory)\customConnectorsConnectionParameters.json"
+    }
+  displayName: 'Clear contents of *_connectionparameters.json files and save data to artifact staging directory'
   enabled: true
 
 # Before we committed changes, we formatted all json files for readability in source control.  This breaks solution package, so we need to flatten them before packing   
