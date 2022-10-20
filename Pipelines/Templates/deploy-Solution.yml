@@ -326,7 +326,7 @@ steps:
 
     $DataverseHost = Get-HostFromUrl '${{parameters.serviceConnectionUrl}}'
     
-    $CustomConnectors | Update-CustomConnectorConnectionParameters -AccessToken $env:SPNTOKEN -DataverseHost $DataverseHost
+    $CustomConnectors | Update-CustomConnectorConnectionParameters -AccessToken "$(SpnToken)" -DataverseHost $DataverseHost
   displayName: 'Update custom connector custom connection parameters'
 
 - template: Hooks\deploy-solution-post-hook.yml
