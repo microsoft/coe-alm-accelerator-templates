@@ -311,4 +311,22 @@ steps:
     UploadPath: '$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\$(WebsiteName)\'
     Environment: '${{parameters.serviceConnectionUrl}}'
   condition: and(succeeded(), ne(variables['WebsiteName'], 'NA'))
+
+- pwsh: |
+    $ConnectorsFilePath = Join-Path "$(ArtifactDropPath)" "customConnectorsConnectionParameters.json"
+    if (-not (Test-Path $ConnectorsFilePath)) {
+      Write-Host "##vso[task.debug]Solution contains no custom connectors to update"
+      return
+    }
+    [PSCustomObject[]]$CustomConnectors = Get-Content -Raw -Encoding utf8NoBOM -LiteralPath $ConnectorsFilePath | ConvertFrom-Json
+    
+    # load PowerShell files into memory
+    . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+    . "$env:POWERSHELLPATH/update-custom-connector-connection-params.ps1"
+
+    $DataverseHost = Get-HostFromUrl '${{parameters.serviceConnectionUrl}}'
+    
+    $CustomConnectors | Update-CustomConnectorConnectionParameters $env:SPNTOKEN $DataverseHost
+  displayName: 'Update custom connector custom connection parameters'
+
 - template: Hooks\deploy-solution-post-hook.yml
