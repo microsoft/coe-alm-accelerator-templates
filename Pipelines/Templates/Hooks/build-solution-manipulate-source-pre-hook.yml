@@ -28,6 +28,6 @@ steps:
       flowauditingattribute: ''
       masterbranchname: 'main'
       solutionpublisheroptionvalueprefix: '80906'
-      solutionpublisherprefix: 'cat'
-      solutionpublisheruniquename: 'catteam'
+      solutionpublisherprefix: 'foo'
+      solutionpublisheruniquename: 'bar'
       solutionsrepopath: $(PreBuild.SolutionName)/SolutionPackage
