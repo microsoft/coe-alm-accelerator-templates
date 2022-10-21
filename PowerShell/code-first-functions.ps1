@@ -331,7 +331,6 @@ function restructure-legacy-folders{
         Write-Host "temp_cdsProjPath - $temp_cdsProjPath"
         if(Test-Path "$temp_cdsProjPath")
         {
-            #Copy-Item "$temp_cdsProjPath" -Destination "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName\"
             Copy-Item "$temp_cdsProjPath" -Destination "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\"
             Write-Host "Adding Package Type 'Both' to .cds proj file"
             add-packagetype-node-to-cdsproj "$buildSourceDirectory" "$repo" "$solutionName"
