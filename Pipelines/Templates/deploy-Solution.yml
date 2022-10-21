@@ -330,6 +330,7 @@ steps:
       ClientSecret = "$(BuildTools.ClientSecret)"
       DataverseHost = Get-HostFromUrl '${{parameters.serviceConnectionUrl}}'
       EnvironmentId = "$(BuildTools.EnvironmentId)"
+      Verbose = '$(System.Debug)' -eq 'True'
     }
 
     $CustomConnectors | Update-CustomConnectorConnectionParameters @UpdateArguments
