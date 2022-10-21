@@ -212,7 +212,10 @@ function clone-or-sync-solution{
         if(Test-Path "$cdsProjPath")
         {
             Write-Host "Cloned solution available; Triggering Solution Sync"
-            $syncCommand = "solution sync -pca true -f ""$cdsProjFolderPath"" -p Both"
+            $cdsProjfolderPath = [System.IO.Path]::GetDirectoryName("$cdsProjPath")
+            Write-Host "Pointing to cdsproj folder path - " $cdsProjfolderPath
+            Set-Location -Path $cdsProjfolderPath
+            $syncCommand = "solution sync -pca true -p Both"
             Write-Host "Triggering Sync - $syncCommand"
             Invoke-Expression -Command "$pacexepath $syncCommand"
         }
