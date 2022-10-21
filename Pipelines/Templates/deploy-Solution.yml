@@ -325,11 +325,11 @@ steps:
     . "$env:POWERSHELLPATH/update-custom-connector-connection-params.ps1"
 
     $UpdateArguments = @{
-      TenantId = "$(BuildTools.TenantId)"
-      ClientId = "$(BuildTools.ApplicationId)"
-      ClientSecret = "$(BuildTools.ClientSecret)"
+      TenantId = '$(connectionVariables.BuildTools.TenantId)'
+      ClientId = '$(connectionVariables.BuildTools.ApplicationId)'
+      ClientSecret = '$(connectionVariables.BuildTools.ClientSecret)'
       DataverseHost = Get-HostFromUrl '${{parameters.serviceConnectionUrl}}'
-      EnvironmentId = "$(BuildTools.EnvironmentId)"
+      EnvironmentId = '$(BuildTools.EnvironmentId)'
       Verbose = '$(System.Debug)' -eq 'True'
     }
 
