@@ -1,6 +1,5 @@
 # Testable outside of agent
 function Get-SpnToken {
-    [OutputType([String])]
     param (
         [Parameter(Mandatory)] [String]$tenantId,
         [Parameter(Mandatory)] [String]$clientId,
@@ -15,7 +14,6 @@ function Get-SpnToken {
 }
 
 function Get-HostFromUrl {
-    [OutputType([String])]
     param (
         [Parameter(Mandatory)] [String]$url
     )
@@ -25,7 +23,6 @@ function Get-HostFromUrl {
 
 # Convenient inside of agent
 function Set-SpnTokenVariableWithinAgent {    
-    [OutputType([void])]
     param (
         [Parameter(Mandatory)] [String]$tenantId,
         [Parameter(Mandatory)] [String]$clientId,
@@ -41,7 +38,6 @@ function Set-SpnTokenVariableWithinAgent {
 }
 
 function Set-DefaultHeaders {
-    [OutputType([System.Collections.Generic.Dictionary[string, string]])]
     param (
         [Parameter(Mandatory)] [String]$token
     )
@@ -52,7 +48,6 @@ function Set-DefaultHeaders {
 }
 
 function Set-RequestUrl {
-    [OutputType([String])]
     param (
         [Parameter(Mandatory)] [String]$dataverseHost,
         [Parameter(Mandatory)] [String]$requestUrlRemainder
@@ -83,21 +78,5 @@ function Invoke-DataverseHttpPost {
     $headers = Set-DefaultHeaders $token
     $requestUrl = Set-RequestUrl $dataverseHost $requestUrlRemainder
     $response = Invoke-RestMethod $requestUrl -Method 'POST' -Headers $headers -Body $body
-    return $response
-}
-
-function Invoke-DataverseHttpPatch {
-    param (
-        [Parameter(Mandatory)] [String]$token,
-        [Parameter(Mandatory)] [String]$dataverseHost,
-        [Parameter(Mandatory)] [String]$requestUrlRemainder,
-        [Parameter(Mandatory)] [String]$body,
-        [Parameter()] [string]$etag = "*"
-    )
-    $headers = Set-DefaultHeaders $token
-    $headers.Add("If-Match", $etag)
-    $headers.Add("Prefer", "return=representation")
-    $requestUrl = Set-RequestUrl $dataverseHost $requestUrlRemainder
-    $response = Invoke-RestMethod $requestUrl -Method 'PATCH' -Headers $headers -Body $body
     return $response
 }
