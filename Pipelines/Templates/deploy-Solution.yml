@@ -324,9 +324,15 @@ steps:
     . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
     . "$env:POWERSHELLPATH/update-custom-connector-connection-params.ps1"
 
-    $DataverseHost = Get-HostFromUrl '${{parameters.serviceConnectionUrl}}'
-    
-    $CustomConnectors | Update-CustomConnectorConnectionParameters -AccessToken "$(SpnToken)" -DataverseHost $DataverseHost
+    $UpdateArguments = @{
+      TenantId = "$(BuildTools.TenantId)"
+      ClientId = "$(BuildTools.ApplicationId)"
+      ClientSecret = "$(BuildTools.ClientSecret)"
+      DataverseHost = Get-HostFromUrl '${{parameters.serviceConnectionUrl}}'
+      EnvironmentId = "$(BuildTools.EnvironmentId)"
+    }
+
+    $CustomConnectors | Update-CustomConnectorConnectionParameters @UpdateArguments
   displayName: 'Update custom connector custom connection parameters'
 
 - template: Hooks\deploy-solution-post-hook.yml
