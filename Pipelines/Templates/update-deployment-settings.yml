@@ -37,10 +37,10 @@ steps:
       $segments = ([System.Uri]"$(Build.Repository.Uri)").LocalPath.Split("/")
 
       #Use the parsed value from the repo uri if it follows the expected format
-      if($segments.Length -gt 3) {
+      if($segments.Length -eq 4) {
         $pipelineProject = $segments[2]
       }
-      else {
+      elseif ($segments.Length -eq 3) {
         $pipelineProject = $segments[1]
       }
 
