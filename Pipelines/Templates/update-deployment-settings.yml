@@ -34,14 +34,12 @@ steps:
       $pipelineProject = "$(System.TeamProject)"
       $pipelineRepo = "$(Build.Repository.Name)"
 
-      $segments = ([System.Uri]"$(Build.Repository.Uri)").LocalPath.Split("/")
+      [string[]]$segments = ([System.Uri]"$(Build.Repository.Uri)").Segments | Select-Object -Last 3 | ForEach-Object { $_.TrimEnd("/") }
 
       #Use the parsed value from the repo uri if it follows the expected format
-      if($segments.Length -eq 4) {
-        $pipelineProject = $segments[2]
-      }
-      elseif ($segments.Length -eq 3) {
-        $pipelineProject = $segments[1]
+      if ($segments.Length -gt 2) {
+        $pipelineProject = $segments[0]
+        $pipelineRepo = $segments[2]
       }
 
       #Finally, use the override variables to bypass the options above
