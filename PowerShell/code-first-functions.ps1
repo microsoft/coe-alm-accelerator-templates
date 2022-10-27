@@ -411,6 +411,9 @@ function append-version-to-solutions{
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$buildNumber
     )
+    # If the Build number includes the solution name (e.g. when override variable UseSolutionVersionFromDataverse is true)
+    # strip the solution name from the Build number
+    $buildNumber = $buildNumber.Trim().TrimStart("$solutionName, ").TrimStart()
     $folderType = ".zip"
     $managedSolutionPath = "$artifactStagingDirectory\$solutionName" + "_managed.zip"
     $newManagedSolutionFileName = "$solutionName" + "_" + "$buildNumber" + "_" + "managed" + "$folderType"
