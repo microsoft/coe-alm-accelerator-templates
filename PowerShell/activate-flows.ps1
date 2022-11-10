@@ -76,37 +76,40 @@ function Invoke-ActivateFlows {
     Write-Host "Getting flows to deactivate..."
     $flowsToDeactivate = get-flows-to-deactivate $activateFlowConfiguration $flowsToActivate
     if($flowsToDeactivate.Count -gt 0){
-        $flowsToDeactivate = $flowsToDeactivate | Sort-Object -Property sortOrder
-    }
-    print-flows "flows to deactivate" $flowsToDeactivate
-    $flowsDeactivatedThisPass = $false
-    do {
-        $throwOnComplete = $false
+        $flowsToDeactivate = $flowsToDeactivate | Sort-Object -Property sortOrder    
+        print-flows "flows to deactivate" $flowsToDeactivate
         $flowsDeactivatedThisPass = $false
-        foreach ($flowToDeactivate in $flowsToDeactivate) {
-            try {
-                if($flowToDeactivate.solutionComponentUniqueName -ne $null -and $flowToDeactivate.solutionComponentUniqueName -ne ''){
-                    $existingStatus = get-workflow-dv-status $flowToDeactivate.solutionComponentUniqueName $token $dataverseHost
-                    if ($existingStatus -ne 0) {
-                        Write-Host "Dectivating Flow: " $flowToDeactivate.solutionComponentName
-                        Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $flowToDeactivate.solutionComponentUniqueName -StateCode 0 -StatusCode 1
-                        $flowsDeactivatedThisPass = $true
-                    }
-                    else{
-                        Write-Host "Workflow " $flowToDeactivate.solutionComponentName " already deactivated at target"
+        do {
+            $throwOnComplete = $false
+            $flowsDeactivatedThisPass = $false
+            foreach ($flowToDeactivate in $flowsToDeactivate) {
+                try {
+                    if($flowToDeactivate.solutionComponentUniqueName -ne $null -and $flowToDeactivate.solutionComponentUniqueName -ne ''){
+                        $existingStatus = get-workflow-dv-status $flowToDeactivate.solutionComponentUniqueName $token $dataverseHost
+                        if ($existingStatus -ne 0) {
+                            Write-Host "Dectivating Flow: " $flowToDeactivate.solutionComponentName
+                            Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $flowToDeactivate.solutionComponentUniqueName -StateCode 0 -StatusCode 1
+                            $flowsDeactivatedThisPass = $true
+                        }
+                        else{
+                            Write-Host "Workflow " $flowToDeactivate.solutionComponentName " already deactivated at target"
+                        }
                     }
                 }
+                catch {
+                    $throwOnComplete = $true
+                    Write-Host "##vso[task.logissue type=warning]Flow could not be deactivated. Continuing with flow deactivation until no more flows can be deactivated. If this is a result of a child flow not being deactivated before it's parent consider ordering your flows to avoid this message."
+                    Write-Host $_
+                }
             }
-            catch {
-                $throwOnComplete = $true
-                Write-Host "##vso[task.logissue type=warning]Flow could not be deactivated. Continuing with flow deactivation until no more flows can be deactivated. If this is a result of a child flow not being deactivated before it's parent consider ordering your flows to avoid this message."
-                Write-Host $_
-            }
-        }
-    } while ($flowsActivatedThisPass)
+        } while ($flowsActivatedThisPass)
 
-    if ($throwOnComplete) {
-        throw
+        if ($throwOnComplete) {
+            throw
+        }
+    }
+    else{
+		Write-Host "No flows to deactivate"
     }
 }
 
@@ -126,7 +129,7 @@ function Get-UserConfiguredFlowActivations {
     param (
         [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$activateFlowConfiguration,
         [Parameter(Mandatory)] [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn,
-        [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate,
+        [Parameter()] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$token,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$dataverseHost
     )
@@ -178,7 +181,7 @@ function Get-ConnectionReferenceFlowActivations {
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$connectionReferences,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$activateFlowConfiguration,
         [Parameter(Mandatory)] [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn,
-        [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
+        [Parameter()] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
     Write-Host "Inside Get-ConnectionReferenceFlowActivations"
     if($connectionReferences -ne "") {
@@ -283,7 +286,7 @@ function Get-OwnerFlowActivations {
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$solutionComponentOwnershipConfiguration,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$activateFlowConfiguration,
         [Parameter(Mandatory)] [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn,
-        [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
+        [Parameter()] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
     Write-Host "Inside Get-OwnerFlowActivations"
     if($solutionComponentOwnershipConfiguration -ne "") {
@@ -361,12 +364,20 @@ function Get-OwnerFlowActivations {
 function print-flows{
  param (
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$loopName,        
-        [Parameter(Mandatory)] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
+        [Parameter()] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
 
     Write-Host "Printing flows from - $loopName"
-    foreach ($flowToActivate in $flowsToActivate) {
-        Write-Host "Flow Name: " $flowToActivate.solutionComponentName
+	if($flowsToActivate -ne $null)
+	{
+		if($flowsToActivate.Count -eq 0)
+		{
+		    Write-Host "No flows to print"
+        }
+		
+        foreach ($flowToActivate in $flowsToActivate) {
+            Write-Host "Flow Name: " $flowToActivate.solutionComponentName
+        }		
     }
 }
 
