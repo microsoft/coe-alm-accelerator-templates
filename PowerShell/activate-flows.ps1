@@ -41,7 +41,7 @@ function Invoke-ActivateFlows {
     Get-ConnectionReferenceFlowActivations $solutionName $connectionReferences $activateFlowConfiguration $conn $flowsToActivate
     Get-OwnerFlowActivations $solutionComponentOwnershipConfiguration $activateFlowConfiguration $conn $flowsToActivate
     
-    print-flows "Total" $flowsToActivate
+    print-flows "Printing total active flows" $flowsToActivate
 
     Write-Host "Activating flows..."
     #Activate any flows added to the collection based on sort order
@@ -77,7 +77,7 @@ function Invoke-ActivateFlows {
     $flowsToDeactivate = get-flows-to-deactivate $activateFlowConfiguration $flowsToActivate
     if($flowsToDeactivate.Count -gt 0){
         $flowsToDeactivate = $flowsToDeactivate | Sort-Object -Property sortOrder    
-        print-flows "flows to deactivate" $flowsToDeactivate
+        print-flows "Printing flows to deactivate" $flowsToDeactivate
         $flowsDeactivatedThisPass = $false
         do {
             $throwOnComplete = $false
@@ -291,11 +291,11 @@ function Get-OwnerFlowActivations {
     Write-Host "Inside Get-OwnerFlowActivations"
     if($solutionComponentOwnershipConfiguration -ne "") {
         $rawContent = Get-Content $solutionComponentOwnershipConfiguration
-        Write-Host "rawContent - " $rawContent
+        Write-Host "Ownership Configuration Content - " $rawContent
 
         $config = Get-Content $solutionComponentOwnershipConfiguration | ConvertFrom-Json
         $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
-        print-flows "Inside Get-OwnerFlowActivations" $flowsToActivate
+        print-flows "Inside Get-OwnerFlowActivations; Prinitng Active Flows" $flowsToActivate
 
         Write-Host "activationConfigs - " $activationConfigs
         foreach ($ownershipConfig in $config) {
@@ -363,11 +363,11 @@ function Get-OwnerFlowActivations {
 
 function print-flows{
  param (
-        [Parameter(Mandatory)] [String] [AllowEmptyString()]$loopName,        
+        [Parameter()] [String] [AllowEmptyString()]$message,        
         [Parameter()] [System.Collections.ArrayList] [AllowEmptyCollection()]$flowsToActivate
     )
 
-    Write-Host "Printing flows from - $loopName"
+    Write-Host "$message"
 	if($flowsToActivate -ne $null)
 	{
 		if($flowsToActivate.Count -eq 0)
