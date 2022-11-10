@@ -75,7 +75,9 @@ function Invoke-ActivateFlows {
 
     Write-Host "Getting flows to deactivate..."
     $flowsToDeactivate = get-flows-to-deactivate $activateFlowConfiguration $flowsToActivate
-    $flowsToDeactivate = $flowsToDeactivate | Sort-Object -Property sortOrder
+    if($flowsToDeactivate.Count -gt 0){
+        $flowsToDeactivate = $flowsToDeactivate | Sort-Object -Property sortOrder
+    }
     print-flows "flows to deactivate" $flowsToDeactivate
     $flowsDeactivatedThisPass = $false
     do {
@@ -381,7 +383,7 @@ function get-flows-to-deactivate{
     if ($null -ne $activationConfigs) {
         foreach ($activateConfig in $activationConfigs) {
             $existingActivation = $null
-            if($flowsToActivate -ne $null){
+            if($flowsToActivate -ne $null -and $flowsToActivate.Count -gt 0){
                 $existingActivation = $flowsToActivate | Where-Object { $_.solutionComponentUniqueName -eq $activateConfig.solutionComponentUniqueName } | Select-Object -First 1
             }
 
