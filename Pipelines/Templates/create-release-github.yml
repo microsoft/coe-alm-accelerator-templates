@@ -144,3 +144,9 @@ steps:
     assets: |
       $(Pipeline.Workspace)/releaseassets/*.*
   displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
+
+- template: prepare-appsource-release.yml
+  parameters:
+    skipBuildToolsInstaller: 'false'
+    cacheEnabled: 'true'
+    solutionsFolderPath: '$(Pipeline.Workspace)/releaseassets'
