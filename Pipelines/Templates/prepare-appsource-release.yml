@@ -42,7 +42,7 @@ steps:
 - pwsh: |
     . "$env:POWERSHELLPATH/app-source-helper.ps1"
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackageProject"
-    $solutionsFolderPath = "{{solutionsFolderPath}}"
+    $solutionsFolderPath = "${{solutionsFolderPath}}"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
     #$solutionsFolderPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\Solutions"
     $appSourceInputFilePath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\appsource_input.json"
