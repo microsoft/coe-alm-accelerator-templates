@@ -20,10 +20,20 @@ steps:
 #  condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
 
 - pwsh: |
-    $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
-    $powerShellPath = "$pipelineUtilsPath/PowerShell"
-    Write-Host "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
-  displayName: "Set PowerShellPath"
+    # Workaround for git Filename too long issue 
+    git config --system core.longpaths true        
+    displayName: "Configuring core.longpaths true"
+
+## Checkout Pipelines
+#- checkout: self
+#  path: 'PipelineUtils'
+#  displayName: 'Checkout Pipeline Branch'
+
+#- pwsh: |
+#    $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
+#    $powerShellPath = "$pipelineUtilsPath/PowerShell"
+#    Write-Host "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
+#  displayName: "Set PowerShellPath"
 
 # Set pipeline vars for tools paths.
 - template: set-tools-paths.yml
@@ -31,7 +41,8 @@ steps:
 - template: install-powershell-modules.yml
 
 - pwsh: |
-      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      #. "$env:POWERSHELLPATH/code-first-functions.ps1"
+      . "PowerShell\code-first-functions.ps1"
       set-pac-tools-path "$(Agent.OS)"
   displayName: 'Set pac tools path'
   
