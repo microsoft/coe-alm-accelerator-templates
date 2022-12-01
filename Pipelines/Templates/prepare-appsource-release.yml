@@ -19,16 +19,16 @@ steps:
 #    cacheHitVar: powerPlatformToolsPath_IsCached
 #  condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
 
-## Checkout Pipelines
-#- checkout: self
-#  path: 'PipelineUtils'
-#  displayName: 'Checkout Pipeline Branch'
+# Checkout Pipelines
+- checkout: self
+  path: 'PipelineUtils'
+  displayName: 'Checkout Pipeline Branch'
 
-#- pwsh: |
-#    $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
-#    $powerShellPath = "$pipelineUtilsPath/PowerShell"
-#    Write-Host "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
-#  displayName: "Set PowerShellPath"
+- pwsh: |
+    $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
+    $powerShellPath = "$pipelineUtilsPath/PowerShell"
+    Write-Host "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
+  displayName: "Set PowerShellPath"
 
 # Set pipeline vars for tools paths.
 - template: set-tools-paths.yml
@@ -36,8 +36,8 @@ steps:
 - template: install-powershell-modules.yml
 
 - pwsh: |
-      #. "$env:POWERSHELLPATH/code-first-functions.ps1"
-      . "PowerShell\code-first-functions.ps1"
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      #. "PowerShell\code-first-functions.ps1"
       set-pac-tools-path "$(Agent.OS)"
   displayName: 'Set pac tools path'
   
