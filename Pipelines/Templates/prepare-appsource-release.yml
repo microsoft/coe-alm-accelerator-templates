@@ -19,11 +19,6 @@ steps:
 #    cacheHitVar: powerPlatformToolsPath_IsCached
 #  condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
 
-- pwsh: |
-    # Workaround for git Filename too long issue 
-    git config --system core.longpaths true        
-    displayName: "Configuring core.longpaths true"
-
 ## Checkout Pipelines
 #- checkout: self
 #  path: 'PipelineUtils'
