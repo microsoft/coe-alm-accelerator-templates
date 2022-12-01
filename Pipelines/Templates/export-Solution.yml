@@ -205,6 +205,11 @@ steps:
   displayName: 'Verify Environment Variable Current Value Not Exported'
   condition: and(succeeded(), eq(variables.DoNotExportCurrentEnvironmentVariableValues, 'true'))
 
+- pwsh: |
+   . "$env:POWERSHELLPATH/export-solution-functions.ps1"
+    Remove-Code-From-Custom-Connectors-Where-Disabled "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}"
+  displayName: 'Remove Code from Custom Connectors Where Disabled'
+
 - template: Hooks\export-solution-update-deploymentsettings-pre-hook.yml
 
 # Update deployment settings configuration
