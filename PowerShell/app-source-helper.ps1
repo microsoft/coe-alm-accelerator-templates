@@ -12,7 +12,7 @@
             $pacexepath = "$pacPath\pac.exe"
             if(Test-Path "$pacexepath")
             {
-                Get-ChildItem "$solutionsFolderPath" -Filter *.zip | 
+                Get-ChildItem "$solutionsFolderPath" -Filter *.managed.zip | 
                 Foreach-Object {
                     $solutionName = $_.Name
                     $solutionPath = $_.FullName
