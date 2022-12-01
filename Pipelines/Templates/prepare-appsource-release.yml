@@ -36,8 +36,8 @@ steps:
 - template: install-powershell-modules.yml
 
 - pwsh: |
-      . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      #. "PowerShell\code-first-functions.ps1"
+      #. "$env:POWERSHELLPATH/code-first-functions.ps1"
+      #. "PowerShell/code-first-functions.ps1"
       set-pac-tools-path "$(Agent.OS)"
   displayName: 'Set pac tools path'
   
