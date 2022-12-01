@@ -145,6 +145,16 @@ steps:
 #      $(Pipeline.Workspace)/releaseassets/*.*
 #  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
 
+- pwsh: |
+    $assetsPath = "$(Pipeline.Workspace)\releaseassets"
+    if(Test-Path "$assetsPath"){
+        Get-ChildItem "$assetsPath" -Recurse
+    }
+    else{
+        Write-Host "Invalid assets path - " $assetsPath
+    }
+  displayName: 'Print releaseassets'
+  
 - template: prepare-appsource-release.yml
   parameters:
     solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
