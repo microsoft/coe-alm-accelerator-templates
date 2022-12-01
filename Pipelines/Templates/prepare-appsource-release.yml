@@ -9,33 +9,14 @@ parameters:
   default: 'true'
 
 steps:
-## Restore PowerShell Module dependencies if available in cache
-## https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops
-#- task: Cache@2
-#  displayName: Cache Powershell Modules
-#  inputs:
-#    key:  restoremodules | "$(powerPlatformToolsSubPath)" | $(Pipeline.Workspace)/PipelineUtils/Pipelines/Templates/install-powershell-modules.yml
-#    path: $(powerPlatformToolsPath)
-#    cacheHitVar: powerPlatformToolsPath_IsCached
-#  condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
-
 - pwsh: |
-    if(Test-Path "$(Pipeline.Workspace)"){
-        Get-ChildItem "$(Pipeline.Workspace)" -Recurse
+    if(Test-Path "$(Build.SourcesDirectory)"){
+        Get-ChildItem "$(Build.SourcesDirectory)" -Recurse
     }
     else{
-        Write-Host "Pipeline.workspace unavailable at - $(Pipeline.Workspace)"
+        Write-Host "Build.SourcesDirectory unavailable at - $(Build.SourcesDirectory)"
     }
-  displayName: 'Print Pipeline.workspace'
-  
-- pwsh: |
-    if(Test-Path "$(Agent.BuildDirectory)"){
-        Get-ChildItem "$(Agent.BuildDirectory)" -Recurse
-    }
-    else{
-        Write-Host "Agent.BuildDirectory unavailable at - $(Agent.BuildDirectory)"
-    }
-  displayName: 'Print (Agent.BuildDirectory)'  
+  displayName: 'Print (Build.SourcesDirectory)'  
 
 # Checkout Pipelines
 #- checkout: PipelineRepo
