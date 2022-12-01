@@ -2,23 +2,25 @@
 parameters:
 - name: solutionsFolderPath
   type: string
-- name: skipBuildToolsInstaller
+- name: parAppSourcePackageProjectPath
   type: string
-  default: 'false'
 - name: cacheEnabled
   type: string
   default: 'true'
 
 steps:
-# Restore PowerShell Module dependencies if available in cache
-# https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops
-- task: Cache@2
-  displayName: Cache Powershell Modules
-  inputs:
-    key:  restoremodules | "$(powerPlatformToolsSubPath)" | $(Pipeline.Workspace)/PipelineUtils/Pipelines/Templates/install-powershell-modules.yml
-    path: $(powerPlatformToolsPath)
-    cacheHitVar: powerPlatformToolsPath_IsCached
-  condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
+## Restore PowerShell Module dependencies if available in cache
+## https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops
+#- task: Cache@2
+#  displayName: Cache Powershell Modules
+#  inputs:
+#    key:  restoremodules | "$(powerPlatformToolsSubPath)" | $(Pipeline.Workspace)/PipelineUtils/Pipelines/Templates/install-powershell-modules.yml
+#    path: $(powerPlatformToolsPath)
+#    cacheHitVar: powerPlatformToolsPath_IsCached
+#  condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
+
+# Set pipeline vars for tools paths.
+- template: set-tools-paths.yml
 
 - template: install-powershell-modules.yml
 
@@ -40,66 +42,97 @@ steps:
   displayName: 'Set appSourceReleasePackageName'
 
 - pwsh: |
-    . "$env:POWERSHELLPATH/app-source-helper.ps1"
-    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackageProject"
-    $solutionsFolderPath = "${{solutionsFolderPath}}"
+    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
+    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
+    $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
+    Write-Host "appSourcePackageProjectPath - $appSourcePackageProjectPath"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
-    #$solutionsFolderPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\Solutions"
-    $appSourceInputFilePath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\appsource_input.json"
+    $appSourceInputFilePath = "$appSourcePackageProjectPath\appsource_input.json"
+
+    . "$env:POWERSHELLPATH/app-source-helper.ps1"
     add-solution-references-to-package-project "$(pacPath)" "$appSourcePackageProjectPath" "$solutionsFolderPath" "$appSourceInputFilePath"
   displayName: "Add solution references to package project"
 
 - pwsh: |
+    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
+    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
+    
     . "$env:POWERSHELLPATH/app-source-helper.ps1"
-    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackageProject"
     trigger-dotnet-publish "$appSourcePackageProjectPath"
   displayName: "Trigger dotnet publish"
 
 - pwsh: |
-    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackageProject\bin"
-    if(Test-Path "$appSourcePackageProjectPath"){
-        Get-ChildItem "$appSourcePackageProjectPath" -Recurse
+    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
+    $appSourcePackageProjectBinPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath\bin"    
+    if(Test-Path "$appSourcePackageProjectBinPath"){
+        Get-ChildItem "$appSourcePackageProjectBinPath" -Recurse
     }
     else{
-        Write-Host "appSourcePackageProject bin unavailable at - $appSourcePackageProjectPath"
+        Write-Host "appSourcePackageProject bin unavailable at - $appSourcePackageProjectBinPath"
     }
   displayName: 'Print AppsourcePackageProject bin post publish'
 
 - pwsh: |
+    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
+    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
+    $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
+    
     . "$env:POWERSHELLPATH/app-source-helper.ps1"
-    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackageProject"
-    $appSourceAssetsPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackageProject\AppSourceAssets"
     copy-published-assets-to-AppSourceAssets "$appSourcePackageProjectPath" "$appSourceAssetsPath"
   displayName: "Move built pdpkg to AppSourceAssets"
 
 - pwsh: |
-    $appSourceAssetsPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackageProject\AppSourceAssets"
-    Get-ChildItem "$appSourceAssetsPath" -Recurse
+    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
+    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
+    $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
+    if(Test-Path "$appSourceAssetsPath"){
+        Get-ChildItem "$appSourceAssetsPath" -Recurse
+    }
+    else{
+        Write-Host "appSourceAssetsPath unavailable at - $appSourceAssetsPath"
+    }
   displayName: 'Print AppSourceAssets folder'
 
 - pwsh: |
-    . "$env:POWERSHELLPATH/app-source-helper.ps1"
-    $inputFilePath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppSourcePackageProject\AppSourceAssets\Input.xml"
-    update-input-file "$inputFilePath" "$(appSourceReleasePackageName)"
+    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
+    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
+    $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
+    $inputFilePath = "$appSourceAssetsPath\Input.xml"
+
+    if(Test-Path "$inputFilePath"){
+        . "$env:POWERSHELLPATH/app-source-helper.ps1"
+        update-input-file "$inputFilePath" "$(appSourceReleasePackageName)"
+    }
+    else{
+        Write-Host "Input.xml unavailable at - $inputFilePath"
+    }
   displayName: "Update InputFile from AppSourceAssets"
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
 
 - pwsh: |
+    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
+    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
+    $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
+    $appSourcePackagePath = "$(Build.ArtifactStagingDirectory)\AppsourcePackage"
+
     . "$env:POWERSHELLPATH/app-source-helper.ps1"
-    $appSourceAssetsPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppSourcePackageProject\AppSourceAssets\*"
-    $appSourcePackagePath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackage"
     pack-and-move-assets-to-AppSourcePackage "$appSourceAssetsPath" "$appSourcePackagePath" "$(appSourceReleasePackageName)"
   displayName: "Compress and move AppSourceAssets to AppsourcePackage"
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
 
 - pwsh: |
-    Get-ChildItem "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackage" -Recurse
+    if(Test-Path "$(Build.ArtifactStagingDirectory)\AppsourcePackage"){
+        Get-ChildItem "$(Build.ArtifactStagingDirectory)\AppsourcePackage" -Recurse
+    }
+    else{
+        Write-Host "Invalid path (Build.ArtifactStagingDirectory)\AppsourcePackage"
+    }
   displayName: 'Print AppsourcePackage'
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
 
 - pwsh: |
     Write-Host "AppSourceReleasePackageName - " $(appSourceReleasePackageName)
-    $sourceDirectory  = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\AppsourcePackage\$(appSourceReleasePackageName)"
+    $sourceDirectory  = "$(Build.ArtifactStagingDirectory)\AppsourcePackage\$(appSourceReleasePackageName)"
     $destinationDirectory = "$(Build.ArtifactStagingDirectory)"
     If(Test-Path "$sourceDirectory"){
         Copy-item -Force -Recurse -Verbose "$sourceDirectory" -Destination $destinationDirectory

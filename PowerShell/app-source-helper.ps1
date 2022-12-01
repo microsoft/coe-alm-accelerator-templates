@@ -77,10 +77,14 @@ function trigger-dotnet-publish{
         [Parameter(Mandatory)] [String]$appSourcePackageProjectPath
     )
 
-    #$sourceDirectory = [System.IO.Path]::GetDirectoryName("$appSourcePackageProjectPath")
     Write-Host "Pointing to package project folder path - " $appSourcePackageProjectPath
-    Set-Location -Path $appSourcePackageProjectPath
-    dotnet publish
+    if(Test-Path $appSourcePackageProjectPath){
+        Set-Location -Path $appSourcePackageProjectPath
+        dotnet publish
+    }
+    else{
+        Write-Host "Path unavailble; $appSourcePackageProjectPath"
+    }
 }
 
 # Copy the .zip folder generated in either bin\debug or bin\release and move it to "AppSourcePackageProject\AppSourceAssets"
