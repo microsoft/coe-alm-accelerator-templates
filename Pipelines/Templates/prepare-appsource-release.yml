@@ -19,8 +19,27 @@ steps:
 #    cacheHitVar: powerPlatformToolsPath_IsCached
 #  condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
 
+- pwsh: |
+    if(Test-Path "$(Pipeline.Workspace)"){
+        Get-ChildItem "$(Pipeline.Workspace)" -Recurse
+    }
+    else{
+        Write-Host "Pipeline.workspace unavailable at - $(Pipeline.Workspace)"
+    }
+  displayName: 'Print Pipeline.workspace'
+  
+- pwsh: |
+    if(Test-Path "$(Agent.BuildDirectory)"){
+        Get-ChildItem "$(Agent.BuildDirectory)" -Recurse
+    }
+    else{
+        Write-Host "Agent.BuildDirectory unavailable at - $(Agent.BuildDirectory)"
+    }
+  displayName: 'Print (Agent.BuildDirectory)'  
+
 # Checkout Pipelines
-- checkout: PipelineRepo
+#- checkout: PipelineRepo
+- checkout: Self
   path: 'PipelineUtils'
   displayName: 'Checkout Pipeline Branch'
 
