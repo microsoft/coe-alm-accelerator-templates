@@ -163,6 +163,6 @@ steps:
     
 - template: prepare-appsource-release-inline.yml
   parameters:
-    solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
+    solutionsFolderPath: '$(Pipeline.Workspace)\Solutions'
     cacheEnabled: 'true'
     parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'    
