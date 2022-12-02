@@ -48,13 +48,8 @@ steps:
     $versionDictionary = @{ "0.24" = ""}
 
     $nugetPackage = "Microsoft.PowerApps.CLI"
-    $nugetPackageVersion = '$(pacVersion)'
-    if('${{ parameters.canvasUnpackVersion }}' -ne '') {
-        $nugetPackageVersion = $versionDictionary['${{ parameters.canvasUnpackVersion }}']
-    }
-    elseif($nugetPackageVersion.Contains("pacVersion")) {
-      $nugetPackageVersion =  ""
-    }
+    #$nugetPackageVersion = '$(pacVersion)'
+    $nugetPackageVersion =  ""    
     $outFolder = "pac"
     if($nugetPackageVersion -ne '') {
         nuget install $nugetPackage -Version $nugetPackageVersion -OutputDirectory $outFolder
