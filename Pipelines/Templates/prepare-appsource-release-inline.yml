@@ -41,21 +41,46 @@ steps:
 
 - template: install-powershell-modules.yml
 
-- pwsh: |
-      #. "$env:POWERSHELLPATH/code-first-functions.ps1"
-      ##. "./PowerShell/code-first-functions.ps1"
-      #set-pac-tools-path "$(Agent.OS)"
+- powershell: |
+    #NOTE: Add new versions of canvas unpack and the associated pac CLI version to the versionDictionary to ensure unpacked versions are packed correctly.
+    #.24 is the only version supported in the release of our pipelines the latest version of PAC CLI should be used until a new version is available at which time we
+    #would add new versions here
+    $versionDictionary = @{ "0.24" = ""}
 
-   $agentOS = "$(Agent.OS)"   
-   if ($agentOS -eq "Linux") {
-       $pacToolsPath = $env:POWERPLATFORMTOOLS_PACCLIPATH + "/pac_linux/tools"
-   }
-   else {
-       $pacToolsPath = $env:POWERPLATFORMTOOLS_PACCLIPATH + "\pac\tools"
-   } 
+    $nugetPackage = "Microsoft.PowerApps.CLI"
+    $nugetPackageVersion = '$(pacVersion)'
+    if('${{ parameters.canvasUnpackVersion }}' -ne '') {
+        $nugetPackageVersion = $versionDictionary['${{ parameters.canvasUnpackVersion }}']
+    }
+    elseif($nugetPackageVersion.Contains("pacVersion")) {
+      $nugetPackageVersion =  ""
+    }
+    $outFolder = "pac"
+    if($nugetPackageVersion -ne '') {
+        nuget install $nugetPackage -Version $nugetPackageVersion -OutputDirectory $outFolder
+    }
+    else {
+        nuget install $nugetPackage -OutputDirectory $outFolder
+    }
+    $pacNugetFolder = Get-ChildItem $outFolder | Where-Object {$_.Name -match $nugetPackage + "."}
+    $pacPath = $pacNugetFolder.FullName + "\tools"
+    echo "##vso[task.setvariable variable=pacPath]$pacPath"
+  displayName: 'Install pac cli'
 
-    echo "##vso[task.setvariable variable=pacPath]$pacToolsPath"      
-  displayName: 'Set pac tools path'
+#- pwsh: |
+#      #. "$env:POWERSHELLPATH/code-first-functions.ps1"
+#      ##. "./PowerShell/code-first-functions.ps1"
+#      #set-pac-tools-path "$(Agent.OS)"
+
+#   if ("$(Agent.OS)" -eq "Linux") {
+#       $pacToolsPath = $env:POWERPLATFORMTOOLS_PACCLIPATH + "/pac_linux/tools"
+#   }
+#   else {
+#       $pacToolsPath = $env:POWERPLATFORMTOOLS_PACCLIPATH + "\pac\tools"
+#   } 
+
+#    echo "##vso[task.setvariable variable=pacPath]$pacToolsPath"      
+#  displayName: 'Set pac tools path'
   
 - pwsh: |
     $releaseZipname = "Microsoft_CreatorKitPackage.zip"
