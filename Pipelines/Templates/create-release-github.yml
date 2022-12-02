@@ -155,8 +155,14 @@ steps:
     }
   displayName: 'Print releaseassets'
   
-- template: prepare-appsource-release.yml
+#- template: prepare-appsource-release.yml
+#  parameters:
+#    solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
+#    cacheEnabled: 'true'
+#    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
+    
+- template: prepare-appsource-release-inline.yml
   parameters:
     solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
     cacheEnabled: 'true'
-    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
+    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'    
