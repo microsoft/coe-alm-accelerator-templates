@@ -213,7 +213,7 @@ steps:
    . "$env:POWERSHELLPATH/export-solution-functions.ps1"
     Remove-Code-From-Custom-Connectors-Where-Disabled "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}"
   displayName: 'Remove Code from Custom Connectors Where Disabled'
-  condition: and(succeeded(), eq(variables.DisableCustomCodeConnectors, 'true'))
+  condition: and(succeeded(), eq(variables.DisableCustomConnectorCode, 'true'))
 
 - template: Hooks\export-solution-update-deploymentsettings-pre-hook.yml
 
