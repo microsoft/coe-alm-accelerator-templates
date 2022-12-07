@@ -146,23 +146,27 @@ steps:
 #  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
 
 - pwsh: |
-    $assetsPath = "${{ parameters.releaseNotesPath }}"
+    $assetsPath = '$(Pipeline.Workspace)\releaseassets'
     if(Test-Path "$assetsPath"){
         Get-ChildItem "$assetsPath" -Recurse
     }
     else{
         Write-Host "Invalid assets path - " $assetsPath
     }
-  displayName: 'Print release notes folder'
-  
-#- template: prepare-appsource-release.yml
+  displayName: 'Print releaseassets folder'
+    
+#- template: prepare-appsource-release-inline.yml
 #  parameters:
-#    solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
+#    solutionsFolderPath: '$(Pipeline.Workspace)\Solutions'
 #    cacheEnabled: 'true'
 #    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
     
-- template: prepare-appsource-release-inline.yml
-  parameters:
-    solutionsFolderPath: '$(Pipeline.Workspace)\Solutions'
-    cacheEnabled: 'true'
-    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'    
+## Run App Source Package
+#- template: prepare-appsource-release.yml
+#  parameters:
+#    #solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
+#    solutionsFolderPath: '$(Build.SourcesDirectory)\$(RepoName)\Solutions'
+#    packageFileName: 'CreatorKitPackage.zip'
+#    solutionAnchorName: 'CreatorKitCore.zip'
+#    cacheEnabled: 'true'
+#    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'

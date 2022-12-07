@@ -12,7 +12,8 @@
             $pacexepath = "$pacPath\pac.exe"
             if(Test-Path "$pacexepath")
             {
-                Get-ChildItem "$solutionsFolderPath" -Filter *.managed.zip | 
+                Get-ChildItem "$solutionsFolderPath" | Where {$_.Name -match '_managed.zip'} |
+                #Get-ChildItem "$solutionsFolderPath" -Filter *.managed.zip | 
                 Foreach-Object {
                     $solutionName = $_.Name
                     $solutionPath = $_.FullName
@@ -91,7 +92,8 @@ function trigger-dotnet-publish{
 function copy-published-assets-to-AppSourceAssets{
     param(
         [Parameter(Mandatory)] [String]$appSourcePackageProjectPath,
-        [Parameter(Mandatory)] [String]$appSourceAssetsPath
+        [Parameter(Mandatory)] [String]$appSourceAssetsPath,
+        [Parameter(Mandatory)] [String]$packageFileName
     )
 
     $pdpkgFileCount = 0
@@ -102,7 +104,9 @@ function copy-published-assets-to-AppSourceAssets{
         Write-Host "Count of .pdpkg.zip from $appSourcePackageProjectPath\bin\Release - "$pdpkgFileCount
         if($pdpkgFileCount -gt 0){
             Write-Host "pdpkg file found under $appSourcePackageProjectPath\bin\Release"
-            Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+            Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath\$packageFileName"
+            #Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+            Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
             $appSourcePackageFound = $true
         }
         else{
@@ -115,7 +119,8 @@ function copy-published-assets-to-AppSourceAssets{
         Write-Host "Count of .pdpkg.zip from $appSourcePackageProjectPath\bin\Debug - "$pdpkgFileCount
         if($pdpkgFileCount -gt 0){
             Write-Host "pdpkg file found under $appSourcePackageProjectPath\bin\Debug"
-            Get-ChildItem "$appSourcePackageProjectPath\bin\Debug" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+            Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath\$packageFileName"
+            Get-ChildItem "$appSourcePackageProjectPath\bin\Debug" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
             $appSourcePackageFound = $true
         }
         else{
@@ -134,19 +139,26 @@ function pack-and-move-assets-to-AppSourcePackage{
     param(
         [Parameter(Mandatory)] [String]$appSourceAssetsPath,
         [Parameter(Mandatory)] [String]$appSourcePackagePath,
-        [Parameter(Mandatory)] [String]$releaseZipName
+        [Parameter(Mandatory)] [String]$releaseZipName,
+        [Parameter(Mandatory)] [String]$appSourcePackageFolderName
     )
 
-    $destinationPath = "$appSourcePackagePath\$releaseZipName"
+    # Create a new folder in Destination
+    if(!(Test-Path "$appSourcePackagePath\$appSourcePackageFolderName")){
+        Write-Host "Creating a new folder $appSourcePackageFolderName under $appSourcePackagePath"
+        New-Item -Path "$appSourcePackagePath" -Name "$appSourcePackageFolderName" -ItemType "directory"
+    }
+
+    $destinationPath = "$appSourcePackagePath\$appSourcePackageFolderName\$releaseZipName"
     if(Test-Path "$appSourceAssetsPath")
     {
-        if(Test-Path "$appSourcePackagePath"){
+        if(Test-Path "$appSourcePackagePath\$appSourcePackageFolderName"){
             Write-Host "Packaging assets from $appSourceAssetsPath and creating $destinationPath"
-            Compress-Archive -Path $appSourceAssetsPath -CompressionLevel Optimal -DestinationPath $destinationPath -Force
+            Compress-Archive -Path "$appSourceAssetsPath\*" -CompressionLevel Optimal -DestinationPath "$destinationPath" -Force
         }
         else{
-                Write-Host "Invalid appSourcePackagePath path - $appSourcePackagePath" 
-            }
+            Write-Host "Invalid appSourcePackagePath path - $appSourcePackagePath\$appSourcePackageFolderName"
+        }
     }
     else{
         Write-Host "Invalid appSourceAssetsPath path - $appSourceAssetsPath" 
@@ -156,7 +168,8 @@ function pack-and-move-assets-to-AppSourcePackage{
 function update-input-file{
     param (
         [Parameter(Mandatory)] [String]$inputFilePath,
-        [Parameter(Mandatory)] [String]$packageFileName
+        [Parameter(Mandatory)] [String]$packageFileName,
+        [Parameter(Mandatory)] [String]$solutionAnchorName
     )
 
     if(Test-Path $inputFilePath){
@@ -166,9 +179,10 @@ function update-input-file{
         $futureDate = (Get-Date).AddMonths(12).ToString('MM-dd-yyyy')
         $xmlDoc.PvsPackageData.StartDate = $todayDate
         $xmlDoc.PvsPackageData.EndDate = $futureDate
-        $xmlDoc.PvsPackageData.PackageFile = $packageFileName
+        $xmlDoc.PvsPackageData.PackageFile = "$packageFileName"
+        $xmlDoc.PvsPackageData.SolutionAnchorName = "$solutionAnchorName"
 
-        Write-Host "Setting StartDate as $todayDate and EndDate as $futureDate and PackageFile as $packageFileName"
+        Write-Host "Setting StartDate as $todayDate and EndDate as $futureDate and PackageFile as $packageFileName and SolutionAnchorName as $solutionAnchorName"
         $xmlDoc.save("$inputFilePath")
     }
     else{
