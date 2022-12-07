@@ -137,6 +137,7 @@ steps:
 #    solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
 #    packageFileName: 'CreatorKitPackage.zip'
 #    solutionAnchorName: 'CreatorKitCore.zip'
+#    appSourceFolderName: 'Microsoft_CreatorKitPackage'
 #    cacheEnabled: 'true'
 #    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
 
@@ -146,6 +147,7 @@ steps:
     solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
     packageFileName: 'CreatorKitPackage.zip'
     solutionAnchorName: 'CreatorKitCore.zip'
+    appSourceFolderName: 'Microsoft_CreatorKitPackage'
     cacheEnabled: 'true'
     parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
 

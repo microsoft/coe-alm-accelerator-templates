@@ -1,4 +1,4 @@
-# This template deploys a solution built by build-Solution.yml and configures the solution in the target environment.
+# This template read solutions from 'releaseassets' and generate a AppSourcePackage
 parameters:
 - name: solutionsFolderPath
   type: string
@@ -8,6 +8,8 @@ parameters:
   type: string
 - name: solutionAnchorName
   type: string
+- name: appSourceFolderName
+  type: string  
 - name: cacheEnabled
   type: string
   default: 'true'
@@ -15,21 +17,21 @@ parameters:
 steps:
 # Checkout Pipelines
 - checkout: Self
-  #path: 'PipelineUtils'
-  #displayName: 'Checkout Pipeline Branch'
-  
+
 - pwsh: |
-    $releaseZipname = "Microsoft_CreatorKitPackage.zip"
+    $releaseZipname = "${{parameters.appSourceFolderName}}"
     if('$(Build.BuildNumber)'.Contains("Build.BuildNumber")) {
         Write-Host "Build number unavailable"
     }
     else{
-        $releaseZipname = "Microsoft_CreatorKitPackage_$(Build.BuildNumber).zip"
+        $releaseZipname = "$releaseZipname_$(Build.BuildNumber)"
     }
 
+    # Suffix extension (i.e.,zip) 
+    $releaseZipname = "$releaseZipname.zip"
     Write-Host "releaseZipname - $releaseZipname"
     Write-Host "##vso[task.setVariable variable=appSourceReleasePackageName]$releaseZipname"
-  displayName: 'Set appSourceReleasePackageName'  
+  displayName: 'Set appSourceReleasePackageName'   
 
 - pwsh: |
     $assetsPath = '$(Build.SourcesDirectory)'
