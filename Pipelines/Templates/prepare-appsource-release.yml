@@ -14,7 +14,6 @@ parameters:
 
 steps:
 # Checkout Pipelines
-#- checkout: PipelineRepo
 - checkout: Self
   path: 'PipelineUtils'
   displayName: 'Checkout Pipeline Branch'
@@ -29,11 +28,19 @@ steps:
     }
   displayName: 'Print releaseassets folder - 2'
   
+- pwsh: |
+    $assetsPath = '$(Build.SourcesDirectory)'
+    if(Test-Path "$assetsPath"){
+        Get-ChildItem "$assetsPath" -Recurse
+    }
+    else{
+        Write-Host "Invalid assets path - " $assetsPath
+    }
+  displayName: 'Print (Build.SourcesDirectory) - 2'  
+  
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
   displayName: 'Install Power Platform Build Tools' 
   
-- template: install-powershell-modules.yml  
-
 - pwsh: |
     $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
     $powerShellPath = "$pipelineUtilsPath/PowerShell"
