@@ -13,6 +13,16 @@ parameters:
   default: 'true'
 
 steps:
+- pwsh: |
+    $assetsPath = '$(Pipeline.Workspace)\releaseassets'
+    if(Test-Path "$assetsPath"){
+        Get-ChildItem "$assetsPath" -Recurse
+    }
+    else{
+        Write-Host "Invalid assets path - " $assetsPath
+    }
+  displayName: 'Print releaseassets folder - 2'
+  
 #- pwsh: |
 #    if(Test-Path "$(Build.SourcesDirectory)"){
 #        Get-ChildItem "$(Build.SourcesDirectory)" -Recurse
