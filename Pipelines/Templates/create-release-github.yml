@@ -131,36 +131,6 @@ steps:
 #    }
 #  displayName: Build Release Notes from Milestone
 
-#- task: GitHubRelease@1
-#  inputs:
-#    gitHubConnection: ${{ parameters.connectionName }}
-#    tagSource: 'userSpecifiedTag'
-#    tag: $(Tag)
-#    title: $(Title)
-#    releaseNotesFilePath: '$(ReleaseNotesPath)'
-#    addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
-#    isDraft: ${{ parameters.isDraft }}
-#    isPreRelease: ${{ parameters.isPreRelease }}
-#    assets: |
-#      $(Pipeline.Workspace)/releaseassets/*.*
-#  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
-
-- pwsh: |
-    $assetsPath = '$(Pipeline.Workspace)\releaseassets'
-    if(Test-Path "$assetsPath"){
-        Get-ChildItem "$assetsPath" -Recurse
-    }
-    else{
-        Write-Host "Invalid assets path - " $assetsPath
-    }
-  displayName: 'Print releaseassets folder'
-    
-#- template: prepare-appsource-release-inline.yml
-#  parameters:
-#    solutionsFolderPath: '$(Pipeline.Workspace)\Solutions'
-#    cacheEnabled: 'true'
-#    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
-    
 ## Run App Source Package
 #- template: prepare-appsource-release.yml
 #  parameters:
@@ -178,3 +148,17 @@ steps:
     solutionAnchorName: 'CreatorKitCore.zip'
     cacheEnabled: 'true'
     parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
+
+#- task: GitHubRelease@1
+#  inputs:
+#    gitHubConnection: ${{ parameters.connectionName }}
+#    tagSource: 'userSpecifiedTag'
+#    tag: $(Tag)
+#    title: $(Title)
+#    releaseNotesFilePath: '$(ReleaseNotesPath)'
+#    addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
+#    isDraft: ${{ parameters.isDraft }}
+#    isPreRelease: ${{ parameters.isPreRelease }}
+#    assets: |
+#      $(Pipeline.Workspace)/releaseassets/*.*
+#  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
