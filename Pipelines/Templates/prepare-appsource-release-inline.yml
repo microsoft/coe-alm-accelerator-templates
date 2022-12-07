@@ -204,18 +204,6 @@ steps:
     $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
     $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
-    if(Test-Path "$appSourceAssetsPath"){
-        Get-ChildItem "$appSourceAssetsPath" -Recurse
-    }
-    else{
-        Write-Host "appSourceAssetsPath unavailable at - $appSourceAssetsPath"
-    }
-  displayName: 'Print AppSourceAssets folder'
-
-- pwsh: |
-    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
-    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
-    $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
     $inputFilePath = "$appSourceAssetsPath\Input.xml"
 
     if(Test-Path "$inputFilePath"){
@@ -236,6 +224,18 @@ steps:
     }
   displayName: "Update InputFile from AppSourceAssets"
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
+  
+- pwsh: |
+    $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
+    $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
+    $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
+    if(Test-Path "$appSourceAssetsPath"){
+        Get-ChildItem "$appSourceAssetsPath" -Recurse
+    }
+    else{
+        Write-Host "appSourceAssetsPath unavailable at - $appSourceAssetsPath"
+    }
+  displayName: 'Print AppSourceAssets folder'  
 
 - pwsh: |
     $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
@@ -250,7 +250,7 @@ steps:
         New-Item -Path "$appSourcePackagePath" -Name "$appSourcePackageFolderName" -ItemType "directory"
     }
 
-    $destinationPath = "$appSourcePackagePath\$appSourcePackageFolderName\$releaseZipName"
+    $destinationPath = "$appSourcePackagePath\$appSourcePackageFolderName\$(appSourceReleasePackageName)"
     if(Test-Path "$appSourceAssetsPath")
     {
         if(Test-Path "$appSourcePackagePath\$appSourcePackageFolderName"){
@@ -264,7 +264,7 @@ steps:
     else{
         Write-Host "Invalid appSourceAssetsPath path - $appSourceAssetsPath" 
     }
-  displayName: "Compress and move AppSourceAssets to AppsourcePackage"
+  displayName: "Move AppSourceAssets to AppsourcePackage and compress"
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
 
 - pwsh: |
