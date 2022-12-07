@@ -289,3 +289,16 @@ steps:
     }
   displayName: 'Copy AppsourcePackage to ArtifactStagingDirectory'
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
+  
+- pwsh: |
+    Write-Host "AppSourceReleasePackageName - " $(appSourceReleasePackageName)
+    $sourceDirectory  = "$(Agent.BuildDirectory)\AppsourcePackage\$(appSourceReleasePackageName)"
+    $destinationDirectory = "$(Pipeline.Workspace)\releaseassets"
+    If(Test-Path "$sourceDirectory"){
+        Copy-item -Force -Recurse -Verbose "$sourceDirectory" -Destination $destinationDirectory
+    }
+    else{
+        Write-Host "AppsourcePackage Folder unavailable - $sourceDirectory"
+    }
+  displayName: 'Copy AppsourcePackage to Releaseassets'
+  condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))    
