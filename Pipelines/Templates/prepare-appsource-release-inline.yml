@@ -219,8 +219,17 @@ steps:
     $inputFilePath = "$appSourceAssetsPath\Input.xml"
 
     if(Test-Path "$inputFilePath"){
-        . "$env:POWERSHELLPATH/app-source-helper.ps1"
-        update-input-file "$inputFilePath" "${{parameters.packageFileName}}" "${{parameters.solutionAnchorName}}"
+        [xml]$xmlDoc = Get-Content -Path $inputFilePath
+
+        $todayDate = (Get-Date).ToString('MM-dd-yyyy')
+        $futureDate = (Get-Date).AddMonths(12).ToString('MM-dd-yyyy')
+        $xmlDoc.PvsPackageData.StartDate = $todayDate
+        $xmlDoc.PvsPackageData.EndDate = $futureDate
+        $xmlDoc.PvsPackageData.PackageFile = "$packageFileName"
+        $xmlDoc.PvsPackageData.SolutionAnchorName = "$solutionAnchorName"
+
+        Write-Host "Setting StartDate as $todayDate and EndDate as $futureDate and PackageFile as $packageFileName and SolutionAnchorName as $solutionAnchorName"
+        $xmlDoc.save("$inputFilePath")
     }
     else{
         Write-Host "Input.xml unavailable at - $inputFilePath"
