@@ -15,19 +15,22 @@ parameters:
 steps:
 # Checkout Pipelines
 - checkout: Self
-  path: 'PipelineUtils'
-  displayName: 'Checkout Pipeline Branch'
+  #path: 'PipelineUtils'
+  #displayName: 'Checkout Pipeline Branch'
   
 - pwsh: |
-    $assetsPath = '$(Pipeline.Workspace)\releaseassets'
-    if(Test-Path "$assetsPath"){
-        Get-ChildItem "$assetsPath" -Recurse
+    $releaseZipname = "Microsoft_CreatorKitPackage.zip"
+    if('$(Build.BuildNumber)'.Contains("Build.BuildNumber")) {
+        Write-Host "Build number unavailable"
     }
     else{
-        Write-Host "Invalid assets path - " $assetsPath
+        $releaseZipname = "Microsoft_CreatorKitPackage_$(Build.BuildNumber).zip"
     }
-  displayName: 'Print releaseassets folder - 2'
-  
+
+    Write-Host "releaseZipname - $releaseZipname"
+    Write-Host "##vso[task.setVariable variable=appSourceReleasePackageName]$releaseZipname"
+  displayName: 'Set appSourceReleasePackageName'  
+
 - pwsh: |
     $assetsPath = '$(Build.SourcesDirectory)'
     if(Test-Path "$assetsPath"){
@@ -36,10 +39,31 @@ steps:
     else{
         Write-Host "Invalid assets path - " $assetsPath
     }
-  displayName: 'Print (Build.SourcesDirectory) - 2'  
+  displayName: 'Print (Build.SourcesDirectory)'  
   
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
-  displayName: 'Install Power Platform Build Tools' 
+  displayName: 'Install Power Platform Build Tools'
+  
+- powershell: |
+    #NOTE: Add new versions of canvas unpack and the associated pac CLI version to the versionDictionary to ensure unpacked versions are packed correctly.
+    #.24 is the only version supported in the release of our pipelines the latest version of PAC CLI should be used until a new version is available at which time we
+    #would add new versions here
+    $versionDictionary = @{ "0.24" = ""}
+
+    $nugetPackage = "Microsoft.PowerApps.CLI"
+    $nugetPackageVersion = ""
+
+    $outFolder = "pac"
+    if($nugetPackageVersion -ne '') {
+        nuget install $nugetPackage -Version $nugetPackageVersion -OutputDirectory $outFolder
+    }
+    else {
+        nuget install $nugetPackage -OutputDirectory $outFolder
+    }
+    $pacNugetFolder = Get-ChildItem $outFolder | Where-Object {$_.Name -match $nugetPackage + "."}
+    $pacPath = $pacNugetFolder.FullName + "\tools"
+    echo "##vso[task.setvariable variable=pacPath]$pacPath"
+  displayName: 'Install pac cli'  
   
 - pwsh: |
     $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
@@ -53,24 +77,11 @@ steps:
     Write-Host "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
   displayName: "Set PowerShellPath"
 
-- pwsh: |
-      . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      #. "./PowerShell/code-first-functions.ps1"
-      set-pac-tools-path "$(Agent.OS)"
-  displayName: 'Set pac tools path'
-  
-- pwsh: |
-    $releaseZipname = "Microsoft_CreatorKitPackage.zip"
-    if('$(Build.BuildNumber)'.Contains("Build.BuildNumber")) {
-        Write-Host "Build number unavailable"
-    }
-    else{
-        $releaseZipname = "Microsoft_CreatorKitPackage_$(Build.BuildNumber).zip"
-    }
-
-    Write-Host "releaseZipname - $releaseZipname"
-    Write-Host "##vso[task.setVariable variable=appSourceReleasePackageName]$releaseZipname"
-  displayName: 'Set appSourceReleasePackageName'
+#- pwsh: |
+#      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+#      #. "./PowerShell/code-first-functions.ps1"
+#      set-pac-tools-path "$(Agent.OS)"
+#  displayName: 'Set pac tools path'
 
 - pwsh: |
     $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
