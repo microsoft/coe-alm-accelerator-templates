@@ -161,8 +161,17 @@ steps:
 #    cacheEnabled: 'true'
 #    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
     
+## Run App Source Package
+#- template: prepare-appsource-release.yml
+#  parameters:
+#    solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
+#    packageFileName: 'CreatorKitPackage.zip'
+#    solutionAnchorName: 'CreatorKitCore.zip'
+#    cacheEnabled: 'true'
+#    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
+
 # Run App Source Package
-- template: prepare-appsource-release.yml
+- template: prepare-appsource-release-inline.yml
   parameters:
     solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
     packageFileName: 'CreatorKitPackage.zip'

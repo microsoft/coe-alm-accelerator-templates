@@ -4,43 +4,46 @@ parameters:
   type: string
 - name: parAppSourcePackageProjectPath
   type: string
+- name: packageFileName
+  type: string
+- name: solutionAnchorName
+  type: string
 - name: cacheEnabled
   type: string
   default: 'true'
 
 steps:
+# Checkout Pipelines
+- checkout: Self
+  #path: 'PipelineUtils'
+  #displayName: 'Checkout Pipeline Branch'
+  
 - pwsh: |
-    if(Test-Path "$(Build.SourcesDirectory)"){
-        Get-ChildItem "$(Build.SourcesDirectory)" -Recurse
+    $releaseZipname = "Microsoft_CreatorKitPackage.zip"
+    if('$(Build.BuildNumber)'.Contains("Build.BuildNumber")) {
+        Write-Host "Build number unavailable"
     }
     else{
-        Write-Host "Build.SourcesDirectory unavailable at - $(Build.SourcesDirectory)"
+        $releaseZipname = "Microsoft_CreatorKitPackage_$(Build.BuildNumber).zip"
+    }
+
+    Write-Host "releaseZipname - $releaseZipname"
+    Write-Host "##vso[task.setVariable variable=appSourceReleasePackageName]$releaseZipname"
+  displayName: 'Set appSourceReleasePackageName'  
+
+- pwsh: |
+    $assetsPath = '$(Build.SourcesDirectory)'
+    if(Test-Path "$assetsPath"){
+        Get-ChildItem "$assetsPath" -Recurse
+    }
+    else{
+        Write-Host "Invalid assets path - " $assetsPath
     }
   displayName: 'Print (Build.SourcesDirectory)'  
-
-# Checkout Pipelines
-#- checkout: PipelineRepo
-- checkout: Self
-  path: 'PipelineUtils'
-  displayName: 'Checkout Pipeline Branch'
-
-- pwsh: |
-    $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
-    $powerShellPath = "$pipelineUtilsPath/PowerShell"
-    if(Test-Path $powerShellPath){
-        Write-Host "PowerShell folder exists"
-    }
-    else{
-        Write-Host "PowerShell folder does not exists"    
-    }
-    Write-Host "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
-  displayName: "Set PowerShellPath"
-
-# Set pipeline vars for tools paths.
-- template: set-tools-paths.yml
-
-- template: install-powershell-modules.yml
-
+  
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
+  displayName: 'Install Power Platform Build Tools'
+  
 - powershell: |
     #NOTE: Add new versions of canvas unpack and the associated pac CLI version to the versionDictionary to ensure unpacked versions are packed correctly.
     #.24 is the only version supported in the release of our pipelines the latest version of PAC CLI should be used until a new version is available at which time we
@@ -48,8 +51,8 @@ steps:
     $versionDictionary = @{ "0.24" = ""}
 
     $nugetPackage = "Microsoft.PowerApps.CLI"
-    #$nugetPackageVersion = '$(pacVersion)'
-    $nugetPackageVersion =  ""    
+    $nugetPackageVersion = ""
+
     $outFolder = "pac"
     if($nugetPackageVersion -ne '') {
         nuget install $nugetPackage -Version $nugetPackageVersion -OutputDirectory $outFolder
@@ -60,20 +63,8 @@ steps:
     $pacNugetFolder = Get-ChildItem $outFolder | Where-Object {$_.Name -match $nugetPackage + "."}
     $pacPath = $pacNugetFolder.FullName + "\tools"
     echo "##vso[task.setvariable variable=pacPath]$pacPath"
-  displayName: 'Install pac cli'
-
-- pwsh: |
-    $releaseZipname = "Microsoft_CreatorKitPackage.zip"
-    if('$(Build.BuildNumber)'.Contains("Build.BuildNumber")) {
-        Write-Host "Build number unavailable"
-    }
-    else{
-        $releaseZipname = "Microsoft_CreatorKitPackage_$(Build.BuildNumber).zip"
-    }
-
-    Write-Host "##vso[task.setVariable variable=appSourceReleasePackageName]$releaseZipname"
-  displayName: 'Set appSourceReleasePackageName'
-
+  displayName: 'Install pac cli'  
+  
 - pwsh: |
     $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
@@ -81,17 +72,15 @@ steps:
     Write-Host "appSourcePackageProjectPath - $appSourcePackageProjectPath"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
     $appSourceInputFilePath = "$appSourcePackageProjectPath\appsource_input.json"
-    $pacPath = "$(pacPath)"
-    #. "$env:POWERSHELLPATH/app-source-helper.ps1"
-    #add-solution-references-to-package-project "$(pacPath)" "$appSourcePackageProjectPath" "$solutionsFolderPath" "$appSourceInputFilePath"
 
      if(Test-Path $solutionsFolderPath){
          if(Test-Path $appSourcePackageProjectPath)
          {
-            $pacexepath = "$pacPath\pac.exe"
+            $pacexepath = "$(pacPath)\pac.exe"
             if(Test-Path "$pacexepath")
             {
-                Get-ChildItem "$solutionsFolderPath" -Filter *.managed.zip | 
+                Get-ChildItem "$solutionsFolderPath" | Where {$_.Name -match '_managed.zip'} |
+                #Get-ChildItem "$solutionsFolderPath" -Filter *.managed.zip | 
                 Foreach-Object {
                     $solutionName = $_.Name
                     $solutionPath = $_.FullName
@@ -120,24 +109,15 @@ steps:
      }
     else{
         Write-Host "Invalid solutions folder path - $solutionsFolderPath"
-    }    
+    }
   displayName: "Add solution references to package project"
 
 - pwsh: |
     $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
     
-    #. "$env:POWERSHELLPATH/app-source-helper.ps1"
-    #trigger-dotnet-publish "$appSourcePackageProjectPath"
-    
-    Write-Host "Pointing to package project folder path - " $appSourcePackageProjectPath
-    if(Test-Path $appSourcePackageProjectPath){
-        Set-Location -Path $appSourcePackageProjectPath
-        dotnet publish
-    }
-    else{
-        Write-Host "Path unavailble; $appSourcePackageProjectPath"
-    }    
+    . "$env:POWERSHELLPATH/app-source-helper.ps1"
+    trigger-dotnet-publish "$appSourcePackageProjectPath"
   displayName: "Trigger dotnet publish"
 
 - pwsh: |
@@ -156,43 +136,8 @@ steps:
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
     $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
     
-    #. "$env:POWERSHELLPATH/app-source-helper.ps1"
-    #copy-published-assets-to-AppSourceAssets "$appSourcePackageProjectPath" "$appSourceAssetsPath"
-    
-    $pdpkgFileCount = 0
-    $appSourcePackageFound = $false
-
-    if(Test-Path "$appSourcePackageProjectPath\bin\Release"){
-        $pdpkgFileCount = (Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Measure-Object).Count
-        Write-Host "Count of .pdpkg.zip from $appSourcePackageProjectPath\bin\Release - "$pdpkgFileCount
-        if($pdpkgFileCount -gt 0){
-            Write-Host "pdpkg file found under $appSourcePackageProjectPath\bin\Release"
-            Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
-            $appSourcePackageFound = $true
-        }
-        else{
-            Write-Host "pdpkg.zip not found under $appSourcePackageProjectPath\bin\Release"
-        }
-    }
-
-    if(($pdpkgFileCount -eq 0) -and (Test-Path "$appSourcePackageProjectPath\bin\Debug")){
-        $pdpkgFileCount = (Get-ChildItem "$appSourcePackageProjectPath\bin\Debug" -Filter *pdpkg.zip | Measure-Object).Count
-        Write-Host "Count of .pdpkg.zip from $appSourcePackageProjectPath\bin\Debug - "$pdpkgFileCount
-        if($pdpkgFileCount -gt 0){
-            Write-Host "pdpkg file found under $appSourcePackageProjectPath\bin\Debug"
-            Get-ChildItem "$appSourcePackageProjectPath\bin\Debug" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
-            $appSourcePackageFound = $true
-        }
-        else{
-            Write-Host "pdpkg.zip not found under $appSourcePackageProjectPath\bin\Debug"
-        }
-    }
-
-    if($pdpkgFileCount -eq 0){
-        Write-Host "pdpkg.zip not found; Exiting"
-    }
-
-    Write-Host "##vso[task.setVariable variable=AppSourcePackageFound]$appSourcePackageFound"    
+    . "$env:POWERSHELLPATH/app-source-helper.ps1"
+    copy-published-assets-to-AppSourceAssets "$appSourcePackageProjectPath" "$appSourceAssetsPath" "${{parameters.packageFileName}}"
   displayName: "Move built pdpkg to AppSourceAssets"
 
 - pwsh: |
@@ -215,7 +160,7 @@ steps:
 
     if(Test-Path "$inputFilePath"){
         . "$env:POWERSHELLPATH/app-source-helper.ps1"
-        update-input-file "$inputFilePath" "$(appSourceReleasePackageName)"
+        update-input-file "$inputFilePath" "${{parameters.packageFileName}}" "${{parameters.solutionAnchorName}}"
     }
     else{
         Write-Host "Input.xml unavailable at - $inputFilePath"
@@ -227,42 +172,27 @@ steps:
     $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
     $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
-    $appSourcePackagePath = "$(Build.ArtifactStagingDirectory)\AppsourcePackage"
+    $appSourcePackagePath = "$(Agent.BuildDirectory)"
+    $appSourcePackageFolderName = "AppsourcePackage"
 
-    #. "$env:POWERSHELLPATH/app-source-helper.ps1"
-    #pack-and-move-assets-to-AppSourcePackage "$appSourceAssetsPath" "$appSourcePackagePath" "$(appSourceReleasePackageName)"
-    
-    $releaseZipName = "$(appSourceReleasePackageName)"
-    $destinationPath = "$appSourcePackagePath\$releaseZipName"
-    if(Test-Path "$appSourceAssetsPath")
-    {
-        if(Test-Path "$appSourcePackagePath"){
-            Write-Host "Packaging assets from $appSourceAssetsPath and creating $destinationPath"
-            Compress-Archive -Path $appSourceAssetsPath -CompressionLevel Optimal -DestinationPath $destinationPath -Force
-        }
-        else{
-                Write-Host "Invalid appSourcePackagePath path - $appSourcePackagePath" 
-            }
-    }
-    else{
-        Write-Host "Invalid appSourceAssetsPath path - $appSourceAssetsPath" 
-    }    
+    . "$env:POWERSHELLPATH/app-source-helper.ps1"
+    pack-and-move-assets-to-AppSourcePackage "$appSourceAssetsPath" "$appSourcePackagePath" "$(appSourceReleasePackageName)" "$appSourcePackageFolderName"
   displayName: "Compress and move AppSourceAssets to AppsourcePackage"
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
 
 - pwsh: |
-    if(Test-Path "$(Build.ArtifactStagingDirectory)\AppsourcePackage"){
-        Get-ChildItem "$(Build.ArtifactStagingDirectory)\AppsourcePackage" -Recurse
+    if(Test-Path "$(Agent.BuildDirectory)\AppsourcePackage"){
+        Get-ChildItem "$(Agent.BuildDirectory)\AppsourcePackage" -Recurse
     }
     else{
-        Write-Host "Invalid path (Build.ArtifactStagingDirectory)\AppsourcePackage"
+        Write-Host "Invalid path (Agent.BuildDirectory)\AppsourcePackage"
     }
   displayName: 'Print AppsourcePackage'
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
 
 - pwsh: |
     Write-Host "AppSourceReleasePackageName - " $(appSourceReleasePackageName)
-    $sourceDirectory  = "$(Build.ArtifactStagingDirectory)\AppsourcePackage\$(appSourceReleasePackageName)"
+    $sourceDirectory  = "$(Agent.BuildDirectory)\AppsourcePackage\$(appSourceReleasePackageName)"
     $destinationDirectory = "$(Build.ArtifactStagingDirectory)"
     If(Test-Path "$sourceDirectory"){
         Copy-item -Force -Recurse -Verbose "$sourceDirectory" -Destination $destinationDirectory
