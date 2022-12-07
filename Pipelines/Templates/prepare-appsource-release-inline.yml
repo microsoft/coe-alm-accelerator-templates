@@ -24,11 +24,11 @@ steps:
         Write-Host "Build number unavailable"
     }
     else{
-        $releaseZipname = "$releaseZipname_$(Build.BuildNumber)"
+        $releaseZipname = $releaseZipname + "_$(Build.BuildNumber)"
     }
 
     # Suffix extension (i.e.,zip) 
-    $releaseZipname = "$releaseZipname.zip"
+    $releaseZipname = $releaseZipname + ".zip"
     Write-Host "releaseZipname - $releaseZipname"
     Write-Host "##vso[task.setVariable variable=appSourceReleasePackageName]$releaseZipname"
   displayName: 'Set appSourceReleasePackageName'  
