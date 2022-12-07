@@ -13,6 +13,12 @@ parameters:
   default: 'true'
 
 steps:
+# Checkout Pipelines
+#- checkout: PipelineRepo
+- checkout: Self
+  path: 'PipelineUtils'
+  displayName: 'Checkout Pipeline Branch'
+  
 - pwsh: |
     $assetsPath = '$(Pipeline.Workspace)\releaseassets'
     if(Test-Path "$assetsPath"){
@@ -23,37 +29,22 @@ steps:
     }
   displayName: 'Print releaseassets folder - 2'
   
-#- pwsh: |
-#    if(Test-Path "$(Build.SourcesDirectory)"){
-#        Get-ChildItem "$(Build.SourcesDirectory)" -Recurse
-#    }
-#    else{
-#        Write-Host "Build.SourcesDirectory unavailable at - $(Build.SourcesDirectory)"
-#    }
-#  displayName: 'Print (Build.SourcesDirectory)'  
-
-## Checkout Pipelines
-##- checkout: PipelineRepo
-#- checkout: Self
-#  path: 'PipelineUtils'
-#  displayName: 'Checkout Pipeline Branch'
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
+  displayName: 'Install Power Platform Build Tools' 
+  
+- template: install-powershell-modules.yml  
 
 - pwsh: |
     $pipelineUtilsPath = "$(Agent.BuildDirectory)/PipelineUtils"
     $powerShellPath = "$pipelineUtilsPath/PowerShell"
     if(Test-Path $powerShellPath){
-        Write-Host "PowerShell folder exists"
+        Write-Host "PowerShell folder exists under $powerShellPath"
     }
     else{
-        Write-Host "PowerShell folder does not exists"    
+        Write-Host "PowerShell folder does not exists under $powerShellPath"    
     }
     Write-Host "##vso[task.setvariable variable=PowerShellPath]$powerShellPath"
   displayName: "Set PowerShellPath"
-
-# Set pipeline vars for tools paths.
-- template: set-tools-paths.yml
-
-- template: install-powershell-modules.yml
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
