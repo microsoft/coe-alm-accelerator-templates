@@ -85,9 +85,28 @@ steps:
                     $solutionName = $_.Name
                     $solutionPath = $_.FullName
                     Write-Host "Fetching import order of Solution - " $solutionName
-                    $importOrder = get-solution-import-order "$appSourceInputFilePath" "$solutionName"
-                    $pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
+                    
+                    $importOrder = 0
+                        if(Test-Path "$appSourceInputFilePath"){
+                            $appSourceInputData = Get-Content "$appSourceInputFilePath" | ConvertFrom-Json        
+                            foreach($solution in $appSourceInputData.Configdatastorage.Solutions){
+                              if("$solutionName" -match $solution.Name){
+                                  $importOrder = $solution.Importorder
+                                  Write-Host "Given Solution - $solutionName MACTHED with appSource Solution - "$solution.Name
+                                  break;
+                              }
+                              else{
+                                 #Write-Host "Given Solution - $solutionName not matched with appSource Solution - "$solution.Name
+                              }
+                            }
+                        }
+                        else{
+                            Write-Host "appSourceInputPath is unavailble at {$appSourceInputFilePath}"
+                        }
 
+                        Write-Host "importOrder - $importOrder"
+
+                    $pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
                     Write-Host "Pac Command - $pacCommand"
                     if($importOrder -ne 0){
                         Write-Host "Pointing to $appSourcePackageProjectPath path" 
@@ -116,8 +135,14 @@ steps:
     $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
     
-    . "$env:POWERSHELLPATH/app-source-helper.ps1"
-    trigger-dotnet-publish "$appSourcePackageProjectPath"
+    Write-Host "Pointing to package project folder path - " $appSourcePackageProjectPath
+    if(Test-Path $appSourcePackageProjectPath){
+        Set-Location -Path $appSourcePackageProjectPath
+        dotnet publish
+    }
+    else{
+        Write-Host "Path unavailble; $appSourcePackageProjectPath"
+    }
   displayName: "Trigger dotnet publish"
 
 - pwsh: |
@@ -136,8 +161,43 @@ steps:
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
     $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
     
-    . "$env:POWERSHELLPATH/app-source-helper.ps1"
-    copy-published-assets-to-AppSourceAssets "$appSourcePackageProjectPath" "$appSourceAssetsPath" "${{parameters.packageFileName}}"
+    $pdpkgFileCount = 0
+    $appSourcePackageFound = $false
+
+    if(Test-Path "$appSourcePackageProjectPath\bin\Release"){
+        $pdpkgFileCount = (Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Measure-Object).Count
+        Write-Host "Count of .pdpkg.zip from $appSourcePackageProjectPath\bin\Release - "$pdpkgFileCount
+        if($pdpkgFileCount -gt 0){
+            Write-Host "pdpkg file found under $appSourcePackageProjectPath\bin\Release"
+            Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath\$packageFileName"
+            #Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+            Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
+            $appSourcePackageFound = $true
+        }
+        else{
+            Write-Host "pdpkg.zip not found under $appSourcePackageProjectPath\bin\Release"
+        }
+    }
+
+    if(($pdpkgFileCount -eq 0) -and (Test-Path "$appSourcePackageProjectPath\bin\Debug")){
+        $pdpkgFileCount = (Get-ChildItem "$appSourcePackageProjectPath\bin\Debug" -Filter *pdpkg.zip | Measure-Object).Count
+        Write-Host "Count of .pdpkg.zip from $appSourcePackageProjectPath\bin\Debug - "$pdpkgFileCount
+        if($pdpkgFileCount -gt 0){
+            Write-Host "pdpkg file found under $appSourcePackageProjectPath\bin\Debug"
+            Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath\$packageFileName"
+            Get-ChildItem "$appSourcePackageProjectPath\bin\Debug" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
+            $appSourcePackageFound = $true
+        }
+        else{
+            Write-Host "pdpkg.zip not found under $appSourcePackageProjectPath\bin\Debug"
+        }
+    }
+
+    if($pdpkgFileCount -eq 0){
+        Write-Host "pdpkg.zip not found; Exiting"
+    }
+
+    Write-Host "##vso[task.setVariable variable=AppSourcePackageFound]$appSourcePackageFound"
   displayName: "Move built pdpkg to AppSourceAssets"
 
 - pwsh: |
@@ -175,8 +235,26 @@ steps:
     $appSourcePackagePath = "$(Agent.BuildDirectory)"
     $appSourcePackageFolderName = "AppsourcePackage"
 
-    . "$env:POWERSHELLPATH/app-source-helper.ps1"
-    pack-and-move-assets-to-AppSourcePackage "$appSourceAssetsPath" "$appSourcePackagePath" "$(appSourceReleasePackageName)" "$appSourcePackageFolderName"
+    # Create a new folder in Destination
+    if(!(Test-Path "$appSourcePackagePath\$appSourcePackageFolderName")){
+        Write-Host "Creating a new folder $appSourcePackageFolderName under $appSourcePackagePath"
+        New-Item -Path "$appSourcePackagePath" -Name "$appSourcePackageFolderName" -ItemType "directory"
+    }
+
+    $destinationPath = "$appSourcePackagePath\$appSourcePackageFolderName\$releaseZipName"
+    if(Test-Path "$appSourceAssetsPath")
+    {
+        if(Test-Path "$appSourcePackagePath\$appSourcePackageFolderName"){
+            Write-Host "Packaging assets from $appSourceAssetsPath and creating $destinationPath"
+            Compress-Archive -Path "$appSourceAssetsPath\*" -CompressionLevel Optimal -DestinationPath "$destinationPath" -Force
+        }
+        else{
+            Write-Host "Invalid appSourcePackagePath path - $appSourcePackagePath\$appSourcePackageFolderName"
+        }
+    }
+    else{
+        Write-Host "Invalid appSourceAssetsPath path - $appSourceAssetsPath" 
+    }
   displayName: "Compress and move AppSourceAssets to AppsourcePackage"
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'))
 
