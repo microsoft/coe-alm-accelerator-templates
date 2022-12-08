@@ -139,7 +139,7 @@ steps:
 #    solutionAnchorName: 'CreatorKitCore.zip'
 #    appSourceFolderName: 'Microsoft_CreatorKitPackage'
 #    cacheEnabled: 'true'
-#    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
+#    parAppSourcePackageProjectPath: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
 
 # Run App Source Package
 - template: prepare-appsource-release-inline.yml
@@ -149,7 +149,7 @@ steps:
     solutionAnchorName: 'CreatorKitCore.zip'
     appSourceFolderName: 'Microsoft_CreatorKitPackage'
     cacheEnabled: 'true'
-    parAppSourcePackageProjectPath: 'PackageDeployerEngine\PowerCAT.PackageDeployer.Package'
+    parAppSourcePackageProjectPath: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
 
 #- task: GitHubRelease@1
 #  inputs:

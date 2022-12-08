@@ -45,7 +45,17 @@ steps:
     else{
         Write-Host "Invalid assets path - " $assetsPath
     }
-  displayName: 'Print (Build.SourcesDirectory)'  
+  displayName: 'Print (Build.SourcesDirectory)'
+  
+- pwsh: |
+    $assetsPath = '$(Pipeline.Workspace)/PipelineUtils'
+    if(Test-Path "$assetsPath"){
+        Get-ChildItem "$assetsPath" -Recurse
+    }
+    else{
+        Write-Host "Invalid assets path - " $assetsPath
+    }
+  displayName: 'Print PipelineUtils'  
   
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
   displayName: 'Install Power Platform Build Tools'
