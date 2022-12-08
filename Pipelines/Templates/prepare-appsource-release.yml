@@ -22,6 +22,17 @@ steps:
   displayName: 'Checkout Pipeline Branch'
   
 - pwsh: |
+    $assetsPath = "$(Pipeline.Workspace)\releaseassets"
+    if(Test-Path "$assetsPath"){
+        Get-ChildItem "$assetsPath" -Recurse
+    }
+    else{
+        Write-Host "Invalid assets path - " $assetsPath
+    }
+  displayName: 'Print initial releaseassets'
+  condition: and(succeeded(), eq(variables['RunAppSourceTasks'], 'true'))  
+  
+- pwsh: |
     $packageFileName = "${{parameters.packageFileName}}"
     $appSourceFolderName = "${{parameters.appSourceFolderName}}"
     $generateAppSourcePackage = "${{parameters.generateAppSourcePackage}}"
