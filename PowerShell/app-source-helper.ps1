@@ -9,7 +9,7 @@
      if(Test-Path $solutionsFolderPath){
          if(Test-Path $appSourcePackageProjectPath)
          {
-            $pacexepath = "$(pacPath)\pac.exe"
+            $pacexepath = "$pacPath\pac.exe"
             if(Test-Path "$pacexepath")
             {
                 Get-ChildItem "$solutionsFolderPath" | Where {$_.Name -match '_managed.zip'} |
