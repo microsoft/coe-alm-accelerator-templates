@@ -31,6 +31,9 @@ parameters:
 - name: queryHeadingDelimited
   type: string
   default: "|"
+- name: prepareAppSourcePackage
+  type: boolean
+  default: false  
 
 steps:
 
@@ -147,6 +150,7 @@ steps:
     packageFileName: '${{parameters.solutionName}}Package.zip'
     appSourceFolderName: 'Microsoft_${{parameters.solutionName}}Package'
     parAppSourcePackageProjectPath: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
+    generateAppSourcePackage: '${{parameters.prepareAppSourcePackage}}'
 
 #- task: GitHubRelease@1
 #  inputs:
