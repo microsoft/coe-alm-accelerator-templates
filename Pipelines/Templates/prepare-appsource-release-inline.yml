@@ -18,6 +18,10 @@ steps:
 # Checkout Pipelines
 - checkout: Self
 
+- checkout: PipelineRepo
+  path: 'PipelineUtils'
+  displayName: 'Checkout Pipeline Branch'
+
 - pwsh: |
     $releaseZipname = "${{parameters.appSourceFolderName}}"
     if('$(Build.BuildNumber)'.Contains("Build.BuildNumber")) {
@@ -162,6 +166,7 @@ steps:
     $projectPath = "${{parameters.parAppSourcePackageProjectPath}}"
     $appSourcePackageProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$projectPath"
     $appSourceAssetsPath = "$appSourcePackageProjectPath\AppSourceAssets"
+    $releaseAssetsDirectory = "$(Pipeline.Workspace)\releaseassets"
     
     $pdpkgFileCount = 0
     $appSourcePackageFound = $false
@@ -172,8 +177,17 @@ steps:
         if($pdpkgFileCount -gt 0){
             Write-Host "pdpkg file found under $appSourcePackageProjectPath\bin\Release"
             Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath\$packageFileName"
-            #Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+            
             Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
+            # Copy pdpkg.zip file to ReleaseAssets folder
+            if(Test-Path "$releaseAssetsDirectory"){
+                Write-Host "Copying pdpkg file to Release Assets Directory"
+                Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$releaseAssetsDirectory" -Force -PassThru
+            }
+            else{
+                Write-Host "Release Assets Directory is unavailable to copy pdpkg file; Path - $releaseAssetsDirectory"
+            }
+            
             $appSourcePackageFound = $true
         }
         else{
