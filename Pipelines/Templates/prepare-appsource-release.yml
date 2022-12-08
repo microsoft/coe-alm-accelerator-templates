@@ -31,7 +31,14 @@ steps:
     $releaseZipname = $releaseZipname + ".zip"
     Write-Host "releaseZipname - $releaseZipname"
     Write-Host "##vso[task.setVariable variable=appSourceReleasePackageName]$releaseZipname"
-  displayName: 'Set appSourceReleasePackageName'  
+  displayName: 'Set appSourceReleasePackageName'
+  
+- pwsh: |
+    $packageFileName = "${{parameters.packageFileName}}"
+    $appSourceFolderName = "${{parameters.appSourceFolderName}}"
+    Write-Host "packageFileName - $packageFileName"
+    Write-Host "appSourceFolderName - $appSourceFolderName"
+  displayName: 'Print Params'  
 
 - pwsh: |
     $assetsPath = '$(Build.SourcesDirectory)'

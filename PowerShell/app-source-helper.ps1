@@ -26,14 +26,15 @@
                         Set-Location -Path $appSourcePackageProjectPath
                         Invoke-Expression -Command "$pacexepath $pacCommand"
                     }
-					# Solution Anchor Name in input.xml file can be Solution Name with Import order 1
-                    elseif($importOrder -eq 1){
-						Write-Host "Setting Solution Anchor Name to $solutionName"
-                        Write-Host "##vso[task.setVariable variable=SolutionAnchorName]$solutionName"
-                    }
                     else{
                         Write-Host "Invalid import order for Solution - $solutionName"
                     }
+
+					# Solution Anchor Name in input.xml file can be Solution Name with Import order 1
+                    if($importOrder -eq 1){
+						Write-Host "Setting Solution Anchor Name to $solutionName"
+                        Write-Host "##vso[task.setVariable variable=SolutionAnchorName]$solutionName"
+                    }					
                 }
             }
             else{
@@ -193,10 +194,11 @@ function update-input-file{
         $xmlDoc.PvsPackageData.EndDate = $futureDate
         $xmlDoc.PvsPackageData.PackageFile = "$packageFileName"
         if(!('$(SolutionAnchorName)'.Contains("SolutionAnchorName"))) {
-            $xmlDoc.PvsPackageData.SolutionAnchorName = "$(SolutionAnchorName)"
+            Write-Host "Setting SolutionAnchorName as " $(SolutionAnchorName)
+			$xmlDoc.PvsPackageData.SolutionAnchorName = "$(SolutionAnchorName)"
         }		
 
-        Write-Host "Setting StartDate as $todayDate and EndDate as $futureDate and PackageFile as $packageFileName and SolutionAnchorName as $solutionAnchorName"
+        Write-Host "Setting StartDate as $todayDate and EndDate as $futureDate and PackageFile as $packageFileName"
         $xmlDoc.save("$inputFilePath")
     }
     else{
