@@ -182,7 +182,8 @@ function pack-and-move-assets-to-AppSourcePackage{
 function update-input-file{
     param (
         [Parameter(Mandatory)] [String]$inputFilePath,
-        [Parameter(Mandatory)] [String]$packageFileName
+        [Parameter(Mandatory)] [String]$packageFileName,
+        [Parameter()] [String]$solutionAnchorName
     )
 
     if(Test-Path "$inputFilePath"){
@@ -193,12 +194,8 @@ function update-input-file{
         $xmlDoc.PvsPackageData.StartDate = $todayDate
         $xmlDoc.PvsPackageData.EndDate = $futureDate
         $xmlDoc.PvsPackageData.PackageFile = "$packageFileName"
-        if(!('$(SolutionAnchorName)'.Contains("SolutionAnchorName"))) {
-            Write-Host "Setting SolutionAnchorName as " $(SolutionAnchorName)
-			$xmlDoc.PvsPackageData.SolutionAnchorName = "$(SolutionAnchorName)"
-        }		
-
-        Write-Host "Setting StartDate as $todayDate and EndDate as $futureDate and PackageFile as $packageFileName"
+		$xmlDoc.PvsPackageData.SolutionAnchorName = "$solutionAnchorName"
+        Write-Host "Setting StartDate as $todayDate and EndDate as $futureDate and PackageFile as $packageFileName and Solution Anchor Name as $solutionAnchorName"
         $xmlDoc.save("$inputFilePath")
     }
     else{

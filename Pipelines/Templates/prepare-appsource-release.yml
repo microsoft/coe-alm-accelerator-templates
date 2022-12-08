@@ -117,7 +117,7 @@ steps:
     
     if(Test-Path "$inputFilePath"){
         . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-        update-input-file "$inputFilePath" "${{parameters.packageFileName}}"
+        update-input-file "$inputFilePath" "${{parameters.packageFileName}}" "$(SolutionAnchorName)"
     }
     else{
         Write-Host "Input.xml unavailable at - $inputFilePath"
