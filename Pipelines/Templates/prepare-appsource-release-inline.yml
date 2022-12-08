@@ -60,6 +60,11 @@ steps:
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
   displayName: 'Install Power Platform Build Tools'
   
+- pwsh: |
+      . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/code-first-functions.ps1"
+      set-pac-tools-path "$(Agent.OS)"
+  displayName: 'Set pac tools path'  
+  
 - powershell: |
     #NOTE: Add new versions of canvas unpack and the associated pac CLI version to the versionDictionary to ensure unpacked versions are packed correctly.
     #.24 is the only version supported in the release of our pipelines the latest version of PAC CLI should be used until a new version is available at which time we
