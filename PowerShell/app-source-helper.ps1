@@ -98,12 +98,12 @@ function copy-published-assets-to-AppSourceAssets{
     param(
         [Parameter(Mandatory)] [String]$appSourcePackageProjectPath,
         [Parameter(Mandatory)] [String]$appSourceAssetsPath,
-        [Parameter(Mandatory)] [String]$packageFileName
+        [Parameter(Mandatory)] [String]$packageFileName,
+        [Parameter(Mandatory)] [String]$releaseAssetsDirectory
     )
 
     $pdpkgFileCount = 0
     $appSourcePackageFound = $false
-	$releaseAssetsDirectory = "$(Pipeline.Workspace)\releaseassets"
 
     if(Test-Path "$appSourcePackageProjectPath\bin\Release"){
         $pdpkgFileCount = (Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Measure-Object).Count
