@@ -9,7 +9,7 @@
      if(Test-Path $solutionsFolderPath){
          if(Test-Path $appSourcePackageProjectPath)
          {
-            $pacexepath = "$pacPath\pac.exe"
+            $pacexepath = "$(pacPath)\pac.exe"
             if(Test-Path "$pacexepath")
             {
                 Get-ChildItem "$solutionsFolderPath" | Where {$_.Name -match '_managed.zip'} |
@@ -20,7 +20,6 @@
                     Write-Host "Fetching import order of Solution - " $solutionName
                     $importOrder = get-solution-import-order "$appSourceInputFilePath" "$solutionName"
                     $pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
-
                     Write-Host "Pac Command - $pacCommand"
                     if($importOrder -ne 0){
                         Write-Host "Pointing to $appSourcePackageProjectPath path" 
@@ -105,8 +104,17 @@ function copy-published-assets-to-AppSourceAssets{
         if($pdpkgFileCount -gt 0){
             Write-Host "pdpkg file found under $appSourcePackageProjectPath\bin\Release"
             Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath\$packageFileName"
-            #Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+            
             Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
+            # Copy pdpkg.zip file to ReleaseAssets folder
+            if(Test-Path "$releaseAssetsDirectory"){
+                Write-Host "Copying pdpkg file to Release Assets Directory"
+                Get-ChildItem "$appSourcePackageProjectPath\bin\Release" -Filter *pdpkg.zip | Copy-Item -Destination "$releaseAssetsDirectory" -Force -PassThru
+            }
+            else{
+                Write-Host "Release Assets Directory is unavailable to copy pdpkg file; Path - $releaseAssetsDirectory"
+            }
+            
             $appSourcePackageFound = $true
         }
         else{
@@ -172,7 +180,7 @@ function update-input-file{
         [Parameter(Mandatory)] [String]$solutionAnchorName
     )
 
-    if(Test-Path $inputFilePath){
+    if(Test-Path "$inputFilePath"){
         [xml]$xmlDoc = Get-Content -Path $inputFilePath
 
         $todayDate = (Get-Date).ToString('MM-dd-yyyy')
@@ -186,6 +194,28 @@ function update-input-file{
         $xmlDoc.save("$inputFilePath")
     }
     else{
-        Write-Host "Input.xml file unavailble at - $inputFilePath"
+        Write-Host "Input.xml unavailable at - $inputFilePath"
     }
+}
+
+function install-pac-cli{
+	param(
+        [Parameter()] [String]$nugetPackageVersion		
+	)
+    #NOTE: Add new versions of canvas unpack and the associated pac CLI version to the versionDictionary to ensure unpacked versions are packed correctly.
+    #.24 is the only version supported in the release of our pipelines the latest version of PAC CLI should be used until a new version is available at which time we
+    #would add new versions here
+    $versionDictionary = @{ "0.24" = ""}
+
+    $nugetPackage = "Microsoft.PowerApps.CLI"
+    $outFolder = "pac"
+    if($nugetPackageVersion -ne '') {
+        nuget install $nugetPackage -Version $nugetPackageVersion -OutputDirectory $outFolder
+    }
+    else {
+        nuget install $nugetPackage -OutputDirectory $outFolder
+    }
+    $pacNugetFolder = Get-ChildItem $outFolder | Where-Object {$_.Name -match $nugetPackage + "."}
+    $pacPath = $pacNugetFolder.FullName + "\tools"
+    echo "##vso[task.setvariable variable=pacPath]$pacPath"	
 }
