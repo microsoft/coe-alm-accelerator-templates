@@ -138,17 +138,14 @@ steps:
 #    packageFileName: 'CreatorKitPackage.zip'
 #    solutionAnchorName: 'CreatorKitCore.zip'
 #    appSourceFolderName: 'Microsoft_CreatorKitPackage'
-#    cacheEnabled: 'true'
 #    parAppSourcePackageProjectPath: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
 
 # Run App Source Package
-- template: prepare-appsource-release-inline.yml
+- template: prepare-appsource-release.yml
   parameters:
     solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
-    packageFileName: 'CreatorKitPackage.zip'
-    solutionAnchorName: 'CreatorKitCore.zip'
-    appSourceFolderName: 'Microsoft_CreatorKitPackage'
-    cacheEnabled: 'true'
+    packageFileName: '${{parameters.solutionName}}Package.zip'
+    appSourceFolderName: 'Microsoft_${{parameters.solutionName}}Package'
     parAppSourcePackageProjectPath: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
 
 #- task: GitHubRelease@1
