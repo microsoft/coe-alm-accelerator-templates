@@ -20,6 +20,16 @@ steps:
 - checkout: PipelineRepo
   path: 'PipelineUtils'
   displayName: 'Checkout Pipeline Branch'
+
+- pwsh: |
+    $packageFileName = "${{parameters.packageFileName}}"
+    $appSourceFolderName = "${{parameters.appSourceFolderName}}"
+    $generateAppSourcePackage = "${{parameters.generateAppSourcePackage}}"
+    Write-Host "packageFileName - $packageFileName"
+    Write-Host "appSourceFolderName - $appSourceFolderName"
+    Write-Host "generateAppSourcePackage - $generateAppSourcePackage"
+    Write-Host "##vso[task.setVariable variable=RunAppSourceTasks]$generateAppSourcePackage"
+  displayName: 'Print Params'  
   
 - pwsh: |
     $assetsPath = "$(Pipeline.Workspace)\releaseassets"
@@ -31,16 +41,6 @@ steps:
     }
   displayName: 'Print initial releaseassets'
   condition: and(succeeded(), eq(variables['RunAppSourceTasks'], 'true'))  
-  
-- pwsh: |
-    $packageFileName = "${{parameters.packageFileName}}"
-    $appSourceFolderName = "${{parameters.appSourceFolderName}}"
-    $generateAppSourcePackage = "${{parameters.generateAppSourcePackage}}"
-    Write-Host "packageFileName - $packageFileName"
-    Write-Host "appSourceFolderName - $appSourceFolderName"
-    Write-Host "generateAppSourcePackage - $generateAppSourcePackage"
-    Write-Host "##vso[task.setVariable variable=RunAppSourceTasks]$generateAppSourcePackage"
-  displayName: 'Print Params'  
 
 - pwsh: |
     $releaseZipname = "${{parameters.appSourceFolderName}}"
