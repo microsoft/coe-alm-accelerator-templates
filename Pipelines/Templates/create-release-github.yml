@@ -128,6 +128,8 @@ steps:
                 $releaseNotes = $releaseNotes + [Environment]::NewLine + "  - #" + $issue.number + "-" + $issue.title #Add a line for each issue with number and title. Add more here as necessary
             }
         }
+        Write-Host $fullReleaseNotesPath
+        Write-Host $releaseNotes
         Set-Content -Path $fullReleaseNotesPath -Value $releaseNotes
 
         exit 0
