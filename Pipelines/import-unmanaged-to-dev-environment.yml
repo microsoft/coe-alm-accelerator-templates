@@ -43,11 +43,10 @@ parameters:
   default: "NA"
 - name: ImportUnmanaged
   type: string
-  default: "NA"
+  default: "true"
 - name: PortalSiteName
   type: string
   default: "NA"
-
 trigger: none
 pr: none
 
@@ -74,13 +73,22 @@ stages:
     - pwsh: |
         Write-Host "##vso[task.setvariable variable=RepoName]${{parameters.Repo}}"
       displayName: 'Set Source Repo Name'
-
+  
     # Set IsUnmanaged variable to 'True'
     - pwsh: |
-        $isunmanaged = 'true'
-        
+       Write-Host "ImportUnmanaged - "  ${{parameters.ImportUnmanaged}}
+
+        $buildType = 'Both'
+        $isunmanaged = 'false'
+        if('${{parameters.ImportUnmanaged}}' -eq 'true'){
+            Write-Host "ImportUnmanaged is requested - " ${{parameters.ImportUnmanaged}}        
+            $buildType = 'Unmanaged'
+            $isunmanaged = 'true'
+        }
+
+        Write-Host "##vso[task.setVariable variable=BuildType]$buildType"
         Write-Host "##vso[task.setVariable variable=IsUnmanaged]$isunmanaged"
-      displayName: "Set IsUnmanaged parameter"      
+      displayName: "Set build type parameter"
 
     - template: Templates\build-unmanaged-Solution.yml
       parameters:
@@ -90,14 +98,15 @@ stages:
         serviceConnectionName: ${{parameters.ServiceConnectionName}}
         serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
         solutionName: ${{parameters.SolutionName}}
-
+        buildType: $(BuildType)
+      
     - template: Templates\deploy-Solution.yml
       parameters:
         environmentName: ${{parameters.EnvironmentName}}
         serviceConnectionName: ${{parameters.ServiceConnectionName}}
         serviceConnectionUrl: ${{parameters.ServiceConnectionUrl}}
         solutionName: ${{parameters.SolutionName}}
-        importUnmanaged: 'true'
+        importUnmanaged: $(IsUnmanaged)
         skipBuildToolsInstaller: 'true'
         
     - template: Templates\update-canvas-app-ownership.yml
