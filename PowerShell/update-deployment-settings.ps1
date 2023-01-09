@@ -100,7 +100,9 @@
                     }
                     #Set environment variable variables
                     elseif($configurationVariableName.StartsWith("environmentvariable.", "CurrentCultureIgnoreCase")) {
-                        $configurationVariableValue = $configurationVariableValue.Trim()
+                        if(-not [string]::IsNullOrEmpty($configurationVariableValue)) {
+                            $configurationVariableValue = $configurationVariableValue.Trim()
+                        }
                         Write-Host "configurationVariableValue - $configurationVariableValue"
                         if(-not [string]::IsNullOrEmpty($configurationVariableValue))
                         {
