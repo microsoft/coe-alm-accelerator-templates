@@ -100,11 +100,8 @@
                     }
                     #Set environment variable variables
                     elseif($configurationVariableName.StartsWith("environmentvariable.", "CurrentCultureIgnoreCase")) {
-                        if(-not [string]::IsNullOrEmpty($configurationVariableValue)) {
-                            $configurationVariableValue = $configurationVariableValue.Trim()
-                        }
                         Write-Host "configurationVariableValue - $configurationVariableValue"
-                        if(-not [string]::IsNullOrEmpty($configurationVariableValue))
+                        if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
                         {
                             $schemaName = $configurationVariableName -replace "environmentvariable.", ""
                             $envVarResults =  Get-CrmRecords -conn $conn -EntityLogicalName environmentvariabledefinition -FilterAttribute "schemaname" -FilterOperator "eq" -FilterValue $schemaName -Fields type
