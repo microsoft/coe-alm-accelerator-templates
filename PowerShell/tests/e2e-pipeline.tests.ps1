@@ -262,7 +262,7 @@ Describe 'E2E-Pipeline-Test' {
             ServiceConnectionName=$ServiceConnection `
             ServiceConnectionUrl=$ServiceConnection `
             SolutionName=$SolutionName `
-            UserName=$UserName `
+            UserName=$UserName
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
