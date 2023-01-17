@@ -99,6 +99,7 @@ Describe 'E2E-Pipeline-Test' {
             SolutionName=$SolutionName `
             UserName=$UserName `
             EnvironmentName=$environmentName `
+            PortalSiteName=$PortalSiteName `
             PublishCustomizations=$PublishCustomizations
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result.id
@@ -263,6 +264,7 @@ Describe 'E2E-Pipeline-Test' {
             ServiceConnectionUrl=$ServiceConnection `
             SolutionName=$SolutionName `
             UserName=$UserName `
+            PortalSiteName=$PortalSiteName `
             PublishCustomerizations=$PublishCustomizations
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result.id
