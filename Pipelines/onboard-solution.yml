@@ -1,0 +1,188 @@
+# SolutionName: The name of the solution being onboarded.
+# RepositoryName: The name of the Azure DevOps Repo to which we are onboarding our solution.
+# ValidationServiceConnection: The name of the ServiceConnection to be used in the deploy-validation pipeline
+# TestServiceConnection: The name of the ServiceConnection to be used in the deploy-test pipeline
+# ProductionServiceConnection: The name of the ServiceConnection to be used in the deploy-prod pipeline
+# TemplateProject: The name of the Azure DevOps Project from which to read the pipeline templates (https://github.com/microsoft/coe-alm-accelerator-templates).
+# TemplateRepo: Then name of the Azure Git Repo in the TemplateProject from which to read the pipeline templates (https://github.com/microsoft/coe-alm-accelerator-templates).
+# TemplateBranch: The name of the new Branch in the TemplateRepo from which to read the pipeline templates (https://github.com/microsoft/coe-alm-accelerator-templates).
+# AgentPool: The name of the Agent Pool to assign to pipelines.
+
+parameters:
+- name: SolutionName
+  type: string
+  default: 'OnboardTest'
+- name: RepositoryName
+  type: string
+  default: 'OnboardTest'
+- name: ValidationServiceConnection
+  type: string
+  default: 'https://contoso-val.crm.dynamics.com/'
+- name: TestServiceConnection
+  type: string
+  default: 'https://contoso-test.crm.dynamics.com/'
+- name: ProductionServiceConnection
+  type: string
+  default: 'https://contoso.crm.dynamics.com/'
+- name: TemplateProject
+  type: string
+  default: 'ModularProject'
+- name: TemplateRepo
+  type: string
+  default: 'coe-alm-accelerator-templates'
+- name: TemplateBranch
+  type: string
+  default: 'main'
+- name: AgentPool
+  type: string
+  default: 'Azure Pipelines'
+
+
+trigger: none
+pr: none
+
+stages:
+- stage: onboardSolution
+  displayName: 'Onboard solution ${{parameters.SolutionName}}'
+  jobs:
+  - job: onboardSolution
+    pool:
+      vmImage: 'windows-2022'
+    steps:
+      - checkout: self
+        persistCredentials: true
+
+        # add Azure DevOps extension - not need for Azure Pipelines agents as they have the DevOps extension preinstalled. 
+        # If running on other/private agent you might need to install the DevOps extension for az cli. To do so set the enabled property to true
+      - pwsh: az extension add -n azure-devops
+        displayName: 'Install Azure DevOps Extension'
+        enabled: false
+
+        # sign in to Azure DevOps
+      - pwsh: echo $(System.AccessToken) | az devops login
+        env:
+          AZURE_DEVOPS_CLI_PAT: $(System.AccessToken)
+        displayName: 'Login Azure DevOps Extension'
+
+        # TODO: Check if Repo exist - only create repo if not exist
+      - pwsh: |
+          Write-Host "##vso[task.setvariable variable=repositoryExist]false"
+          Write-Host "##vso[task.setvariable variable=repositoryInitialized]false"
+
+          $repoExist = az repos list --org $(System.TeamFoundationCollectionUri) --project '$(System.TeamProject)' --query "[?name=='${{parameters.SolutionName}}']" | ConvertFrom-Json
+          if($repoExist > 0) {
+            Write-Host "##vso[task.setvariable variable=repositoryExist]true"
+            if($repoExist.defaultBranch -ne $null) {
+              Write-Host "##vso[task.setvariable variable=repositoryInitialized]true"  
+            } 
+          }
+        displayName: 'Check if repository exist'
+
+        # Create Azure Git repository
+      - pwsh: |
+          # set git user config
+          git config --global user.email "$(Build.RequestedForEmail)"
+          git config --global user.name "$(Build.RequestedFor)"
+
+          # create azure git repository
+          $repositoryId = az repos create --name ${{parameters.RepositoryName}} --project $(System.TeamProject) --org $(System.TeamFoundationCollectionUri) | ConvertFrom-Json | % id
+          Write-Host "##vso[task.setvariable variable=repositoryId]$repositoryId"
+        displayName: 'Create git repo: ${{parameters.RepositoryName}}'
+        condition: and(succeeded(), ne('$(repositoryExist))', 'true'))
+
+        # Create deploy pipeline yaml files and push to Azure Git repository
+        # Create Solution branch from main branch in Azure Git repository
+        # TODO: Check to see if pipeline yml files already exist
+      - pwsh: |
+          # create local folder
+          mkdir "${{parameters.RepositoryName}}"
+          cd "${{parameters.RepositoryName}}"
+          
+          # init git
+          git init --initial-branch=main
+
+          # create Pipelines folder
+          mkdir "Pipelines"
+
+          # copy pipeline sample files
+          Copy-Item -Path $(Build.Repository.LocalPath)\Pipelines\build-deploy-*.yml -Destination .\Pipelines 
+
+          # rename pipeline sample files
+          Get-ChildItem .\Pipelines -Filter build-deploy-*.yml -Recurse | Rename-Item -NewName { $_.Name.replace('SampleSolution', '${{parameters.SolutionName}}')}
+
+          # update pipeline yaml
+          Get-ChildItem .\Pipelines -Filter build-deploy-*.yml | % {
+            $content = Get-Content -Path $_.FullName
+            
+            # replace pipeline template branch ref
+            $content = $content.replace('ref: BranchContainingTheBuildTemplates', 'ref: ${{parameters.TemplateBranch}}')
+            
+            # replace pipeline project/repo ref
+            $content = $content.replace('name: RepositoryContainingTheBuildTemplates', 'name: ${{parameters.TemplateProject}}/${{parameters.TemplateRepo}}')
+            
+            # replace solution name
+            $content = $content.replace('SampleSolutionName', '${{parameters.SolutionName}}')
+            
+            # write content back to file
+            Set-Content -Path $_.FullName -Value $content
+          }
+
+          # commit changes
+          git add .
+          git commit -m "Initial commit"
+
+          # encode Personal Access Token from ADOPAT pipeline variable
+          #$B64Pat = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$(ADOPAT)"))
+          
+          # add origin
+          git -c http.extraHeader="Authorization: Bearer $(System.AccessToken)" remote add origin $(System.TeamFoundationCollectionUri)/$(System.TeamProject)/_git/${{Parameters.RepositoryName}}
+          
+          # push changes
+          git -c http.extraHeader="Authorization: Bearer $(System.AccessToken)" push -u origin +main
+
+          # create SolutionBranch
+          git -c http.extraHeader="Authorization: Bearer $(System.AccessToken)" checkout -b ${{parameters.SolutionName}} main
+
+          # push changes
+          git -c http.extraHeader="Authorization: Bearer $(System.AccessToken)" push -u origin ${{parameters.SolutionName}}
+        displayName: 'Initialize repository ${{parameters.RepositoryName}}'
+        condition: and(succeeded(), ne('$(repositoryInitialized))', 'true'))
+
+        # Find Agent Pool id
+      - pwsh: |
+          Write-Host "AgentPool" ${{parameters.AgentPool}}
+          az pipelines pool list --action use --org '$(System.TeamFoundationCollectionUri)'
+          $agentQueueId = az pipelines queue list --action use --queue-name '${{parameters.AgentPool}}' --org '$(System.TeamFoundationCollectionUri)' --project '$(System.TeamProject)' --query "[?name=='${{parameters.AgentPool}}'].id" | ConvertFrom-Json
+          Write-Host "Agent Pool Id " $agentQueueId
+          Write-Host "##vso[task.setvariable variable=agentQueueId]$agentQueueId"
+        displayName: 'Get Agent Pool id'
+
+        # Configure deploy pipelines
+        # TODO: Check to see if pipelines already exist
+      - pwsh: |
+          # create pipeline folder
+          az pipelines folder create --path '${{parameters.SolutionName}}' --project $(System.TeamProject) --org $(System.TeamFoundationCollectionUri) 
+
+          # create deploy-validation pipeline and add ServiceConnection variable
+          $deployValidationPipelineId = az pipelines create --folder-path ${{parameters.SolutionName}} --name 'deploy-validation-${{parameters.SolutionName}}' --description 'Pipeline to deploy ${{parameters.SolutionName}} to Validation Environment' --repository ${{parameters.RepositoryName}} --branch main --repository-type tfsgit --yml-path Pipelines/build-deploy-validation-${{parameters.SolutionName}}.yml --queue-id $(agentQueueId) --skip-first-run | ConvertFrom-Json | % id
+          Write-Host "##vso[task.setvariable variable=validationPipelineId]$deployValidationPipelineId"
+          az pipelines variable create --name 'ServiceConnection' --value ${{parameters.ValidationServiceConnection}} --pipeline-id $deployValidationPipelineId --org $(System.TeamFoundationCollectionUri) --project $(System.TeamProject)
+          az pipelines variable create --name 'EnvironmentName' --value 'Validation' --pipeline-id $deployValidationPipelineId --org $(System.TeamFoundationCollectionUri) --project $(System.TeamProject)
+
+          # create deploy-test pipeline and add ServiceConnection variable
+          $deployTestPipelineId = az pipelines create --folder-path ${{parameters.SolutionName}} --name 'deploy-test-${{parameters.SolutionName}}' --description 'Pipeline to deploy ${{parameters.SolutionName}} to Test Environment' --repository ${{parameters.RepositoryName}} --branch main --repository-type tfsgit --yml-path Pipelines/build-deploy-test-${{parameters.SolutionName}}.yml --queue-id $(agentQueueId) --skip-first-run | ConvertFrom-Json | % id
+          az pipelines variable create --name 'ServiceConnection' --value ${{parameters.TestServiceConnection}} --pipeline-id $deployTestPipelineId --org $(System.TeamFoundationCollectionUri) --project $(System.TeamProject)
+          az pipelines variable create --name 'EnvironmentName' --value 'Test' --pipeline-id $deployTestPipelineId --org $(System.TeamFoundationCollectionUri) --project $(System.TeamProject)
+          
+          # create deploy-prod pipeline and add ServiceConnection variable
+          $deployProdPipelineId = az pipelines create --folder-path ${{parameters.SolutionName}} --name 'deploy-prod-${{parameters.SolutionName}}' --description 'Pipeline to deploy ${{parameters.SolutionName}} to Production Environment' --repository ${{parameters.RepositoryName}} --branch main --repository-type tfsgit --yml-path Pipelines/build-deploy-prod-${{parameters.SolutionName}}.yml --queue-id $(agentQueueId) --skip-first-run | ConvertFrom-Json | % id
+          az pipelines variable create --name 'ServiceConnection' --value ${{parameters.ProductionServiceConnection}} --pipeline-id $deployProdPipelineId --org $(System.TeamFoundationCollectionUri) --project $(System.TeamProject)
+          az pipelines variable create --name 'EnvironmentName' --value 'Production' --pipeline-id $deployProdPipelineId --org $(System.TeamFoundationCollectionUri) --project $(System.TeamProject)
+        displayName: 'Create Build and Deploy Pipelines'
+
+        # Create build validation policy on Solution branch
+        # TODO: Check to see if policy already exist
+      - pwsh: |
+          # create build validation policy for solution branch
+          az repos policy build create --blocking true --branch ${{parameters.SolutionName}} --build-definition-id $(validationPipelineId) --display-name 'Build validation' --enabled true --manual-queue-only false --queue-on-source-update-only false --repository-id $(repositoryId) --valid-duration 0 --branch-match-type exact --org $(System.TeamFoundationCollectionUri) --project $(System.TeamProject) --path-filter '/${{parameters.SolutionName}}/SolutionPackage/*'
+        displayName: 'Create Build Validation policy'
