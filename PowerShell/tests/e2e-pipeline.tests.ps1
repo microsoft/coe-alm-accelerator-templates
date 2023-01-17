@@ -98,7 +98,8 @@ Describe 'E2E-Pipeline-Test' {
             ServiceConnectionUrl=$ServiceConnection `
             SolutionName=$SolutionName `
             UserName=$UserName `
-            EnvironmentName=$environmentName
+            EnvironmentName=$environmentName `
+            PublishCustomizations=$PublishCustomizations
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
@@ -261,7 +262,8 @@ Describe 'E2E-Pipeline-Test' {
             ServiceConnectionName=$ServiceConnection `
             ServiceConnectionUrl=$ServiceConnection `
             SolutionName=$SolutionName `
-            UserName=$UserName
+            UserName=$UserName `
+            PublishCustomerizations=$PublishCustomizations
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
