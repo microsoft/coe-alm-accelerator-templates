@@ -98,9 +98,8 @@ Describe 'E2E-Pipeline-Test' {
             ServiceConnectionUrl=$ServiceConnection `
             SolutionName=$SolutionName `
             UserName=$UserName `
-            EnvironmentName=$environmentName `
-            PortalSiteName=$PortalSiteName `
-            PublishCustomizations=$PublishCustomizations
+            ImportUnmanaged='true' `
+            EnvironmentName=$environmentName
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
@@ -158,8 +157,8 @@ Describe 'E2E-Pipeline-Test' {
                 SolutionName          = $SolutionName
                 UserName              = $UserName
                 PipelineId            = 0
-                PortalSiteName        = $PortalSiteName
                 PublishCustomizations = $PublishCustomizations
+                PortalSiteName        = $PortalSiteName
             }
         }
         [Helper]::ExportToGitNewBranchSucceeded = [Helper]::QueueExportToGit($Org, $Project, $SolutionName, $body)
@@ -198,8 +197,8 @@ Describe 'E2E-Pipeline-Test' {
                 SolutionName          = $SolutionName
                 UserName              = $UserName
                 PipelineId            = 0
-                PortalSiteName        = $PortalSiteName
                 PublishCustomizations = $PublishCustomizations
+                PortalSiteName        = $PortalSiteName
             } 
         }
     
@@ -264,8 +263,6 @@ Describe 'E2E-Pipeline-Test' {
             ServiceConnectionUrl=$ServiceConnection `
             SolutionName=$SolutionName `
             UserName=$UserName `
-            PortalSiteName=$PortalSiteName `
-            PublishCustomerizations=$PublishCustomizations
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
