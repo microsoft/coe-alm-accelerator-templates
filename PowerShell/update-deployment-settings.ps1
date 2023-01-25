@@ -74,6 +74,27 @@
             }
         }		
 
+        if($null -ne $configurationDataEnvironment.ApprovalType) {         
+            $approvalType=$configurationDataEnvironment.ApprovalType
+            Write-Host "Adding ApprovalType - $approvalType as pipeline parameter"
+            if($null -ne $approvalType){
+                $approvalTypeLabel = $null
+                switch ($approvalType) {
+                    "809060000" {$approvalTypeLabel = "Pull Request"}
+                    "809060001" {$approvalTypeLabel = "Environment"}
+                    default {$approvalTypeLabel = "None"}
+                }
+
+                # Check "ApprovalType" pipeline parameter is already presented. 
+                $found = Check-Parameter "ApprovalType" $newBuildDefinitionVariables
+                # If not presented, add the Parameter to the Pipeline
+                if(!$found) { 
+                    $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ApprovalType" -Value @{value = ''}
+                }
+                $newBuildDefinitionVariables.ApprovalType.value = $approvalTypeLabel
+            }
+        }
+
         if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
             foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
                 $configurationVariableName = $configurationVariable.Name
