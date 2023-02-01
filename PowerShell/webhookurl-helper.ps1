@@ -18,7 +18,6 @@ function Update-WebHookUrls {
         Write-Host "dataverseHost - $dataverseHost"
 
         Write-Host "webHookConfiguration - $webHookConfiguration"
-
         $webHookConfigCollection = Get-WebHookConfigurations $webHookConfiguration
 
         foreach ($configuration in $webHookConfigCollection) {
