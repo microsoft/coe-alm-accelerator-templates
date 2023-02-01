@@ -21,7 +21,6 @@ function Update-WebHookUrls {
 
         $webHookConfigCollection = Get-WebHookConfigurations $webHookConfiguration
 
-        Write-Host "webHookConfigCollection - $webHookConfigCollection"
         foreach ($configuration in $webHookConfigCollection) {
             # Retrieve Service End Point
             if ($configuration.SchemaName -ne $null) {

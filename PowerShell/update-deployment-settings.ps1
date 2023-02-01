@@ -125,18 +125,18 @@
                         if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
                         {
                             $schemaName = $configurationVariableName -replace "webhookurl.", ""
-                            #$endPointResults =  Get-CrmRecords -conn $conn -EntityLogicalName "serviceendpoints" -FilterAttribute "name" -FilterOperator "eq" -FilterValue $schemaName -Fields "name"
-                            #if ($endPointResults.Count -gt 0){
+                            $endPointResults =  Get-CrmRecords -conn $conn -EntityLogicalName "serviceendpoint" -FilterAttribute "name" -FilterOperator "eq" -FilterValue $schemaName -Fields "name"
+                            if ($endPointResults.Count -gt 0){
                                 $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="#{$configurationVariableName}#"}
                                 if($usePlaceholders.ToLower() -eq 'false') {
                                     $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="$configurationVariableValue"}
                                 }
                                 $webHookUrls.Add($envVar)                                
-                            #}
+                            }
                         }
-                        #else{
-                        #    Write-Host "Service Endpoint variable $configurationVariableName is Null or Empty"
-                        #}
+                        else{
+                            Write-Host "Service Endpoint variable $configurationVariableName is Null or Empty"
+                        }
                     }
                     elseif($configurationVariableName.StartsWith("canvasshare.aadGroupId.", "CurrentCultureIgnoreCase")) {
                         $schemaSuffix = $configurationVariableName -replace "canvasshare.aadGroupId.", ""
