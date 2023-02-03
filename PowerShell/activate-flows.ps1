@@ -74,7 +74,7 @@ function Invoke-ActivateFlows {
                     $flowsActivatedDeactivatedThisPass = $true
                 }
                 else{
-                    Write-Host "Workflow " $flowToActivate.solutionComponentName " already activated/deactivated at target"
+                    Write-Host "Workflow " $flowToActivate.solutionComponent.name " already activated/deactivated at target"
                 }
             }
             catch {
@@ -146,7 +146,6 @@ function Get-UserConfiguredFlowActivations {
                 elseif($impersonationCallerId -ne '') {
                     Write-Host "1 - Updating existing flow activation " $activateConfig.solutionComponentName
                     $flowActivation.solutionComponentUniqueName = $activateConfig.solutionComponentUniqueName
-                    $flowActivation.solutionComponentName = $activateConfig.solutionComponentName
                     $flowActivation.solutionComponent = $workflow
                     $flowActivation.impersonationCallerId = $impersonationCallerId
                     $flowActivation.activate = $activateConfig.activate
@@ -370,7 +369,7 @@ function Write-Flows{
         }
 		
         foreach ($flowToActivate in $flowsToActivate) {
-            Write-Host "Flow Name: " $flowToActivate.solutionComponentName
+            Write-Host "Flow Name: " $flowToActivate.solutionComponent.name
         }		
     }
 }
