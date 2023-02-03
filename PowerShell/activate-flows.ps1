@@ -137,7 +137,6 @@ function Get-UserConfiguredFlowActivations {
                     Write-Host "1 - Adding flow " $activateConfig.solutionComponentName " to activation collection"
                     $flowActivation = [PSCustomObject]@{}
                     $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentUniqueName' -Value $activateConfig.solutionComponentUniqueName
-                    $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponentName' -Value $activateConfig.solutionComponentName
                     $flowActivation | Add-Member -MemberType NoteProperty -Name 'solutionComponent' -Value $workflow
                     $flowActivation | Add-Member -MemberType NoteProperty -Name 'impersonationCallerId' -Value $impersonationCallerId
                     $flowActivation | Add-Member -MemberType NoteProperty -Name 'sortOrder' -Value $activateConfig.sortOrder
@@ -248,7 +247,7 @@ function Get-ConnectionReferenceFlowActivations {
                                                     $flowsToActivate.Add($flowActivation)
                                                 }
                                                 else {
-                                                    Write-Host "Excluding flow " $activationConfig.solutionComponentName "from activation collection"
+                                                    Write-Host "Excluding flow " $activationConfig.workflow.name "from activation collection"
                                                 }
                                             }
                                         }
