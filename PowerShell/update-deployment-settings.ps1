@@ -555,3 +555,91 @@ function Get-Flow-Component-Name{
     Write-Host "flowComponentName - $flowComponentName"
     return $flowComponentName
 }
+
+# Read 'Portal Settings File' attached to 'User Settings' for each Environment
+# Create or Override 'Portal Settings' files under .\PowerPages\Websitename\deployment-profiles
+function Set-PortalSettings-Files
+{
+    param (
+        [Parameter(Mandatory)] [String]$buildSourceDirectory,
+        [Parameter(Mandatory)] [String]$buildRepositoryName,
+        [Parameter(Mandatory)] [String]$serviceConnection,
+        [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter(Mandatory)] [String]$webSiteName,
+        [Parameter()] [String]$token
+    )
+
+    . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+    $dataverseHost = Get-HostFromUrl "$serviceConnection"
+    Write-Host "dataverseHost - $dataverseHost"
+
+    Write-Host "Inside Set-PortalSettings-Files"
+    $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
+
+    . "$env:POWERSHELLPATH/portal-functions.ps1"
+    $powerPagesFolderPath = "$buildSourceDirectory\$buildRepositoryName\$solutionName\PowerPages\$webSiteName\"
+    # Check if Power Pages folder available
+    if(Test-Path $powerPagesFolderPath){
+        #Loop through the build definitions we found and update the pipeline variables based on the placeholders we put in the deployment settings files.
+        foreach($configurationDataEnvironment in $configurationData)
+        {
+            $userSettingIdAvailable = $false
+            $environmentName = $configurationDataEnvironment.DeploymentEnvironmentName
+            Write-Host "EnvironmentName - $environmentName"
+            if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
+                foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
+                    $configurationVariableName = $configurationVariable.Name
+                    $configurationVariableValue = $configurationVariable.Value
+                    if($configurationVariableName.StartsWith("UserSettingId", "CurrentCultureIgnoreCase")) {
+                        $userSettingIdAvailable = $true
+                        $userSettingId = $configurationVariableValue
+                        Write-Host "userSettingId - $userSettingId available for environment $environmentName"
+                        $responseUserSetting = Get-UserSetting-by-Id $token $dataverseHost $userSettingId
+                        if($null -ne $responseUserSetting -and $null -ne $responseUserSetting.value -and $responseUserSetting.value.count -gt 0){
+                           # Read portalsettingscontent
+                           $portalsettingscontent = $responseUserSetting.value[0].cat_portalsettingscontent
+                           Write-Host "portalsettingscontent - $portalsettingscontent"
+                           if($portalsettingscontent){
+                                Write-Host "Creating or overriding deployment setting file for $environmentName environment"
+                                Create-or-Override-Profile-File "$buildSourceDirectory\$buildRepositoryName\$solutionName\PowerPages\$webSiteName\" "$environmentName" "$portalsettingscontent"
+                           }
+                           else{
+                               Write-Host "portalsettingscontent is empty"
+                           }
+                        }
+                        else{
+                            Write-Host "User Setting with Id $userSettingId for $environmentName does not have portalsettingscontent"
+                        }
+                    }
+                }
+            }
+
+            if($userSettingIdAvailable -eq $false){
+                Write-Host "UserSettingId variable unavailable for $environmentName environment"
+            }
+        }
+    }
+    else{
+        Write-Host "Power pages folder path $powerPagesFolderPath unavailable. Exiting."
+    }
+}
+
+# Fetch 'User Setting' record, if the 'Portal Settings Content' field has data. Else return $null
+function Get-UserSetting-by-Id {
+    param (
+        [Parameter(Mandatory)] [String]$token,
+        [Parameter(Mandatory)] [String]$dataverseHost,
+        [Parameter(Mandatory)] [String]$userSettingId
+    )
+    $responseUserSetting = $null
+    $queryUserSetting = 'cat_usersettings?$filter=cat_portalsettingscontent ne null and cat_usersettingid eq ' + "'$userSettingId'" + '&$select=cat_portalsettingscontent'
+    try{
+        Write-Host "User setting Query - $queryUserSetting"
+        $responseUserSetting = Invoke-DataverseHttpGet $token $dataverseHost $queryUserSetting
+    }
+    catch{
+        Write-Host "Error $queryUserSetting - $($_.Exception.Message)"
+    }
+
+    return $responseUserSetting
+}
