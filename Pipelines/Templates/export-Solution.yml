@@ -50,6 +50,9 @@ parameters:
 - name: publishCustomizations
   type: string
   default: 'true'
+- name: CommitScope
+  type: string
+  default: '1'
 steps:
 - template: set-service-connection-url.yml
   parameters:
