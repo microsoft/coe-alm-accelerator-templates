@@ -303,6 +303,7 @@ steps:
     solutionName: '${{parameters.solutionName}}'
     websiteName: '${{parameters.portalSiteName}}'
     commitScope: '${{parameters.CommitScope}}'
+    configurationData: '${{parameters.configurationData}}'
 
 - template: Hooks\export-power-page-post-hook.yml
 
