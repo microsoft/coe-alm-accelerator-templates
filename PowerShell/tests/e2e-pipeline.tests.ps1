@@ -13,7 +13,7 @@
 
 param(
     $Org, $Project, $BranchToTest, $SourceBranch, $BranchToCreate, $CommitMessage, $Data, 
-    $Email, $Repo, $ServiceConnection, $SolutionName, $UserName, $PortalSiteName, $PublishCustomizations
+    $Email, $Repo, $ServiceConnection, $SolutionName, $UserName, $PortalSiteName, $PublishCustomizations, $CommitScope
 )
 
 class Helper {
