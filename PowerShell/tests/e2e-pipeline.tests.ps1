@@ -229,7 +229,7 @@ Describe 'E2E-Pipeline-Test' {
         # Get the id of the PR validation pipeline using the PR id and wait for it to successfully complete
         $pullRequestId = $result.pullRequestId
         # sleep for 15 seconds to ensure the pipeline to validate the PR is kicked off (may need to tweak)
-        Start-Sleep -Seconds 15
+        Start-Sleep -Seconds 30
         $result = az pipelines runs list --org $Org --project $Project --branch "refs/pull/$pullRequestId/merge"
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result[0].id
