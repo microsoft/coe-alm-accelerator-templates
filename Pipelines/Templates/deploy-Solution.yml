@@ -313,7 +313,7 @@ steps:
 
 - pwsh: |
     . "$env:POWERSHELLPATH/portal-functions.ps1"
-    Process-and-Upload-Websites "$(Build.SourcesDirectory)" "$(Build.Repository.Name)" "${{parameters.solutionName}}" "$(EnvironmentName)" "$(pacPath)" "${{parameters.serviceConnectionUrl}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)"
+    Process-and-Upload-Websites "$(Build.SourcesDirectory)" "$(Build.Repository.Name)" "${{parameters.solutionName}}" "${{ parameters.environmentName }}" "$(pacPath)" "${{parameters.serviceConnectionUrl}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)"
   displayName: "Upload website(s)"
 
 - template: Hooks\deploy-solution-post-hook.yml
