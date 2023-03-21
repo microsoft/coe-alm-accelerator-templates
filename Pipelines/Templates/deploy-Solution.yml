@@ -258,7 +258,7 @@ steps:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'
     aadGroupTeamConfiguration: '$(outAadGroupTeamConfiguration)'
 
-- template: Invoke-Share-Canvas-App-with-AAD-Group.yml
+- template: share-canvas-app-with-aad-group.yml
   parameters:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'
     aadGroupCanvasConfiguration: '$(outAadGroupCanvasConfiguration)'
