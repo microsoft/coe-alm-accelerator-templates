@@ -137,7 +137,7 @@ steps:
 
 - pwsh: |
    . "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
-    Get-managed-solution-zip-path "$(ArtifactDropPath)" "${{parameters.solutionName}}"
+    Get-Managed-Solution-Zip-Path "$(ArtifactDropPath)" "${{parameters.solutionName}}"
 
     #Set TriggerSolutionUpgrade to false if the variable is not set
     if('$(TriggerSolutionUpgrade)'.Contains("TriggerSolutionUpgrade")) {
@@ -195,56 +195,56 @@ steps:
   # Only publish customizations for when importing unmanaged solutions into a dev environment.
 
 # Set deployment variables
-- template: set-deployment-variable.yml
+- template: Set-Deployment-Variable.yml
   parameters:
     variableName: 'outActivateFlows'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'ActivateFlowConfiguration'
     displayName: 'Retrieve Flow Activation Config for Deploy'
 
-- template: set-deployment-variable.yml
+- template: Set-Deployment-Variable.yml
   parameters:
     variableName: 'outAadGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'AadGroupTeamConfiguration'
     displayName: 'Retrieve AAD Group Team Config for Deploy'
 
-- template: set-deployment-variable.yml
+- template: Set-Deployment-Variable.yml
   parameters:
     variableName: 'outAadGroupCanvasConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'AadGroupCanvasConfiguration'
     displayName: 'Retrieve AAD Group Canvas Config for Deploy'
 
-- template: set-deployment-variable.yml
+- template: Set-Deployment-Variable.yml
   parameters:
     variableName: 'outSolutionComponentOwnershipConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'SolutionComponentOwnershipConfiguration'
     displayName: 'Retrieve Solution Component Onwership Config for Deploy'
 
-- template: set-deployment-variable.yml
+- template: Set-Deployment-Variable.yml
   parameters:
     variableName: 'outConnectionReferences'
     deploymentSettingsPath: $(DeploymentSettingsPath)
     deploymentSettingsNode: 'ConnectionReferences'
     displayName: 'Retrieve Connection Reference Config for Deploy'
 
-- template: set-deployment-variable.yml
+- template: Set-Deployment-Variable.yml
   parameters:
     variableName: 'outWebHookUrls'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'WebhookUrls'
     displayName: 'Retrieve WebHook Urls Config for Deploy'
 
-- template: set-deployment-variable.yml
+- template: Set-Deployment-Variable.yml
   parameters:
     variableName: 'outFlowShareWithGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'FlowShareWithGroupTeamConfiguration'
     displayName: 'Retrieve Flow Share with Group Team Configuration for Deploy'
 
-- template: set-deployment-variable.yml
+- template: Set-Deployment-Variable.yml
   parameters:
     variableName: 'outConnectorShareWithGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
@@ -258,7 +258,7 @@ steps:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'
     aadGroupTeamConfiguration: '$(outAadGroupTeamConfiguration)'
 
-- template: share-canvas-app-with-aad-group.yml
+- template: Invoke-Share-Canvas-App-with-AAD-Group.yml
   parameters:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'
     aadGroupCanvasConfiguration: '$(outAadGroupCanvasConfiguration)'
@@ -311,7 +311,7 @@ steps:
 - pwsh: |
     . "$env:POWERSHELLPATH/portal-functions.ps1"
     $websiteName = Get-Website-Name "$(Build.SourcesDirectory)" "$(Build.Repository.Name)" "${{parameters.solutionName}}"
-    echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
+    Write-Host "##vso[task.setvariable variable=WebsiteName]$websiteName"
     Write-Host "websiteName - $websiteName"
   displayName: "Fetch Portal Website Name"
 
@@ -323,9 +323,9 @@ steps:
     else{
         write-Host "EnvironmentName variable provided in pipeline. Value - $(EnvironmentName)"
         . "$env:POWERSHELLPATH/portal-functions.ps1"
-        $fileCount = Validate-Profile-Name "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\$(WebsiteName)\" "$(EnvironmentName)"
+        $fileCount = Invoke-Validate-Profile-Name "$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\$(WebsiteName)\" "$(EnvironmentName)"
     }
-    echo "##vso[task.setvariable variable=ProfileFileCount]$fileCount"
+    Write-Host "##vso[task.setvariable variable=ProfileFileCount]$fileCount"
   condition: and(succeeded(), ne(variables['WebsiteName'], 'NA'))
   displayName: "Fetch Portal Deployment Profile"
 
