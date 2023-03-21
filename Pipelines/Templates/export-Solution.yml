@@ -150,7 +150,7 @@ steps:
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      clone-or-sync-solution "${{parameters.serviceConnectionUrl}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)" "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)" "$(Agent.BuildDirectory)"
+      clone-or-sync-solution "${{parameters.serviceConnectionUrl}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)" "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)" "$(Agent.BuildDirectory)" "$(localProcessCanvasApps)"
   displayName: 'pac - Clone or Sync Solution'
   condition: and(succeeded(), ne('${{parameters.commitScope}}', '3'))
 

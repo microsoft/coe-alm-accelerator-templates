@@ -210,7 +210,8 @@ function clone-or-sync-solution{
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$pacPath,
-        [Parameter(Mandatory)] [String]$buildDirectory
+        [Parameter(Mandatory)] [String]$buildDirectory,
+        [Parameter(Mandatory)] [String]$processCanvasApps
     )
 	
 	$legacyFolderPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
@@ -231,7 +232,7 @@ function clone-or-sync-solution{
             $cdsProjfolderPath = [System.IO.Path]::GetDirectoryName("$cdsProjPath")
             Write-Host "Pointing to cdsproj folder path - " $cdsProjfolderPath
             Set-Location -Path $cdsProjfolderPath
-            $syncCommand = "solution sync --processCanvasApps true --packagetype Both --async"
+            $syncCommand = "solution sync --processCanvasApps $processCanvasApps --packagetype Both --async"
             Write-Host "Triggering Sync - $syncCommand"
             Invoke-Expression -Command "$pacexepath $syncCommand"
         }
@@ -243,7 +244,7 @@ function clone-or-sync-solution{
             }
 
             # Trigger Clone
-            $cloneCommand = "solution clone -n $solutionName --processCanvasApps true --outputDirectory ""$unpackfolderpath"" --packagetype Both --async"
+            $cloneCommand = "solution clone -n $solutionName --processCanvasApps $processCanvasApps --outputDirectory ""$unpackfolderpath"" --packagetype Both --async"
             Write-Host "Clone Command - $pacexepath $cloneCommand"
             Invoke-Expression -Command "$pacexepath $cloneCommand"
         }
