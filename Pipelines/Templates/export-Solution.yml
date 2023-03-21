@@ -252,7 +252,7 @@ steps:
     commitScope: '${{parameters.commitScope}}'
 
 # Set deployment variable for Activate Flow Configuration
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outActivateFlows'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
@@ -271,7 +271,7 @@ steps:
     commitScope: '${{parameters.commitScope}}'
 
 # Set deployment variable for default environment variables
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outDefaultEnvironmentVariables'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)

@@ -147,7 +147,7 @@ steps:
   enabled: true
 
 # Set deployment variable for Activate Flow Configuration
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outActivateFlows'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)

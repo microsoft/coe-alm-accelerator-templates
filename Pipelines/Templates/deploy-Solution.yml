@@ -195,56 +195,56 @@ steps:
   # Only publish customizations for when importing unmanaged solutions into a dev environment.
 
 # Set deployment variables
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outActivateFlows'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'ActivateFlowConfiguration'
     displayName: 'Retrieve Flow Activation Config for Deploy'
 
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outAadGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'AadGroupTeamConfiguration'
     displayName: 'Retrieve AAD Group Team Config for Deploy'
 
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outAadGroupCanvasConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'AadGroupCanvasConfiguration'
     displayName: 'Retrieve AAD Group Canvas Config for Deploy'
 
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outSolutionComponentOwnershipConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'SolutionComponentOwnershipConfiguration'
     displayName: 'Retrieve Solution Component Onwership Config for Deploy'
 
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outConnectionReferences'
     deploymentSettingsPath: $(DeploymentSettingsPath)
     deploymentSettingsNode: 'ConnectionReferences'
     displayName: 'Retrieve Connection Reference Config for Deploy'
 
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outWebHookUrls'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'WebhookUrls'
     displayName: 'Retrieve WebHook Urls Config for Deploy'
 
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outFlowShareWithGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'FlowShareWithGroupTeamConfiguration'
     displayName: 'Retrieve Flow Share with Group Team Configuration for Deploy'
 
-- template: Set-Deployment-Variable.yml
+- template: set-deployment-variable.yml
   parameters:
     variableName: 'outConnectorShareWithGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
