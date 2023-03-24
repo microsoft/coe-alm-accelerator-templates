@@ -1,4 +1,4 @@
-﻿function Get-Website-Name
+function Get-Website-Name
 {
     param (
         [Parameter(Mandatory)] [String]$sourcesDirectory,

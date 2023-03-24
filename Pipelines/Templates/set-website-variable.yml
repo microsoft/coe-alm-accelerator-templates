@@ -11,7 +11,7 @@ parameters:
 steps:
 - pwsh: |
     Write-Host "Portal Website provided as variable. Website ID - $(PowerPageWebsiteId)"
-    echo "##vso[task.setvariable variable=WebsiteId;]$(PowerPageWebsiteId)"
+    Write-Host "##vso[task.setvariable variable=WebsiteId;]$(PowerPageWebsiteId)"
   condition: and(succeeded(), ne(variables['PowerPageWebsiteId'], ''),ne('${{parameters.commitScope}}', '3'))
   displayName: "Fetch Power Pages Website ID from Variable"
 
