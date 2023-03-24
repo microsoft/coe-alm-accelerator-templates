@@ -137,7 +137,7 @@ steps:
 
 - pwsh: |
    . "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
-    Get-managed-solution-zip-path "$(ArtifactDropPath)" "${{parameters.solutionName}}"
+    Get-Managed-Solution-Zip-Path "$(ArtifactDropPath)" "${{parameters.solutionName}}"
 
     #Set TriggerSolutionUpgrade to false if the variable is not set
     if('$(TriggerSolutionUpgrade)'.Contains("TriggerSolutionUpgrade")) {

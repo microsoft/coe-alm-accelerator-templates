@@ -143,7 +143,7 @@ function Process-and-Upload-Websites
     }
 }
 
-function Validate-Profile-Name
+function Invoke-Validate-Profile-Name
 {
     param (
         [Parameter(Mandatory)] [String]$websiteRepoPath,
@@ -167,7 +167,7 @@ function Validate-Profile-Name
     return $filesCount
 }
 
-function Create-or-Override-Profile-File
+function Invoke-Create-Or-Override-Profile-File
 {
     param (
         [Parameter(Mandatory)] [String]$websiteRepoPath,
@@ -190,7 +190,7 @@ function Create-or-Override-Profile-File
     }
 }
 
-function Clean-Website-Folder
+function Invoke-Clean-Website-Folder
 {
     param (
         [Parameter(Mandatory)] [String]$sourcesDirectory,
@@ -206,7 +206,7 @@ function Clean-Website-Folder
     }
 }
 
-function Fetch-Website-ID
+function Get-Website-ID
 {
     param (
         [Parameter()] [String]$websiteName,
@@ -242,7 +242,7 @@ function Fetch-Website-ID
     return $websiteId
 }
 
-function Portal-Upload-With-Profile{
+function Invoke-Portal-Upload-With-Profile{
     param (
         [Parameter(Mandatory)] [String]$pacPath,
         [Parameter(Mandatory)] [String]$serviceConnectionUrl,
