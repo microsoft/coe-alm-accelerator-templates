@@ -17,7 +17,7 @@ steps:
 
 - pwsh: |
     . "$env:POWERSHELLPATH/portal-functions.ps1"
-     Fetch-Website-ID "${{parameters.websiteName}}" "${{parameters.serviceConnectionUrl}}" "$env:MAPPED_SPN_Token"
+     Get-Website-ID "${{parameters.websiteName}}" "${{parameters.serviceConnectionUrl}}" "$env:MAPPED_SPN_Token"
   condition: and(succeeded(), eq(variables['PowerPageWebsiteId'], ''),ne('${{parameters.commitScope}}', '3'))
   displayName: "Fetch Power Pages Website ID from Dataverse"
   env:

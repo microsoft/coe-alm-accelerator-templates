@@ -52,7 +52,7 @@ function Process-and-Download-Websites
         foreach ($websiteName in $collWebsiteNames) {
             Write-Host "validating the presence of website - $websiteName"
             # Make sure there is a website with the name
-            $websiteId =  Fetch-Website-ID "$websiteName" "$serviceConnectionUrl" "$token"
+            $websiteId =  Get-Website-ID "$websiteName" "$serviceConnectionUrl" "$token"
             Write-Host "websiteId of $websiteName  - $websiteId"
             if($websiteId -ne "NA"){
                 Write-Host "Triggering pac download"
