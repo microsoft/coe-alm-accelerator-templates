@@ -97,7 +97,7 @@ function Add-Codefirst-Projects-To-Cdsproj{
           foreach($pcfProj in $pcfProjectFiles)
           {     
             Write-Host "Adding Reference of Pcf Project - " $pcfProj.FullName
-            $pcfProjectPath = $pcfProj.FullName
+            $pcfProjectPath = "`"$($pcfProj.FullName)`""
 
             $addReferenceCommand = "solution add-reference --path $pcfProjectPath"
             Write-Host "Add Reference Command - $addReferenceCommand"
