@@ -13,7 +13,7 @@ stages:
       
     - template: build-unmanaged-managed-Solution.yml
 
-    # If ImportUnmanaged variable passed in pipeline; Pass 'importUnmanaged' param to deploy-Solution.yml
+    # If ImportUnmanaged variable passed in pipeline; Pass 'isUnmanaged' param to deploy-Solution.yml
     - pwsh: |
         $isunmanaged = 'false'
         if('$(ImportUnmanaged)'.Contains("ImportUnmanaged")) {
@@ -36,4 +36,4 @@ stages:
         solutionName: $(SolutionName)
         environmentName: $(EnvironmentName)
         skipBuildToolsInstaller: 'true'
-        importUnmanaged: $(IsUnmanaged)
+        isUnmanaged: $(IsUnmanaged)

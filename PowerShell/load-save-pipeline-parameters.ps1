@@ -26,12 +26,12 @@ function Write-Deploy-Pipeline-Parameters {
         [Parameter()] [String]$serviceConnectionUrl,
         [Parameter()] [String]$environmentName, 
         [Parameter()] [String]$solutionName,
-        [Parameter()] [String]$importUnmanaged, 
+        [Parameter()] [String]$isUnmanaged, 
         [Parameter()] [String]$overwriteUnmanagedCustomizations,
         [Parameter()] [String]$skipBuildToolsInstaller, 
         [Parameter()] [String]$cacheEnabled
     )
-    $pipelineParameterObject = [PSCustomObject]@{"serviceConnectionName"="$serviceConnectionName"; "serviceConnectionUrl"="$serviceConnectionUrl"; "environmentName"="$environmentName"; "solutionName"="$solutionName"; "importUnmanaged"="$importUnmanaged"; "overwriteUnmanagedCustomizations"="$overwriteUnmanagedCustomizations"; "skipBuildToolsInstaller"="$skipBuildToolsInstaller"; "cacheEnabled"="$cacheEnabled" }
+    $pipelineParameterObject = [PSCustomObject]@{"serviceConnectionName"="$serviceConnectionName"; "serviceConnectionUrl"="$serviceConnectionUrl"; "environmentName"="$environmentName"; "solutionName"="$solutionName"; "isUnmanaged"="$isUnmanaged"; "overwriteUnmanagedCustomizations"="$overwriteUnmanagedCustomizations"; "skipBuildToolsInstaller"="$skipBuildToolsInstaller"; "cacheEnabled"="$cacheEnabled" }
     Write-Pipeline-Parameters $filePath $pipelineParameterObject
 }
 
