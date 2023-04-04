@@ -119,7 +119,7 @@ function Process-and-Upload-Websites
                     }
 
                     # Logic to upload websites
-                    $portalUploadCommand = "paportal upload --path $websiteFolderPath"
+                    $portalUploadCommand = 'paportal upload --path "$websiteFolderPath"'
                     if($filesCount -gt 0){
                         Write-Host "Uploading command with profile - $environmentName"
                         $portalUploadCommand = $portalUploadCommand + " --deploymentProfile $environmentName"
