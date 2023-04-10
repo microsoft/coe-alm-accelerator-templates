@@ -59,7 +59,7 @@ steps:
     key:  restoremodules | "$(powerPlatformToolsSubPath)" | $(Pipeline.Workspace)/PipelineUtils/Pipelines/Templates/install-powershell-modules.yml
     path: $(powerPlatformToolsPath)
     cacheHitVar: powerPlatformToolsPath_IsCached
-  condition: and(succeeded(), eq('${{parameters.cacheEnabled}}', 'true'))
+  condition: and(succeeded(), and(eq('${{parameters.cacheEnabled}}', 'true'), ne(variables['CacheEnabled'], 'false')))
 
 - template: install-powershell-modules.yml
 
@@ -137,7 +137,7 @@ steps:
 
 - pwsh: |
    . "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
-    Get-managed-solution-zip-path "$(ArtifactDropPath)" "${{parameters.solutionName}}"
+    Get-Managed-Solution-Zip-Path "$(ArtifactDropPath)" "${{parameters.solutionName}}"
 
     #Set TriggerSolutionUpgrade to false if the variable is not set
     if('$(TriggerSolutionUpgrade)'.Contains("TriggerSolutionUpgrade")) {
@@ -232,6 +232,13 @@ steps:
 
 - template: set-deployment-variable.yml
   parameters:
+    variableName: 'outWebHookUrls'
+    deploymentSettingsPath: $(CustomDeploymentSettingsPath)
+    deploymentSettingsNode: 'WebhookUrls'
+    displayName: 'Retrieve WebHook Urls Config for Deploy'
+
+- template: set-deployment-variable.yml
+  parameters:
     variableName: 'outFlowShareWithGroupTeamConfiguration'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'FlowShareWithGroupTeamConfiguration'
@@ -260,6 +267,11 @@ steps:
   parameters:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'
     solutionComponentOwnershipConfiguration: '$(outSolutionComponentOwnershipConfiguration)'
+
+- template: update-webhook-urls.yml
+  parameters:
+    serviceConnection: '${{parameters.serviceConnectionUrl}}'
+    webHookConfiguration: '$(outWebHookUrls)'
 
 - template: activate-flows.yml
   parameters:
@@ -294,23 +306,15 @@ steps:
     makerPortalUrl: '$(TestAutomationMakerPortalUrl)'
     loginMethod: '$(TestAutomationLoginMethod)'
 
-# ALM Accelerator currently supports ALM of single website.
-# PowerPages folder contain one subfolder at depth 1, which is the unpacked WebSite folder.
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      set-pac-tools-path "$(Agent.OS)"
+  displayName: 'Set pac tools path'
+
 - pwsh: |
     . "$env:POWERSHELLPATH/portal-functions.ps1"
-    $websiteName = Get-Website-Name "$(Build.SourcesDirectory)" "$(Build.Repository.Name)" "${{parameters.solutionName}}"
-    echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
-    Write-Host "websiteName - $websiteName"
-  displayName: "Fetch Portal Website Name"
-
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.upload-paportal.PowerPlatformUploadPaportal@2
-  displayName: 'Upload Power Page ${{parameters.solutionName}}'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
-    UploadPath: '$(Build.SourcesDirectory)\$(Build.Repository.Name)\${{parameters.solutionName}}\PowerPages\$(WebsiteName)\'
-    Environment: '${{parameters.serviceConnectionUrl}}'
-  condition: and(succeeded(), ne(variables['WebsiteName'], 'NA'))
+    Process-and-Upload-Websites "$(Build.SourcesDirectory)" "$(Build.Repository.Name)" "${{parameters.solutionName}}" "${{ parameters.environmentName }}" "$(pacPath)" "${{parameters.serviceConnectionUrl}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)"
+  displayName: "Upload website(s)"
 
 - pwsh: |
     $ConnectorsFilePath = Join-Path "$(ArtifactDropPath)" "customConnectorsConnectionParameters.json"

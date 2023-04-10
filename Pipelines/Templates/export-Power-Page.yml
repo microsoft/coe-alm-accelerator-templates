@@ -13,31 +13,36 @@ parameters:
   type: string
 - name: websiteName
   type: string
-
+- name: commitScope
+  type: string
+  default: '1'
+- name: configurationData
+  type: string
+- name: buildSourceDirectory
+  type: string
 steps:
 # ALM Accelerator currently supports ALM of single website.
 # PowerPages folder contain one subfolder at depth 1, which is the unpacked WebSite folder.
+# Check if unpacked website folder already exists; If exists Clean the folder in the next step
 - pwsh: |
     . "$env:POWERSHELLPATH/portal-functions.ps1"
-    $websiteName = Get-Website-Name "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}"
-    echo "##vso[task.setvariable variable=WebsiteName]$websiteName"
+    Process-and-Download-Websites "${{parameters.buildSourceDirectory}}" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)" "${{parameters.serviceConnectionUrl}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)" "${{parameters.websiteName}}" "$env:MAPPED_SPN_Token"
+  displayName: "Download website(s)"
+  #condition: and(succeeded(), ne('${{parameters.commitScope}}', '3'))
+  condition: and(succeeded(), ne('${{parameters.commitScope}}', '3'), and(ne('${{parameters.websiteName}}', 'NA'), ne('${{parameters.websiteName}}', '')))
+  env:
+    MAPPED_SPN_Token: $(SpnToken)
+
+# Logic to read and set deployment profiles yml files under .\PowerPages\Websitename\deployment-profiles
+- pwsh: |
+    . "$env:POWERSHELLPATH/portal-functions.ps1"
+    . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+    $websiteName = Get-Website-Name "${{parameters.buildSourceDirectory}}" "${{parameters.repo}}" "${{parameters.solutionName}}"
     Write-Host "websiteName - $websiteName"
-  displayName: "Fetch Portal Website Name"
-  condition: and(succeeded(), ne(variables['websiteId'], 'NA'))
-
-#TODO Because the override flag is not exposed yet in tools, so we need to clear the folder manually
-- pwsh: |
-    . "$env:POWERSHELLPATH/portal-functions.ps1"
-    Clean-Website-Folder "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(WebsiteName)"
-  displayName: 'Clear Download Folder'
-  condition: and(succeeded(), ne(variables['websiteId'], 'NA'))
-
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.download-paportal.PowerPlatformDownloadPaportal@2
-  displayName: 'Export Power Page ${{parameters.solutionName}} from ${{parameters.serviceConnectionUrl}}'
-  inputs:
-    authenticationType: PowerPlatformSPN
-    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
-    Environment: '${{parameters.serviceConnectionUrl}}'
-    DownloadPath: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\PowerPages\'
-    WebsiteId: ${{parameters.websiteId}}
-  condition: and(succeeded(), ne(variables['websiteId'], 'NA'))
+    . "$env:POWERSHELLPATH/update-deployment-settings.ps1"
+    Set-PortalSettings-Files "${{parameters.buildSourceDirectory}}" "${{parameters.repo}}" "${{parameters.serviceConnectionUrl}}" "${{parameters.solutionName}}" "$websiteName" "$env:MAPPED_SPN_Token"
+  env:
+    DEPLOYMENT_SETTINGS: ${{parameters.configurationData}}
+    MAPPED_SPN_Token: $(SpnToken)
+  displayName: 'Fetch and set deployment profiles'
+  condition: and(succeeded(), ne('${{parameters.commitScope}}', '3'), and(ne('${{parameters.websiteName}}', 'NA'), ne('${{parameters.websiteName}}', '')))
