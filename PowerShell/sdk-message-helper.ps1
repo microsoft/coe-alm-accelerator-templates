@@ -48,12 +48,12 @@ function Update-Sdk-Message-Configurations {
                                 # For secured configuration, first check if 'sdkmessageprocessingstepsecureconfig' already presents
                                 if($sdkMessageStep.sdkmessageprocessingstepsecureconfigid){
                                     Write-Host "SDK Message Step already having secureconfig id - "$sdkMessageStep.sdkmessageprocessingstepsecureconfigid
-                                    Write-Host "Updating the 'secureconfig' field of sdkmessageprocessingstepsecureconfig"
+                                    Write-Host "Updating the 'secureconfig' field of sdkmessageprocessingstepsecureconfig."
                                     Set-CrmRecord -conn $conn -EntityLogicalName sdkmessageprocessingstepsecureconfig -Id $sdkMessageStep.sdkmessageprocessingstepsecureconfigid -Fields @{"secureconfig"="$($configuration.Value)";}
                                 }else{
                                    # Create a new sdkmessageprocessingstepsecureconfig record
-                                   Write-Host "SDK Message Step does not have secureconfig"
-                                   Write-Host "Creating a new sdkmessageprocessingstepsecureconfig record"
+                                   Write-Host "SDK Message Step does not have secureconfig."
+                                   Write-Host "Creating a new sdkmessageprocessingstepsecureconfig record."
                                    $securedConfigReferenceId = New-CrmRecord -conn $conn -EntityLogicalName sdkmessageprocessingstepsecureconfig -Fields @{"secureconfig"="$($configuration.Value)";}
                                    $securedConfigReference = New-CrmEntityReference -EntityLogicalName sdkmessageprocessingstepsecureconfig -Id $securedConfigReferenceId
                                    Write-Host "Updating the sdkmessageprocessingstepsecureconfigid field of sdkmessageprocessingstep with the newly created sdkmessageprocessingstepsecureconfig record"
