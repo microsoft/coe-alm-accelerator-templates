@@ -515,6 +515,7 @@ function Invoke-Create-Update-ServiceConnection-Parameters{
             $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "ServiceConnectionUrl" -Value @{value = ''}
         }
 
+        Write-Host "Service Connection Name: $ServiceConnectionName"
 		# If the "$ServiceConnectionName" variable was not found, use $DeploymentEnvironmentUrl
 		if([string]::IsNullOrEmpty($ServiceConnectionName))
 		{
