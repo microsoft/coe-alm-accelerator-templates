@@ -22,7 +22,6 @@
     $reservedVariables = @("TriggerSolutionUpgrade")
     Write-Host (ConvertTo-Json -Depth 10 $configurationData)
 
-
     #Generate Deployment Settings
     Write-Host "Update Deployment Settings"
     if(!(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\")) {
@@ -386,7 +385,7 @@ function New-DeploymentPipelines
             $settings= ""
             $environmentNames = ""
             foreach($deploymentEnvironment in $deploymentConfigurationData) {
-                Write-Host "Environment Name: " + $deploymentEnvironment.DeploymentEnvironmentName
+                Write-Host "Environment Name: " $deploymentEnvironment.DeploymentEnvironmentName
                 if(-Not [string]::IsNullOrWhiteSpace($settings)) {
                     $settings = $settings + ","
                 }
@@ -437,23 +436,22 @@ function New-DeploymentPipelines
                 if(Test-Path ".\combined.log") {
                     Remove-Item ".\combined.log"
                 }
-                if ($agentOS -eq "Linux") {
-                    #NOTE: The ability to call the coe-cli in a Linux environment is here for reference. Currently, the ALM Accelerator Pipelines require Windows runners due to several
-                    #packages we use that are windows only. We are actively working toward support for Linux environments, but as of the time of this addition this is for reference only.
-                    if([string]::IsNullOrWhiteSpace($pat)) {
-                        .\Coe-Cli\linux\coe-cli alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
-                    }
-                    else {
-                        .\Coe-Cli\linux\coe-cli alm branch --pipelineProject "$buildProjectName" --pipelineRepository $buildRepositoryName -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
-                    }
+                
+                try{
+                    . "$env:POWERSHELLPATH/brach-pipeline-policy.ps1"
+                    Write-Host "Branch creation start"
+                   $solutionProjectRepo = Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType"
+
+                   if($solutionProjectRepo -ne $null){
+                        Write-Host "Creation of build definitions start"                        
+                        Create-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings"
+                        Write-Host "Setting up branch policy start"                        
+                        Set-Branch-Policy "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings"
+                   }
                 }
-                else {
-                    if([string]::IsNullOrWhiteSpace($pat)) {
-                        .\Coe-Cli\coe-cli.exe alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $env:SYSTEM_ACCESSTOKEN -s $settings
-                    }
-                    else {
-                        .\Coe-Cli\coe-cli.exe alm branch --pipelineProject "$buildProjectName" --pipelineRepository "$buildRepositoryName" -o "$orgUrl" -p "$projectName" -r "$repo" -d "$solutionName" -a $pat -s $settings
-                    }
+                catch{
+                    # Code to handle the error goes here
+                    Write-Host "An error occurred duirng Branch creation with definitions and policy configurations : $($_.Exception.Message)"
                 }
 
                 if(Test-Path ".\combined.log") {
@@ -486,7 +484,6 @@ function Set-BuildDefinitionVariables {
         $body = $body -replace "`t", ""
         #remove newline charcters from the body
         $body = $body -replace '\\n', ''
-        Write-Host "Body - $body"
         Write-Host $buildDefinitionResourceUrl
         Invoke-RestMethod $buildDefinitionResourceUrl -Method 'PUT' -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | Out-Null   
     }
