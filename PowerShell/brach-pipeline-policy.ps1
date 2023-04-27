@@ -467,7 +467,7 @@ Param(
     # For some reason nested array not parsing properly
     # Logic to convert String to array
     $jsonBodyCleansed = $jsonBody -replace """branchFilters"":  ""main""","""branchFilters"":  [""main""]" 
-    #Write-Host "Cleansed Body $jsonBodyCleansed"
+    Write-Host "Cleansed Body $jsonBodyCleansed"
 
     $uriBuildDefinition = "$orgUrl$buildProjectName/_apis/build/definitions?api-version=6.0"
     Write-Host "Create Definition URI - $uriBuildDefinition"
