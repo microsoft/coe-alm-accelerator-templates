@@ -219,17 +219,19 @@ Describe 'E2E-Pipeline-Test' {
 
         # Before we create the PR, we need to update the pipeline yml to use the branch containing the yml we want to test
         $result = az pipelines run --org $Org --project $Project --name update-ref-for-pr-loop --variables BranchToUpdate=$BranchToCreate TemplateBranch=$BranchToTest
-        Start-Sleep -Seconds 15
+		Write-Host "az pipelines run response : $result"
+        Start-Sleep -Seconds 30	
 
         # Create PR for the branch we committed/pushed to
         $result = az repos pr create --org $Org --project $Project --repository $Repo --source-branch $BranchToCreate --target-branch $SolutionName --title "E2E-Pipeline-Test"
+		Write-Host "pr create result : $result"
         $result = $result | ConvertFrom-Json -Depth 100
         $result.status | Should -Be 'active'
         
         # Get the id of the PR validation pipeline using the PR id and wait for it to successfully complete
         $pullRequestId = $result.pullRequestId
         # sleep for 15 seconds to ensure the pipeline to validate the PR is kicked off (may need to tweak)
-        Start-Sleep -Seconds 30
+        Start-Sleep -Seconds 60
         $result = az pipelines runs list --org $Org --project $Project --branch "refs/pull/$pullRequestId/merge"
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result[0].id
