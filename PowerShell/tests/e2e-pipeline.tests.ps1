@@ -230,9 +230,11 @@ Describe 'E2E-Pipeline-Test' {
         
         # Get the id of the PR validation pipeline using the PR id and wait for it to successfully complete
         $pullRequestId = $result.pullRequestId
+        Write-Host "PullRequestId - $pullRequestId"
         # sleep for 15 seconds to ensure the pipeline to validate the PR is kicked off (may need to tweak)
         Start-Sleep -Seconds 60
         $result = az pipelines runs list --org $Org --project $Project --branch "refs/pull/$pullRequestId/merge"
+        Write-Host "az pipelines runs list : $result"
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result[0].id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
@@ -245,6 +247,7 @@ Describe 'E2E-Pipeline-Test' {
         # Get the id of the pipeline to deploy to UAT and wait for it to successfully complete
         # TODO: See if we can improve the query below to be more precise.  Works when there isn't another pipeline running triggered from the same solution branch
         $result = az pipelines runs list --org $Org --project $Project --branch $SolutionName --top 1 --reason individualCI --query-order QueueTimeDesc
+        Write-Host "az pipelines runs list 2 : $result"
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result[0].id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
