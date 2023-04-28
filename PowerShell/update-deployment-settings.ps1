@@ -148,7 +148,7 @@
                             Write-Host "Sdkmessageprocessingstepid - $sdkmessageprocessingstepid"
                             $configKey = $configurationVariableName -replace "sdkstep.", "" 
                             $sdkmessageprocessingstepRecord = Get-CrmRecord -conn $conn -EntityLogicalName "sdkmessageprocessingstep" -Id "$sdkmessageprocessingstepid" -Fields sdkmessageprocessingstepid
-                            if($sdkmessageprocessingstepRecord -ne $null){
+                            if($null -ne $sdkmessageprocessingstepRecord){
                                 $sdkConfig = [PSCustomObject]@{"Config"="$configKey"; "Value"="#{$configurationVariableName}#"}
                                 if($usePlaceholders.ToLower() -eq 'false' -or $isDevEnvironment) {
                                     $sdkConfig = [PSCustomObject]@{"Config"="$configKey"; "Value"="$configurationVariableValue"}
@@ -442,9 +442,9 @@ function New-DeploymentPipelines
                     Write-Host "Branch creation start"
                    $solutionProjectRepo = Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType"
 
-                   if($solutionProjectRepo -ne $null){
+                   if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"                        
-                        Create-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings"
+                        Update-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings"
                         Write-Host "Setting up branch policy start"                        
                         Set-Branch-Policy "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings"
                    }
@@ -710,7 +710,6 @@ function Read-File-Content {
         if ($null -ne $response -and -not $response.IsEmpty){
             # Read FileContinuationToken and call 'InitializeFileBlocksDownload'
             $fileSizeInBytes = $response.FileSizeInBytes
-            $fileName = $response.FileName
             $fileContinuationToken = $response.FileContinuationToken
 
             Write-Host "fileContinuationToken - $fileContinuationToken"

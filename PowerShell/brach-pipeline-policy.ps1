@@ -112,7 +112,7 @@ function Create-Branch{
                     Write-Host "Getting commit changes for $environmentName"
                     # Fetch Commit Changes Collection
                     $commitChange = Get-Git-Commit-Changes "$organizationURL" "$buildProjectName" "$solutionProjectName" "$solutionRepositoryName" "$buildRepositoryName" "$solutionName" "$environmentName" "$sourceBranch"
-                    if($commitChange -ne $null){
+                    if($null -ne $commitChange){
                         $commitChanges.Add($commitChange)
                     }
                 }
@@ -220,9 +220,6 @@ function Get-Repositories{
         Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
     }
 
-    $jsonString = ConvertTo-Json $getReposInProjectResponse
-    #Write-Host "getReposInProjectResponse - " $jsonString
-
     Write-Host "$($getReposInProjectResponse.value.length) repositories available in Project - $project"
     return $getReposInProjectResponse
 }
@@ -255,12 +252,12 @@ function Get-Git-Commit-Changes{
         Write-Host "Build definition does not exist at $repoTemplatePath. Message - $($_.Exception.Message)"
     }
 
-    if($existingPipelineResponse -eq $null){
+    if($null -eq $existingPipelineResponse){
         Write-Host "Creating a build definition for $environmentName"
         # Fetch the Template from pipeline Repo
         $templatePath = "/Pipelines/build-deploy-$environmentName-SampleSolution.yml"
         $settingsTemplatePath = Get-Value-From-settings $settings "$environmentName-buildtemplate"
-        if($settingsTemplatePath -ne $null){
+        if($null -ne $settingsTemplatePath){
             Write-Host "Template Path mentioned in Settings for $environmentName"
             $templatePath = $settingsTemplatePath
         }
@@ -279,7 +276,7 @@ function Get-Git-Commit-Changes{
             Write-Host "Pipeline template does not exist at $templatePath. Message - $($_.Exception.Message)"
         }
 
-        if($almBuildpipelineResponse -ne $null){
+        if($null -ne $almBuildpipelineResponse){
             Write-Host "Fetched pipeline content for $environmentName"
             # Replace with 'Main' Branch name of Pipeline Build Repository
             $pipelineContent = $almBuildpipelineResponse -replace "BranchContainingTheBuildTemplates", $sourceBranch
@@ -288,7 +285,7 @@ function Get-Git-Commit-Changes{
             $pipelineContent = $pipelineContent -replace "SampleSolutionName", $solutionName
 
             $variableGroup = Get-Value-From-settings $settings "$environmentName-variablegroup"
-            if($variableGroup -ne $null){
+            if($null -ne $variableGroup){
                 $pipelineContent = $pipelineContent -replace "alm-accelerator-variable-group", $variableGroup
             }
 
@@ -313,7 +310,7 @@ function Get-Git-Commit-Changes{
     return $commitChange
 }
 
-function Create-Build-for-Branch{
+function Update-Build-for-Branch{
     param (
         [Parameter(Mandatory)] [String]$orgUrl,
         [Parameter(Mandatory)] [String]$buildProjectName,
@@ -328,7 +325,7 @@ function Create-Build-for-Branch{
     $definitions = Get-Project-Build-Definitions "$orgUrl" "$buildProjectName" "$azdoAuthType"
     Write-Host "Retrieving default Queue"
     $defaultAgentQueue = Get-AgentQueueByName "$orgUrl" "$buildProjectName" "$azdoAuthType" "Azure Pipelines"
-    if($defaultAgentQueue -ne $null){
+    if($null -ne $defaultAgentQueue){
         Write-Host "Default queue (Azure Pipelines) is available"
         # If Environment Names not provided, fall back to validation|test|prod.
         if([string]::IsNullOrEmpty($environmentNames)){
@@ -339,14 +336,14 @@ function Create-Build-for-Branch{
         # Get 'pipelines' content for all environments
         $collEnvironmentNames = $environmentNames.Split('|')
         foreach ($environmentName in $collEnvironmentNames) {
-            Clone-Build-Settings "$orgUrl" "$buildProjectName" "$settings" $definitions "$environmentName" "$solutionName" $repo "$azdoAuthType" $defaultAgentQueue
+            Invoke-Clone-Build-Settings "$orgUrl" "$buildProjectName" "$settings" $definitions "$environmentName" "$solutionName" $repo "$azdoAuthType" $defaultAgentQueue
         }
     }else{
         Write-Host "'Azure Pipelines' queue Not Found. You will need to set the default queue manually. Please verify the permissions for the user executing this command include access to queues."
     }
 }
 
-function Clone-Build-Settings {
+function Invoke-Clone-Build-Settings {
     param (
         [Parameter(Mandatory)] [String]$orgUrl,
         [Parameter(Mandatory)] [String]$buildProjectName,
@@ -359,7 +356,7 @@ function Clone-Build-Settings {
         [Parameter(Mandatory)] [object]$defaultAgentQueue
     )
 
-    $destinationBuildName = "deploy-$environmentName-$solutionName".ToLower()
+    $destinationBuildName = "deploy-$environmentName-$solutionName"
     Write-Host "Looking for DestinationBuildName - $destinationBuildName from the build definitions"
 
     $destinationBuild = $pipelines.value | Where-Object {$_.name -eq "$destinationBuildName"}
@@ -369,11 +366,11 @@ function Clone-Build-Settings {
         return;
     }else{
         # Create new Pipeline
-        Create-Build-Definition "$orgUrl" "$buildProjectName" "$settings" "$environmentName" "$solutionName" $repo "$destinationBuildName" "$azdoAuthType" $defaultAgentQueue
+        Update-Build-Definition "$orgUrl" "$buildProjectName" "$settings" "$environmentName" "$solutionName" $repo "$destinationBuildName" "$azdoAuthType" $defaultAgentQueue
     }
 }
 
-function Create-Build-Definition{
+function Update-Build-Definition{
 Param(
     [Parameter(Mandatory)] [String]$orgUrl,
     [Parameter(Mandatory)] [String]$buildProjectName,
@@ -394,20 +391,8 @@ Param(
     $serviceConnectionUrl = Get-ValueFromKey-Settings "$environmentName" "$settings"
     Write-Host "Service Connection Url - $serviceConnectionUrl"
     #Fall back to using the service connection url supplied as the service connection name if no name was supplied
-    if ($serviceConnectionName -eq $null) {
+    if ($null -eq $serviceConnectionName) {
         $serviceConnectionName = $serviceConnectionUrl
-    }
-    
-    $variables = @{
-        EnvironmentName = @{
-            value = "$environmentName"
-        }
-        ServiceConnection = @{
-            value = "$serviceConnectionName"
-        }
-        ServiceConnectionUrl = @{
-            value = "$serviceConnectionUrl"
-        }
     }
 
     Write-Host "Creating a new pipleine $destinationBuildName"
@@ -619,7 +604,7 @@ function Set-Branch-Policy{
         }
 
         # Check if there are existing policies. If yes, delete the policy configuration.
-        if($existingPolices -ne $null){
+        if($null -ne $existingPolices){
             Write-Host "Policy of branch $solutionName already exists. Deleting existing policy"
             $uriDeleteConfig = "$orgUrl$solutionProjectName/_apis/policy/configurations/$($existingPolices.id)?api-version=6.0"
             Write-Host "UriDeleteConfig - $uriDeleteConfig"
@@ -731,7 +716,7 @@ function Get-Policy-Types {
     return $policyTypesResponse
 }
 
-function Fetch-Repo-in-Project{
+function Get-Repo-in-Project{
     param (
         [Parameter(Mandatory)] [String]$organizationURL,
         [Parameter(Mandatory)] [String]$project,
