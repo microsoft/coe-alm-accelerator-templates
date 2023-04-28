@@ -237,7 +237,8 @@ function Get-Git-Commit-Changes{
     )
 
     $commitChange = $null
-    $repoTemplatePath = "/$solutionName/deploy-$environmentName-$solutionName.yml"
+    $deployPipelineName = "deploy-$environmentName".ToLower()
+    $repoTemplatePath = "/$solutionName/$deployPipelineName-$solutionName.yml"
     Write-Host "RepoTemplatePath - $repoTemplatePath"
     $existingPipelineUrl = "$orgUrl$solutionProjectName/_apis/git/repositories/$solutionRepositoryName/items?path=$repoTemplatePath&api-version=6.0&versionDescriptor.versionType=branch&versionDescriptor.version=$sourceBranch"
     Write-Host "ExistingPipelineUrl - $existingPipelineUrl"
@@ -255,7 +256,8 @@ function Get-Git-Commit-Changes{
     if($null -eq $existingPipelineResponse){
         Write-Host "Creating a build definition for $environmentName"
         # Fetch the Template from pipeline Repo
-        $templatePath = "/Pipelines/build-deploy-$environmentName-SampleSolution.yml"
+        $deployPipelineName = "build-deploy-$environmentName".ToLower()
+        $templatePath = "/Pipelines/$deployPipelineName-SampleSolution.yml"
         $settingsTemplatePath = Get-Value-From-settings $settings "$environmentName-buildtemplate"
         if($null -ne $settingsTemplatePath){
             Write-Host "Template Path mentioned in Settings for $environmentName"
@@ -291,11 +293,12 @@ function Get-Git-Commit-Changes{
 
             #Write-Host "Pipeline content post substitution - $pipelineContent"
 
+            $deployPipelineName = "deploy-$environmentName".ToLower()
             # Create a new commit change
             $commitChange = @{
                 changeType = "add"
                 item = @{
-                    path = "/$solutionName/deploy-$environmentName-$solutionName.yml"
+                    path = "/$solutionName/$deployPipelineName-$solutionName.yml"
                 }
                 newContent = @{
                     content = "$pipelineContent"
@@ -384,7 +387,8 @@ Param(
     [Parameter(Mandatory)] [object]$defaultAgentQueue
 )
     #Yaml file name
-    $yamlFileName = "/$solutionName/deploy-$environmentName-$solutionName.yml"
+    $deployPipelineName = "deploy-$environmentName".ToLower()
+    $yamlFileName = "/$solutionName/$deployPipelineName-$solutionName.yml"
     Write-Host "Creating build definition for $yamlFileName"
     # Prepare Variables
     $serviceConnectionName = $null
