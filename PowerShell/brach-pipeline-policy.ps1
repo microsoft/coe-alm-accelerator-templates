@@ -356,7 +356,8 @@ function Invoke-Clone-Build-Settings {
         [Parameter(Mandatory)] [object]$defaultAgentQueue
     )
 
-    $destinationBuildName = "deploy-$environmentName-$solutionName"
+    $destinationBuildName = "deploy-$environmentName".ToLower()
+    $destinationBuildName = "$destinationBuildName-$solutionName"
     Write-Host "Looking for DestinationBuildName - $destinationBuildName from the build definitions"
 
     $destinationBuild = $pipelines.value | Where-Object {$_.name -eq "$destinationBuildName"}
