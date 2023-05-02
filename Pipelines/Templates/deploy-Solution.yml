@@ -308,6 +308,13 @@ steps:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'
     connectorShareWithGroupTeamConfiguration: '$(outConnectorShareWithGroupTeamConfiguration)'
 
+- template: run-testengine.yml 
+  parameters:
+    environmentId: '$(BuildTools.EnvironmentId)'
+    tenantId: '$(connectionVariables.BuildTools.TenantId)'
+    testAccountUsername: '$(TestAutomationUsername)'
+    testAccountPassword: '$(TestAutomationPassword)'
+
 - template: run-canvas-tests.yml 
   parameters:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'

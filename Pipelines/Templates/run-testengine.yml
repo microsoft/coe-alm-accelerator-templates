@@ -1,0 +1,23 @@
+parameters:
+  - name: environmentId
+    type: string
+  - name: tenantId
+    type: string
+  - name: testAccountUsername
+    type: string
+  - name: testAccountPassword
+    type: string
+
+steps:
+- pwsh: |
+    git clone --recurse-submodules https://github.com/Grant-Archibald-MS/PowerApps-TestEngine-Modules.git
+    
+    cd PowerApps-TestEngine-Modules\PowerApps-TestEngine
+    git checkout testengine-plugin
+    cd ..
+
+    cd src\PowerApps-TestEngine-Modules
+    dotnet build
+  displayName: "Build Test Engine"
+    
+    
