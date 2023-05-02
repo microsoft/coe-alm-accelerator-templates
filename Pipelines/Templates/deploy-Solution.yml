@@ -314,6 +314,7 @@ steps:
     tenantId: '$(connectionVariables.BuildTools.TenantId)'
     testAccountUsername: '$(TestAutomationUsername)'
     testAccountPassword: '$(TestAutomationPassword)'
+  condition: and(succeeded(), and(ne(variables['DisableTestEngine'], 'true'), eq(variables['Build.Reason'], 'PullRequest')))
 
 - template: run-canvas-tests.yml 
   parameters:
