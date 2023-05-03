@@ -37,7 +37,7 @@ steps:
       if ($testFiles.length -eq 0) {
         Write-Host "No test files found"
       } else {
-        for ($testFile in $testFiles) {
+        ForEach ($testFile in $testFiles) {
           Write-Host $testFile.FullName
           dotnet run -- -i $testFile.FullName -e $(environmentId) -t $(tenantId)
         }
@@ -47,4 +47,8 @@ steps:
     }
   displayName: "Run Test Engine Tests"
     
-    
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '**/*.trx'
+  displayName: "Publish Test Results"
