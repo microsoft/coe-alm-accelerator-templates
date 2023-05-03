@@ -23,6 +23,8 @@ steps:
     $env:user1Password = "$(TestAutomationPassword)"
     cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
 
+    & .\playwright.ps1 install
+
     $splitName = "$(Build.Repository.Name)".Split("/")
     $repoName = $splitName[$splitName.Length - 1]
     $testPath = "$(Build.SourcesDirectory)\$(repoName)\$(solutionName)\tests"
