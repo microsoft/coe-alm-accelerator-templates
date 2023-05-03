@@ -1,4 +1,9 @@
 parameters:
+  - name: repo
+    type: string
+    default: ''
+  - name: solutionName
+    type: string
   - name: environmentId
     type: string
   - name: tenantId
@@ -19,5 +24,27 @@ steps:
     cd src\PowerApps-TestEngine-Modules
     dotnet build
   displayName: "Build Test Engine"
+
+- pwsh: |
+    $env:user1Email = "${{parameters.testAccountUsername}}"
+    $env:user1Password = "${{parameters.testAccountUsername}}"
+    cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
+
+    $testPath = "$(Build.SourcesDirectory)\$(repo)\$(solutionName)\tests"
+    if (Test-Path -Path $testPath -PathType Container) {
+      Write-Host "Found test directory"
+      $testFiles = @(Get-ChildItem -Path $testPath -Filter *.fx.yaml -Recurse -ErrorAction SilentlyContinue -Force)
+      if ($testFiles.length -eq 0) {
+        Write-Host "No test files found"
+      } else {
+        for ($testFile in $testFiles) {
+          Write-Host $testFile.FullName
+          dotnet run -- -i $testFile.FullName -e $(environmentId) -t $(tenantId)
+        }
+      }
+    } else {
+      Write-Host "No tests found"
+    }
+  displayName: "Run Test Engine Tests"
     
     

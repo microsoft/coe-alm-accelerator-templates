@@ -310,6 +310,8 @@ steps:
 
 - template: run-testengine.yml 
   parameters:
+    repo: '$(Build.Repository.Name)'
+    solutionName: '{{parameters.SolutionName}}'
     environmentId: '$(BuildTools.EnvironmentId)'
     tenantId: '$(connectionVariables.BuildTools.TenantId)'
     testAccountUsername: '$(TestAutomationUsername)'
