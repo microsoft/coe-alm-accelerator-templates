@@ -313,8 +313,6 @@ steps:
     solutionName: '{{parameters.SolutionName}}'
     environmentId: '$(BuildTools.EnvironmentId)'
     tenantId: '$(connectionVariables.BuildTools.TenantId)'
-    testAccountUsername: '$(TestAutomationUsername)'
-    testAccountPassword: '$(TestAutomationPassword)'
 
 - template: run-canvas-tests.yml 
   parameters:

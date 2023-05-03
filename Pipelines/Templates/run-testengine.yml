@@ -5,10 +5,6 @@ parameters:
     type: string
   - name: tenantId
     type: string
-  - name: testAccountUsername
-    type: string
-  - name: testAccountPassword
-    type: string
 
 steps:
 - pwsh: |
@@ -23,8 +19,8 @@ steps:
   displayName: "Build Test Engine"
 
 - pwsh: |
-    $env:user1Email = "${{parameters.testAccountUsername}}"
-    $env:user1Password = "${{parameters.testAccountUsername}}"
+    $env:user1Email = $env:TestAutomationUsername
+    $env:user1Password = "$(TestAutomationPassword)"
     cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
 
     $splitName = "$(Build.Repository.Name)".Split("/")
@@ -33,6 +29,7 @@ steps:
 
     Write-Host "Searching for tests in"
     Write-Host $testPath
+    Write-Host "As user $($env:user1Email)"
     if ( [System.IO.Directory]::Exists($testPath) ) {
       Write-Host "Found test directory"
       $testFiles = @(Get-ChildItem -Path $testPath -Filter *.fx.yaml -Recurse -ErrorAction SilentlyContinue -Force)
