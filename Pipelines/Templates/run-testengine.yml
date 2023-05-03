@@ -39,8 +39,8 @@ steps:
         ForEach ($testFile in $testFiles) {
           Write-Host $testFile.FullName
           Write-Host "Environment Id: ${{parameters.environmentId}}"
-          Write-Host "Tenant Id: $(connectionVariables.BuildTools.TenantId)"
-          dotnet PowerAppsTestEngine.dll -i $testFile.FullName -e "${{parameters.environmentId}}" -t "$(connectionVariables.BuildTools.TenantId)" -l Trace
+          Write-Host "Tenant Id: $(TestTenantId)"
+          dotnet PowerAppsTestEngine.dll -i $testFile.FullName -e "${{parameters.environmentId}}" -t "$(TestTenantId)" -l Trace
         }
       }
     } else {
