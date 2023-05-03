@@ -46,6 +46,7 @@ steps:
     } else {
       Write-Host "No tests found"
     }
+    Compress-Archive -LiteralPath TestOutput -DestinationPath TestOutput.zip
   displayName: "Run Test Engine Tests"
     
 - task: PublishTestResults@2
@@ -54,14 +55,8 @@ steps:
     testResultsFiles: '**/*.trx'
   displayName: "Publish Test Results"
 
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: 'PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine\TestOutput'
-    Contents: |
-      **/*
-    targetFolder: $(Build.ArtifactStagingDirectory)
-
 - task: PublishBuildArtifacts@1
   inputs:
-    pathToPublish: $(Build.ArtifactStagingDirectory)
+    pathToPublish: PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine\TestOutput.zip
     artifactName: TestOutput
+  displayName: "Publish Test Output"
