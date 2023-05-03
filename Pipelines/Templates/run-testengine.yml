@@ -27,11 +27,13 @@ steps:
     $env:user1Password = "${{parameters.testAccountUsername}}"
     cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
 
-    $testPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$(solutionName)\tests"
+    $splitName = "$(Build.Repository.Name)".Split("/")
+    $repoName = $splitName[$splitName.Length - 1]
+    $testPath = "$(Build.SourcesDirectory)\$(repoName)\$(solutionName)\tests"
 
     Write-Host "Searching for tests in"
     Write-Host $testPath
-    if (Test-Path -Path $testPath -PathType Container) {
+    if ( [System.IO.Directory]::Exists($testPath) ) {
       Write-Host "Found test directory"
       $testFiles = @(Get-ChildItem -Path $testPath -Filter *.fx.yaml -Recurse -ErrorAction SilentlyContinue -Force)
       if ($testFiles.length -eq 0) {
