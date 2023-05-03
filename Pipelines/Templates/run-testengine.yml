@@ -40,7 +40,7 @@ steps:
       } else {
         ForEach ($testFile in $testFiles) {
           Write-Host $testFile.FullName
-          dotnet PowerAppsTestEngine.dll -i $testFile.FullName -e "${{parameters.environmentId}}" -t "${{parameters.tenantId}}"
+          dotnet PowerAppsTestEngine.dll -i $testFile.FullName -e "${{parameters.environmentId}}" -t "${{parameters.tenantId}}" -l Trace
         }
       }
     } else {
