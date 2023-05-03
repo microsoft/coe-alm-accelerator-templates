@@ -54,7 +54,7 @@ steps:
 
 - task: CopyFiles@2
   inputs:
-    SourceFolder: "PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine\TestOutput"
+    SourceFolder: 'PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine\TestOutput'
     Contents: |
       **/*
     targetFolder: $(Build.ArtifactStagingDirectory)
