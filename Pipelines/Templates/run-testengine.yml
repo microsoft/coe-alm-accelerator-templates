@@ -1,7 +1,4 @@
 parameters:
-  - name: repo
-    type: string
-    default: ''
   - name: solutionName
     type: string
   - name: environmentId
@@ -30,7 +27,7 @@ steps:
     $env:user1Password = "${{parameters.testAccountUsername}}"
     cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
 
-    $testPath = "$(Build.SourcesDirectory)\$(repo)\$(solutionName)\tests"
+    $testPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$(solutionName)\tests"
     if (Test-Path -Path $testPath -PathType Container) {
       Write-Host "Found test directory"
       $testFiles = @(Get-ChildItem -Path $testPath -Filter *.fx.yaml -Recurse -ErrorAction SilentlyContinue -Force)
