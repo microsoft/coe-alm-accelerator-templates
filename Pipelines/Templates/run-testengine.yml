@@ -3,8 +3,6 @@ parameters:
     type: string
   - name: environmentId
     type: string
-  - name: tenantId
-    type: string
 
 steps:
 - pwsh: |
@@ -41,8 +39,8 @@ steps:
         ForEach ($testFile in $testFiles) {
           Write-Host $testFile.FullName
           Write-Host "Environment Id: ${{parameters.environmentId}}"
-          Write-Host "Environment Id: ${{parameters.tenantId}}"
-          dotnet PowerAppsTestEngine.dll -i $testFile.FullName -e "${{parameters.environmentId}}" -t "${{parameters.tenantId}}" -l Trace
+          Write-Host "Tenant Id: $(connectionVariables.BuildTools.TenantId)"
+          dotnet PowerAppsTestEngine.dll -i $testFile.FullName -e "${{parameters.environmentId}}" -t "$(connectionVariables.BuildTools.TenantId)" -l Trace
         }
       }
     } else {

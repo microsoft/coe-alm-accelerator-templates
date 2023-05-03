@@ -312,7 +312,6 @@ steps:
   parameters:
     solutionName: '{{parameters.SolutionName}}'
     environmentId: '$(BuildTools.EnvironmentId)'
-    tenantId: '$(connectionVariables.BuildTools.TenantId)'
 
 - template: run-canvas-tests.yml 
   parameters:
