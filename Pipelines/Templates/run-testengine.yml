@@ -28,6 +28,9 @@ steps:
     cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
 
     $testPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$(solutionName)\tests"
+
+    Write-Host "Searching for tests in"
+    Write-Host $testPath
     if (Test-Path -Path $testPath -PathType Container) {
       Write-Host "Found test directory"
       $testFiles = @(Get-ChildItem -Path $testPath -Filter *.fx.yaml -Recurse -ErrorAction SilentlyContinue -Force)
