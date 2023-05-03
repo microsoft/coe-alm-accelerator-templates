@@ -51,3 +51,15 @@ steps:
     testResultsFormat: 'VSTest'
     testResultsFiles: '**/*.trx'
   displayName: "Publish Test Results"
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: "PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine\TestOutput"
+    Contents: |
+      **/*
+    targetFolder: $(Build.ArtifactStagingDirectory)
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: TestOutput
