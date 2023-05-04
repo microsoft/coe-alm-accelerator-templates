@@ -13,8 +13,8 @@ steps:
   displayName: "Build Test Engine"
 
 - pwsh: |
-    $env:user1Email = $env:TestAutomationUsername
-    $env:user1Password = "$(TestAutomationPassword)"
+    $env:user1Email = $env:TestEngineAutomationUsername
+    $env:user1Password = "$(TestEngineAutomationPassword)"
     cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Release\PowerAppsTestEngine
 
     & .\playwright.ps1 install
