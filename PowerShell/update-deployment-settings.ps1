@@ -331,7 +331,7 @@
             $json = ConvertTo-Json -Depth 10 $newCustomConfiguration
             $json = [System.Text.RegularExpressions.Regex]::Unescape($json)
             if ($PSVersionTable.PSVersion.Major -gt 5) {
-                Set-Content -Path $customDeploymentSettingsFilePath -Value $json -Encoding Byte
+                Set-Content -Path $customDeploymentSettingsFilePath -Value $json
             }
             else {
                 $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
