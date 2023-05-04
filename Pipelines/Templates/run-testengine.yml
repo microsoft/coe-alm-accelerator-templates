@@ -42,10 +42,13 @@ steps:
     } else {
       Write-Host "No tests found"
     }
-    if ( [System.IO.Directory]::Exists("TestOutput") ) {
-      Compress-Archive -LiteralPath TestOutput -DestinationPath TestOutput.zip
-    }
   displayName: "Run Test Engine Tests"
+
+- pwsh: |
+    cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
+    Compress-Archive -LiteralPath TestOutput -DestinationPath TestOutput.zip 
+  displayName: "Compress Test Engine Results"
+  continueOnError: true
     
 - task: PublishTestResults@2
   inputs:
@@ -54,8 +57,8 @@ steps:
   displayName: "Publish Test Results"
 
 - task: PublishBuildArtifacts@1
-  continueOnError: true
   inputs:
     pathToPublish: PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine\TestOutput.zip
     artifactName: TestOutput
   displayName: "Publish Test Output"
+  continueOnError: true
