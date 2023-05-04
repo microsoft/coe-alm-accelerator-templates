@@ -46,7 +46,7 @@ steps:
               Write-Host "An error occurred:"
               Write-Host $_
             }
-          } ( $attempt -le 5 )
+          } while ( $attempt -le 5 )
         }
       }
     } else {
