@@ -304,6 +304,7 @@
 
             Write-Host "Creating deployment settings"
             $json = ConvertTo-Json -Depth 10 $newConfiguration
+            $json = [System.Text.RegularExpressions.Regex]::Unescape($json)
             if ($PSVersionTable.PSVersion.Major -gt 5) {
                 Set-Content -Path $deploymentSettingsFilePath -Value $json
             }
