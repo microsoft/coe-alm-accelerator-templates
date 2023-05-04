@@ -176,6 +176,15 @@ steps:
 - template: Hooks\build-solution-pack-pre-hook.yml
 
 - pwsh: |
+      . "$env:POWERSHELLPATH/flow-xml-validation.ps1"
+      $invalidFlows =  Validate-And-Fetch-Invalid-Flows '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
+      if($null -ne $invalidFlows){
+         Write-Host "##vso[task.logissue type=warning]Solution you are trying to deploy has following invalid flows ($invalidFlows). Exiting the deployment."
+         throw
+      }
+  displayName: 'Validate Flows'
+
+- pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
       Invoke-Check-Code-First-Components '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
   displayName: 'Check codefirst components existence'
