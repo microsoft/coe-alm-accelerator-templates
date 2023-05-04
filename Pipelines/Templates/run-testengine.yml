@@ -7,10 +7,6 @@ parameters:
 steps:
 - pwsh: |
     git clone --recurse-submodules https://github.com/Grant-Archibald-MS/PowerApps-TestEngine-Modules.git
-    
-    cd PowerApps-TestEngine-Modules\PowerApps-TestEngine
-    git checkout testengine-plugin
-    cd ..
 
     cd src\PowerApps-TestEngine-Modules
     dotnet build
@@ -46,7 +42,9 @@ steps:
     } else {
       Write-Host "No tests found"
     }
-    Compress-Archive -LiteralPath TestOutput -DestinationPath TestOutput.zip
+    if ( [System.IO.Directory]::Exists("TestOutput") ) {
+      Compress-Archive -LiteralPath TestOutput -DestinationPath TestOutput.zip
+    }
   displayName: "Run Test Engine Tests"
     
 - task: PublishTestResults@2
@@ -56,6 +54,7 @@ steps:
   displayName: "Publish Test Results"
 
 - task: PublishBuildArtifacts@1
+  continueOnError: true
   inputs:
     pathToPublish: PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine\TestOutput.zip
     artifactName: TestOutput
