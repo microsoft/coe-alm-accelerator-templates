@@ -9,13 +9,13 @@ steps:
     git clone --recurse-submodules https://github.com/Grant-Archibald-MS/PowerApps-TestEngine-Modules.git
 
     cd PowerApps-TestEngine-Modules\src\PowerApps-TestEngine-Modules
-    dotnet build
+    dotnet build --configuration Release
   displayName: "Build Test Engine"
 
 - pwsh: |
     $env:user1Email = $env:TestAutomationUsername
     $env:user1Password = "$(TestAutomationPassword)"
-    cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
+    cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Release\PowerAppsTestEngine
 
     & .\playwright.ps1 install
 
@@ -36,7 +36,17 @@ steps:
           Write-Host $testFile.FullName
           Write-Host "Environment Id: ${{parameters.environmentId}}"
           Write-Host "Tenant Id: $(connectionVariables.BuildTools.TenantId)"
-          dotnet PowerAppsTestEngine.dll -i $testFile.FullName -e "${{parameters.environmentId}}" -t "$(connectionVariables.BuildTools.TenantId)" -l Trace
+          $attempt = 0
+          do {
+            try {
+              dotnet PowerAppsTestEngine.dll -i $testFile.FullName -e "${{parameters.environmentId}}" -t "$(connectionVariables.BuildTools.TenantId)" -l Trace
+              break;
+            } catch {
+              $attempt++
+              Write-Host "An error occurred:"
+              Write-Host $_
+            }
+          } ( $attempt -le 5 )
         }
       }
     } else {
@@ -45,7 +55,7 @@ steps:
   displayName: "Run Test Engine Tests"
 
 - pwsh: |
-    cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine
+    cd PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Release\PowerAppsTestEngine
     Compress-Archive -LiteralPath TestOutput -DestinationPath TestOutput.zip 
   displayName: "Compress Test Engine Results"
   continueOnError: true
@@ -58,7 +68,7 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    pathToPublish: PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Debug\PowerAppsTestEngine\TestOutput.zip
+    pathToPublish: PowerApps-TestEngine-Modules\PowerApps-TestEngine\bin\Release\PowerAppsTestEngine\TestOutput.zip
     artifactName: TestOutput
   displayName: "Publish Test Output"
   continueOnError: true
