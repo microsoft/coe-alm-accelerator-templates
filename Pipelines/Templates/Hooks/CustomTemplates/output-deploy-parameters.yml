@@ -10,7 +10,7 @@ steps:
     Write-Host "serviceConnectionUrl:" $parameters.serviceConnectionUrl
     Write-Host "environmentName:" $parameters.environmentName
     Write-Host "solutionName:" $parameters.solutionName
-    Write-Host "importUnmanaged:" $parameters.importUnmanaged
+    Write-Host "isUnmanaged:" $parameters.isUnmanaged
     Write-Host "overwriteUnmanagedCustomizations:" $parameters.overwriteUnmanagedCustomizations
     Write-Host "skipBuildToolsInstaller:" $parameters.skipBuildToolsInstaller
     Write-Host "cacheEnabled:" $parameters.cacheEnabled
