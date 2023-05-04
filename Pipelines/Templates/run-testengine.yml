@@ -8,7 +8,7 @@ steps:
 - pwsh: |
     git clone --recurse-submodules https://github.com/Grant-Archibald-MS/PowerApps-TestEngine-Modules.git
 
-    cd src\PowerApps-TestEngine-Modules
+    cd PowerApps-TestEngine-Modules\src\PowerApps-TestEngine-Modules
     dotnet build
   displayName: "Build Test Engine"
 
