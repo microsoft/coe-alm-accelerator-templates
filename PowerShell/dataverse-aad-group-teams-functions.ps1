@@ -138,10 +138,9 @@
                   Write-Host "Query Dataverse for the Team $aadGroupTeamName roles passed in configuration settings "
                   foreach ($securityRoleNamefromConfig in $securityRoleNamesfromConfig){
                     $encodedFilterValue = [System.Web.HttpUtility]::UrlEncode("$securityRoleNamefromConfig")
+                    $querysecurityRoles = "roles?`$select=roleid,name&`$filter=(name eq '$encodedFilterValue')"
                     if($businessUnitId -ne '') {
                       $querysecurityRoles = "roles?`$select=roleid,name&`$filter=(name eq '$encodedFilterValue' and _businessunitid_value eq '$businessUnitId')"
-                    } else {
-                      $querysecurityRoles = "roles?`$select=roleid,name&`$filter=(name eq '$encodedFilterValue')"
                     }
 
                     try{
