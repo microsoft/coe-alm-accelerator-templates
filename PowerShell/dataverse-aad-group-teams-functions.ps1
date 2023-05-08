@@ -138,7 +138,12 @@
                   Write-Host "Query Dataverse for the Team $aadGroupTeamName roles passed in configuration settings "
                   foreach ($securityRoleNamefromConfig in $securityRoleNamesfromConfig){
                     $encodedFilterValue = [System.Web.HttpUtility]::UrlEncode("$securityRoleNamefromConfig")
-                    $querysecurityRoles = "roles?`$select=roleid,name&`$filter=(name eq '$encodedFilterValue' and _businessunitid_value eq '$businessUnitId')"
+                    if($businessUnitId -ne '') {
+                      $querysecurityRoles = "roles?`$select=roleid,name&`$filter=(name eq '$encodedFilterValue' and _businessunitid_value eq '$businessUnitId')"
+                    } else {
+                      $querysecurityRoles = "roles?`$select=roleid,name&`$filter=(name eq '$encodedFilterValue')"
+                    }
+
                     try{
                         Write-Host "Security Roles Query - $querysecurityRoles"
                         $responseDVSecurityRoleofConfig = Invoke-DataverseHttpGet $token $dataverseHost $querysecurityRoles
@@ -174,7 +179,7 @@
                   }
 
                   # Feature to remove additional DV roles
-                  if($skipRolesDeletion -eq "false" -and $securityRoleNamesfromConfig -ne $null -and !$newTeamCreated){
+                  if($skipRolesDeletion -eq "false" -and $null -ne $securityRoleNamesfromConfig -and !$newTeamCreated){
                     Write-Host "Admin chosen to remove additional roles not part of configurations"
                     if($null -ne $existingDVTeamRolesNonConfig.value -and $existingDVTeamRolesNonConfig.value.count -gt 0){
                         #Check if DVRole 
