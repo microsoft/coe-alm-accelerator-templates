@@ -138,7 +138,7 @@ function Add-Codefirst-Projects-To-Cdsproj{
                 $csProjectPath = "`"$($csProject.FullName)`""    
 
                 # Read csproj xml to determin project type
-                [xml]$xmlDoc = Get-Content -Path $csProjectPath
+                [xml]$xmlDoc = Get-Content -Path $csProject.FullName
                 $tagPowerAppsTargetsPath = $xmlDoc.Project.PropertyGroup.PowerAppsTargetsPath
 
                 # 'PowerAppsTargetsPath' tag is only availble in plugin project generate via 'pac plugin init'
