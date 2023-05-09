@@ -19,7 +19,7 @@ parameters:
   type: string
   default: 'false'
 
-steps:  
+steps: 
 - template: set-service-connection-url.yml
   parameters:
     serviceConnectionName: '${{parameters.serviceConnectionName}}'
@@ -175,14 +175,16 @@ steps:
 
 - template: Hooks\build-solution-pack-pre-hook.yml
 
+# Validate flows only if "validateFlows" variable passed as 'true'
 - pwsh: |
-      . "$env:POWERSHELLPATH/flow-xml-validation.ps1"
-      $invalidFlows =  Validate-And-Fetch-Invalid-Flows '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
-      if($null -ne $invalidFlows){
-         Write-Host "##vso[task.logissue type=warning]Solution you are trying to deploy has following invalid flows ($invalidFlows). Exiting the deployment."
-         throw
-      }
+    . "$env:POWERSHELLPATH/flow-xml-validation.ps1"
+    $invalidFlows =  Validate-And-Fetch-Invalid-Flows '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
+    if($null -ne $invalidFlows){
+        Write-Host "##vso[task.logissue type=warning]Solution you are trying to deploy has following invalid flows ($invalidFlows). Exiting the deployment."
+        throw
+    }
   displayName: 'Validate Flows'
+  condition: and(succeeded(), ne(variables['TriggerFlowValidation'],''), eq(variables['TriggerFlowValidation'],'true'))
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"

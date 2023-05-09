@@ -25,7 +25,6 @@ function Validate-And-Fetch-Invalid-Flows{
                 $hasErros = Parse-Validate-Flow-Json-File $jsonObject
 
                 if ($hasErros) {
-                    Write-Host "InvalidFiles - $invalidFiles"
                     $invalidFiles += $delimiter + $($flowJsonFile.Name)
                     $delimiter = ","
                     Write-Host "Flow file - $($flowJsonFile.Name) is invalid."
@@ -62,17 +61,13 @@ function Parse-Validate-Flow-Json-File($jsonObject) {
                     $expression = $property.Value                          
                     if($null -ne $expression){
                         $jsonString = $expression | ConvertTo-Json
-                        #Write-Host "json string - "$jsonString
                         $keyName = ($expression | Get-Member -MemberType NoteProperty).Name
-                        #Write-Host "keyName - $keyName"
                         $objCondition = $expression.$keyName
                         # Get the values inside the array
                         $leftOperand = $objCondition[0]
                         $rightOperand = $objCondition[1]
-                        Write-Host "leftOperand - $leftOperand"
-                        Write-Host "rightOperand - $rightOperand"
-
-                        if ($leftOperand -eq "" -or $rightOperand -eq "") {
+                        Write-Host "leftOperand - $leftOperand and rightOperand - $rightOperand"
+                        if([string]::IsNullOrEmpty($leftOperand) -or [string]::IsNullOrEmpty($rightOperand)){
                             return $true
                         }
                     }                
