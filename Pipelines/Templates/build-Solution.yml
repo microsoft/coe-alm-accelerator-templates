@@ -175,7 +175,8 @@ steps:
 
 - template: Hooks\build-solution-pack-pre-hook.yml
 
-# Validate flows only if "validateFlows" variable passed as 'true'
+# Validate flows only if the "validateFlows" variable passed as 'true'
+# Variable can either be passed from deployment pipelines or from Variable Group.
 - pwsh: |
     . "$env:POWERSHELLPATH/flow-xml-validation.ps1"
     $invalidFlows =  Validate-And-Fetch-Invalid-Flows '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
