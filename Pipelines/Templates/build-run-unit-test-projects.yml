@@ -1,0 +1,101 @@
+parameters:
+- name: buildSourceDirectory
+  type: string
+- name: repo
+  type: string
+
+steps:
+- task: NuGetToolInstaller@1
+  displayName: 'Install NuGet'
+  inputs:
+    versionSpec: '5.x'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}"
+      $csharpProjects = Get-ChildItem -Path "$repoPath" -Filter "*.csproj" -Recurse
+      if ($csharpProjects) {
+        Write-Host "##vso[task.setvariable variable=HasCSharpProjects]true"
+        Write-Host "C# projects found in the Repo."
+      } else {
+        Write-Host "##vso[task.setvariable variable=HasCSharpProjects]false"
+        Write-Host "No C# projects found in the Repo."
+      }
+  displayName: 'Check the presence of CS projects'
+
+# Nuget packages must be restored at csproj\packages folder and buildSourceDirectory\repo\packages folders
+- powershell: |
+    $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}"
+    $basePackagesDirectory = "$repoPath\packages"
+    $projects = Get-ChildItem -Path "$repoPath" -Filter '*.csproj' -Recurse
+    foreach ($project in $projects) {
+      $projectPath = $project.FullName
+      $projectDirectory = Split-Path -Path $projectPath -Parent
+      $restoreDirectory = Join-Path -Path $projectDirectory -ChildPath 'packages'
+      $configFile = Join-Path -Path $projectDirectory -ChildPath 'packages.config'
+
+      Write-Host "Restoring NuGet packages for project - $projectPath"
+      
+      & nuget.exe restore $configFile -PackagesDirectory $restoreDirectory
+      & nuget.exe restore $configFile -PackagesDirectory $basePackagesDirectory
+    }
+  displayName: 'Restore NuGet packages'
+  condition: eq(variables['HasCSharpProjects'], 'true')
+
+- task: VSBuild@1
+  displayName: 'Build cs projects'
+  inputs:
+    solution: '**/*.csproj'
+    msbuildArgs: '/t:build /restore'
+  condition: eq(variables['HasCSharpProjects'], 'true')
+
+# Checks if 'Run Settings' file available in the Repo.
+- task: PowerShell@2
+  displayName: 'Check for RunSettings file in the Repo'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}"
+      $runSettingsFiles = Get-ChildItem -Path "$repoPath" -Recurse -Filter "*.runsettings"
+
+      if ($runSettingsFiles.Count -gt 0) {
+          $runSettingsFilePath = $runSettingsFiles[0].FullName
+          Write-Host "Run settings file found at $runSettingsFilePath"
+          Write-Host "##vso[task.setvariable variable=RunSettingsFilePath]$runSettingsFilePath"
+      } else {
+          Write-Host "No run settings file found in the repository."
+      }
+  condition: eq(variables['HasCSharpProjects'], 'true')
+
+# Run unit test with no 'Run Settings' file
+- task: VSTest@2
+  displayName: 'VSTest without Run Settings file'
+  inputs:
+    testSelector: 'testAssemblies'
+    testAssemblyVer2: |
+      **/*Tests.dll
+      !**\*TestAdapter.dll
+      !**\obj\**
+    searchFolder: '${{parameters.buildSourceDirectory}}\${{parameters.repo}}'
+    platform: 'Any CPU'
+    codeCoverageEnabled: true     
+    testRunTitle: 'Unit Test Execution with no Run Settings file'
+  condition: and(eq(variables['HasCSharpProjects'], 'true'), eq(variables['RunSettingsFilePath'], ''))
+
+# Run unit test with 'Run Settings' file
+- task: VSTest@2
+  displayName: 'VSTest with Run Settings file'
+  inputs:
+    testSelector: 'testAssemblies'
+    testAssemblyVer2: |
+      **/*Tests.dll
+      !**\*TestAdapter.dll
+      !**\obj\**
+    searchFolder: '${{parameters.repo}}'
+    platform: 'Any CPU'
+    codeCoverageEnabled: true
+    testRunTitle: 'Unit Test Execution with runsettings file'
+    runSettingsFile: '$(RunSettingsFilePath)'
+  condition: and(eq(variables['HasCSharpProjects'], 'true'), ne(variables['RunSettingsFilePath'], ''))

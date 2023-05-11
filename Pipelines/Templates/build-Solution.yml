@@ -192,6 +192,12 @@ steps:
       Invoke-Check-Code-First-Components '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
   displayName: 'Check codefirst components existence'
 
+# Run the unit test cases
+- template: build-run-unit-test-projects.yml
+  parameters:
+    buildSourceDirectory: '$(Build.SourcesDirectory)'
+    repo: '$(RepoName)'
+
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
       Add-Codefirst-Projects-To-Cdsproj '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
@@ -202,29 +208,16 @@ steps:
       Invoke-Pcf-Projects-Install-Npm '$(Build.SourcesDirectory)' '$(RepoName)'
   displayName: 'Install npm - pcf projects'
 
+# Build Cdsproj file which generates the solution zip files
 - task: VSBuild@1
   inputs:
-    #solution: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}\${{parameters.solutionName}}.cdsproj'
     solution: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}.cdsproj'
     msbuildArgs: '/t:build /restore'
     #platform: '$(buildPlatform)'
     #configuration: '$(buildConfiguration)'
   displayName: 'Build cdsproject'
 
-- task: VSTest@2
-  inputs:
-    platform: 'Any CPU'
-    configuration: 'Release'
-    codeCoverageEnabled: True
-    resultsFolder: '$(build.ArtifactStagingDirectory)\Test\Results'
-    searchFolder: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}'
-    testAssemblyVer2: |
-      **\*test*.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
-    condition: and(succeeded(), eq(variables.pluginstestexists, 'true'))
-  displayName: 'Run unit test case projects'
-
+# Verbose purpose to make sure cdsproj buiild generated required files
 - pwsh: |
     $sourceDirectory  = "$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\bin\Debug\*"
     Get-ChildItem "$sourceDirectory" -Recurse
