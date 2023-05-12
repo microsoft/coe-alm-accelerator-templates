@@ -7,8 +7,6 @@ parameters:
 steps:
 - task: NuGetToolInstaller@1
   displayName: 'Install NuGet'
-  inputs:
-    versionSpec: '5.x'
 
 - task: PowerShell@2
   inputs:
@@ -25,10 +23,20 @@ steps:
       }
   displayName: 'Check the presence of CS projects'
 
-# Nuget packages must be restored at csproj\packages folder and buildSourceDirectory\repo\packages folders
+# CS Project might be referring NuGet packages. If a NuGet package referred in a CS Project a 'HintPath' node will be added.
+# Example <HintPath>..\packages\Castle.Core.4.3.1\lib\net45\Castle.Core.dll</HintPath>
+# 'HintPath' pattern will be different for each project template (i.e., Class Library vs Unit test project)
+# This function removes '..\' references so that NuGet packages will always be restored at project root folder level
+- powershell: |
+    . "$env:POWERSHELLPATH/flow-xml-validation.ps1"
+    Remove-Relative-References-from-HintPath '$(Build.SourcesDirectory)' '$(RepoName)' 
+  displayName: 'Remove Relative References from Packages HintPath'
+  condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'))
+
+# Nuget packages must be restored at csproj\packages folder and csproj's parent folder
+# Structure of Csharp Projects must be Repo/parentfolder/csprojects
 - powershell: |
     $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}"
-    $basePackagesDirectory = "$repoPath\packages"
     $projects = Get-ChildItem -Path "$repoPath" -Filter '*.csproj' -Recurse
     foreach ($project in $projects) {
       $projectPath = $project.FullName
@@ -39,17 +47,16 @@ steps:
       Write-Host "Restoring NuGet packages for project - $projectPath"
       
       & nuget.exe restore $configFile -PackagesDirectory $restoreDirectory
-      & nuget.exe restore $configFile -PackagesDirectory $basePackagesDirectory
     }
   displayName: 'Restore NuGet packages'
-  condition: eq(variables['HasCSharpProjects'], 'true')
+  condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'))
 
 - task: VSBuild@1
   displayName: 'Build cs projects'
   inputs:
     solution: '**/*.csproj'
     msbuildArgs: '/t:build /restore'
-  condition: eq(variables['HasCSharpProjects'], 'true')
+  condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'))
 
 # Checks if 'Run Settings' file available in the Repo.
 - task: PowerShell@2
@@ -67,7 +74,7 @@ steps:
       } else {
           Write-Host "No run settings file found in the repository."
       }
-  condition: eq(variables['HasCSharpProjects'], 'true')
+  condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'))
 
 # Run unit test with no 'Run Settings' file
 - task: VSTest@2
@@ -82,7 +89,7 @@ steps:
     platform: 'Any CPU'
     codeCoverageEnabled: true     
     testRunTitle: 'Unit Test Execution with no Run Settings file'
-  condition: and(eq(variables['HasCSharpProjects'], 'true'), eq(variables['RunSettingsFilePath'], ''))
+  condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'), eq(variables['RunSettingsFilePath'], ''))
 
 # Run unit test with 'Run Settings' file
 - task: VSTest@2
@@ -98,4 +105,4 @@ steps:
     codeCoverageEnabled: true
     testRunTitle: 'Unit Test Execution with runsettings file'
     runSettingsFile: '$(RunSettingsFilePath)'
-  condition: and(eq(variables['HasCSharpProjects'], 'true'), ne(variables['RunSettingsFilePath'], ''))
+  condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'), ne(variables['RunSettingsFilePath'], ''))
