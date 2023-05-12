@@ -138,8 +138,8 @@ function Add-Codefirst-Projects-To-Cdsproj{
               foreach($csProject in $filteredProjects)
               {     
                 Write-Host "Adding Reference of Plugin Project - " $csProject.Name
-                $csProjectPath = "`"$($csProject.FullName)`""    
-                $addReferenceCommand = "solution add-reference --path $csProjectPath"
+                #$csProjectPath = "`"$($csProject.FullName)`""    
+                $addReferenceCommand = "solution add-reference --path $($csProject.FullName)"
                 Write-Host "Add Reference Command - $addReferenceCommand"
                 Invoke-Expression -Command "$pacexepath $addReferenceCommand"
               }
