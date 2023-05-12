@@ -192,12 +192,6 @@ steps:
       Invoke-Check-Code-First-Components '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
   displayName: 'Check codefirst components existence'
 
-# Run the unit test cases
-- template: build-run-unit-test-projects.yml
-  parameters:
-    buildSourceDirectory: '$(Build.SourcesDirectory)'
-    repo: '$(RepoName)'
-
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
       Add-Codefirst-Projects-To-Cdsproj '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
@@ -216,6 +210,12 @@ steps:
     #platform: '$(buildPlatform)'
     #configuration: '$(buildConfiguration)'
   displayName: 'Build cdsproject'
+
+# Run the unit test cases
+- template: build-run-unit-test-projects.yml
+  parameters:
+    buildSourceDirectory: '$(Build.SourcesDirectory)'
+    repo: '$(RepoName)'
 
 # Verbose purpose to make sure cdsproj buiild generated required files
 - pwsh: |

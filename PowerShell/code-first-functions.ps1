@@ -131,25 +131,17 @@ function Add-Codefirst-Projects-To-Cdsproj{
           if(Test-Path "$unpackedPluginAssemblyPath"){
               # Get all .csproj files under Repo/Commited Solution folder
               $csProjectFiles = Get-ChildItem -Path "$buildSourceDirectory\$repo\$solutionName" -Filter *.csproj -Recurse
-              foreach($csProject in $csProjectFiles)
+              Write-Host "$($csProjectFiles.Count) cs project files found"
+              # Filter out projects name ending with "Tests.csproj" (i.e.,Unit test projects)
+              $filteredProjects = $csProjectFiles | Where-Object { $_.Name -notlike "*Tests.csproj" }
+              Write-Host "$($filteredProjects.Count) plugin project files found after filtering out unit test projects"
+              foreach($csProject in $filteredProjects)
               {     
-                Write-Host "Adding Reference of Plugin Project - " $csProject.FullName
-                # Add only Plugin type csproj; Skip others
+                Write-Host "Adding Reference of Plugin Project - " $csProject.Name
                 $csProjectPath = "`"$($csProject.FullName)`""    
-
-                # Read csproj xml to determin project type
-                [xml]$xmlDoc = Get-Content -Path $csProjectPath
-                $tagPowerAppsTargetsPath = $xmlDoc.Project.PropertyGroup.PowerAppsTargetsPath
-
-                # 'PowerAppsTargetsPath' tag is only availble in plugin project generate via 'pac plugin init'
-                if(-not [string]::IsNullOrWhiteSpace($tagPowerAppsTargetsPath)){
-                    $addReferenceCommand = "solution add-reference --path $csProjectPath"
-                    Write-Host "Add Reference Command - $addReferenceCommand"
-                    Invoke-Expression -Command "$pacexepath $addReferenceCommand"
-                }
-                else{
-                    Write-Host "Not a plug-in project; Skipping add reference to cdsproj; Path - $csProjectPath"
-                }
+                $addReferenceCommand = "solution add-reference --path $csProjectPath"
+                Write-Host "Add Reference Command - $addReferenceCommand"
+                Invoke-Expression -Command "$pacexepath $addReferenceCommand"
               }
           }
           else
