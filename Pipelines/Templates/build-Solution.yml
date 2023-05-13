@@ -187,6 +187,7 @@ steps:
   displayName: 'Validate Flows'
   condition: and(succeeded(), ne(variables['TriggerFlowValidation'],''), eq(variables['TriggerFlowValidation'],'true'))
 
+# Add code first projects(csproj,pcfproj) to cdsproj
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
       Invoke-Check-Code-First-Components '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}'
