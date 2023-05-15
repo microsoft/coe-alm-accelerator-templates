@@ -140,23 +140,22 @@ function Add-Codefirst-Projects-To-Cdsproj{
                 Write-Host "Adding Reference of Plugin Project - " $csProject.FullName
                 $csProjectPath = '"' + $($csProject.FullName) + '"'
                 
-                #[xml]$xmlDoc = Get-Content -Path $($csProject.FullName)
-                #$snkFileName = $xmlDoc.Project.PropertyGroup.AssemblyOriginatorKeyFile
-                #$signAssembly = $xmlDoc.Project.PropertyGroup.SignAssembly
+                [xml]$xmlDoc = Get-Content -Path $($csProject.FullName)
+                $snkFileName = $xmlDoc.Project.PropertyGroup.AssemblyOriginatorKeyFile
+                $signAssembly = $xmlDoc.Project.PropertyGroup.SignAssembly
                 # Check for existing snk file or pull from global variables
-                #if($signAssembly -eq "true") {
-                #    $projectDirectory = [System.IO.Path]::GetDirectoryName("$csProject.FullName")
-                #    Write-Host "Project Directory: $projectDirectory\$snkFileName"
-                #    $filteredSnkFile = Get-ChildItem -Path "$projectDirectory" -Filter "$snkFileName" | Measure-Object
-                #    if(($null -eq $filteredSnkFile -or $filteredSnkFile.Count -eq 0)) {
-                #        Write-Host 'SNK Variable: $("$snkFileName")'
-                #        if(-not $base64Snk.Contains("PluginSNK")) {
-                #            Write-Host "Writing plugin snk file to disk"
-                #            $bytes = [Convert]::FromBase64String($base64Snk)
-                #            [IO.File]::WriteAllBytes("$projectDirectory\$snkFileName", $bytes)
-                #        }
-                #    }
-                #}
+                if($signAssembly -eq "true") {
+                    $projectDirectory = [System.IO.Path]::GetDirectoryName("$csProject.FullName")
+                    Write-Host "Project Directory: $projectDirectory\$snkFileName"
+                    $filteredSnkFile = Get-ChildItem -Path "$projectDirectory" -Filter "$snkFileName" | Measure-Object
+                    if(($null -eq $filteredSnkFile -or $filteredSnkFile.Count -eq 0)) {
+                        if(-not $base64Snk.Contains("PluginSNK")) {
+                            Write-Host "Writing plugin snk file to disk"
+                            $bytes = [Convert]::FromBase64String($base64Snk)
+                            [IO.File]::WriteAllBytes("$projectDirectory\$snkFileName", $bytes)
+                        }
+                    }
+                }
 
                 $addReferenceCommand = "solution add-reference --path $csProjectPath"
                 Write-Host "Add Reference Command - $addReferenceCommand"
