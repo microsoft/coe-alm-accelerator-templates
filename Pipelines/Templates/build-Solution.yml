@@ -218,6 +218,7 @@ steps:
   parameters:
     buildSourceDirectory: '$(Build.SourcesDirectory)'
     repo: '$(RepoName)'
+    solutionName: '${{parameters.solutionName}}'
 
 # Verbose purpose to make sure cdsproj buiild generated required files
 - pwsh: |

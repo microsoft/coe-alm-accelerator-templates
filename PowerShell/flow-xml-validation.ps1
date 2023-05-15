@@ -90,10 +90,11 @@ function Parse-Validate-Flow-Json-File($jsonObject) {
 function Remove-Relative-References-from-HintPath{
     param (
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
-        [Parameter(Mandatory)] [String]$repo
+        [Parameter(Mandatory)] [String]$repo,
+        [Parameter(Mandatory)] [String]$solutionName
     )
 
-    $repoPath = "$buildSourceDirectory\$repo"
+    $repoPath = "$buildSourceDirectory\$repo\$solutionName"
     $projects = Get-ChildItem -Path "$repoPath" -Filter '*.csproj' -Recurse    
     foreach ($project in $projects) {
         $csProjectPath = $project.FullName

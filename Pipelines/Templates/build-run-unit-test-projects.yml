@@ -3,6 +3,8 @@ parameters:
   type: string
 - name: repo
   type: string
+- name: solutionName
+  type: string
 
 steps:
 - task: NuGetToolInstaller@1
@@ -12,7 +14,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}"
+      $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}\${{parameters.solutionName}}"
       $csharpProjects = Get-ChildItem -Path "$repoPath" -Filter "*.csproj" -Recurse
       if ($csharpProjects) {
         Write-Host "##vso[task.setvariable variable=HasCSharpProjects]true"
@@ -29,14 +31,14 @@ steps:
 # This function removes '..\' references so that NuGet packages will always be restored at project root folder level
 - powershell: |
     . "$env:POWERSHELLPATH/flow-xml-validation.ps1"
-    Remove-Relative-References-from-HintPath '$(Build.SourcesDirectory)' '$(RepoName)' 
+    Remove-Relative-References-from-HintPath '${{parameters.buildSourceDirectory}}' '${{parameters.repo}}' '${{parameters.solutionName}}'
   displayName: 'Remove Relative References from Packages HintPath'
   condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'))
 
 # Nuget packages must be restored at csproj\packages folder and csproj's parent folder
 # Structure of Csharp Projects must be Repo/parentfolder/csprojects
 - powershell: |
-    $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}"
+    $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}\${{parameters.solutionName}}"
     $projects = Get-ChildItem -Path "$repoPath" -Filter '*.csproj' -Recurse
     foreach ($project in $projects) {
       $projectPath = $project.FullName
@@ -48,7 +50,7 @@ steps:
       
       & nuget.exe restore $configFile -PackagesDirectory $restoreDirectory
     }
-  displayName: 'Restore NuGet packages'
+  displayName: 'Restore NuGet packages to run unit test cases'
   condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'))
 
 - task: VSBuild@1
@@ -64,7 +66,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}"
+      $repoPath = "${{parameters.buildSourceDirectory}}\${{parameters.repo}}\${{parameters.solutionName}}"
       $runSettingsFiles = Get-ChildItem -Path "$repoPath" -Recurse -Filter "*.runsettings"
 
       if ($runSettingsFiles.Count -gt 0) {
@@ -85,7 +87,7 @@ steps:
       **/*Tests.dll
       !**\*TestAdapter.dll
       !**\obj\**
-    searchFolder: '${{parameters.buildSourceDirectory}}\${{parameters.repo}}'
+    searchFolder: '${{parameters.buildSourceDirectory}}\${{parameters.repo}}\${{parameters.solutionName}}'
     platform: 'Any CPU'
     codeCoverageEnabled: true     
     testRunTitle: 'Unit Test Execution with no Run Settings file'
@@ -100,7 +102,7 @@ steps:
       **/*Tests.dll
       !**\*TestAdapter.dll
       !**\obj\**
-    searchFolder: '${{parameters.repo}}'
+    searchFolder: '${{parameters.buildSourceDirectory}}\${{parameters.repo}}\${{parameters.solutionName}}'
     platform: 'Any CPU'
     codeCoverageEnabled: true
     testRunTitle: 'Unit Test Execution with runsettings file'
