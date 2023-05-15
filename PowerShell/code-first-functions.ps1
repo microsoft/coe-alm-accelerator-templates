@@ -92,7 +92,8 @@ function Add-Codefirst-Projects-To-Cdsproj{
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName,
-        [Parameter(Mandatory)] [String]$pacPath
+        [Parameter(Mandatory)] [String]$pacPath,
+        [Parameter(Mandatory)] [String]$base64Snk
     )
     if (-not ([string]::IsNullOrEmpty($pacPath)) -and (Test-Path "$pacPath\pac.exe"))
     {
@@ -136,8 +137,26 @@ function Add-Codefirst-Projects-To-Cdsproj{
               Write-Host "$($filteredProjects.Count) plugin project files found after filtering out unit test projects"
               foreach($csProject in $filteredProjects)
               {     
-                Write-Host "Adding Reference of Plugin Project - " $csProject.Name
+                Write-Host "Adding Reference of Plugin Project - " $csProject.FullName
                 $csProjectPath = '"' + $($csProject.FullName) + '"'
+                [xml]$xmlDoc = Get-Content -Path $($csProject.FullName)
+                $snkFileName = $xmlDoc.Project.PropertyGroup.AssemblyOriginatorKeyFile
+                $signAssembly = $xmlDoc.Project.PropertyGroup.SignAssembly
+                # Check for existing snk file or pull from global variables
+                if($signAssembly -eq "true") {
+                    $projectDirectory = [System.IO.Path]::GetDirectoryName("$csProject.FullName")
+                    Write-Host "Project Directory: $projectDirectory\$snkFileName"
+                    $filteredSnkFile = Get-ChildItem -Path "$projectDirectory" -Filter "$snkFileName" | Measure-Object
+                    if(($null -eq $filteredSnkFile -or $filteredSnkFile.Count -eq 0)) {
+                        Write-Host 'SNK Variable: $("$snkFileName")'
+                        if(-not $base64Snk.Contains("PluginSNK")) {
+                            Write-Host "Writing plugin snk file to disk"
+                            $bytes = [Convert]::FromBase64String($base64Snk)
+                            [IO.File]::WriteAllBytes("$projectDirectory\$snkFileName", $bytes)
+                        }
+                    }
+                }
+
                 $addReferenceCommand = "solution add-reference --path $csProjectPath"
                 Write-Host "Add Reference Command - $addReferenceCommand"
                 Invoke-Expression -Command "$pacexepath $addReferenceCommand"

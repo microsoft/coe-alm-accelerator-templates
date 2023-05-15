@@ -195,7 +195,7 @@ steps:
 
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
-      Add-Codefirst-Projects-To-Cdsproj '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)'
+      Add-Codefirst-Projects-To-Cdsproj '$(Build.SourcesDirectory)' '$(RepoName)' '${{parameters.solutionName}}' '$(pacPath)' '$(PluginSNK)'
   displayName: 'Add project references to cdsproject'
 
   # Runs NPM Install against all PCF projects
