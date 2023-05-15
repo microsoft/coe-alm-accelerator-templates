@@ -146,9 +146,9 @@ function Add-Codefirst-Projects-To-Cdsproj{
                 # Check for existing snk file or pull from global variables
                 if($signAssembly -eq "true") {
                     $projectDirectory = [System.IO.Path]::GetDirectoryName("$csProject.FullName")
-                    Write-Host "Project Directory: $projectDirectory\$snkFileName"
+                    Write-Host "SNK Path: $projectDirectory\$snkFileName"
                     if(!(Test-Path "$projectDirectory\$snkFileName")) {
-                        if(-not $base64Snk.Contains("PluginSNK")) {
+                        if(!($base64Snk.Contains("PluginSNK"))) {
                             Write-Host "Writing plugin snk file to disk"
                             $bytes = [Convert]::FromBase64String($base64Snk)
                             [IO.File]::WriteAllBytes("$projectDirectory\$snkFileName", $bytes)
@@ -163,7 +163,7 @@ function Add-Codefirst-Projects-To-Cdsproj{
           }
           else
           {
-                Write-Host "PluginAssemblies folder unavailble in unpacked solution"
+                Write-Host "PluginAssemblies folder unavailable in unpacked solution"
           }
         }
         else
