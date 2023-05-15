@@ -147,8 +147,7 @@ function Add-Codefirst-Projects-To-Cdsproj{
                 if($signAssembly -eq "true") {
                     $projectDirectory = [System.IO.Path]::GetDirectoryName("$csProject.FullName")
                     Write-Host "Project Directory: $projectDirectory\$snkFileName"
-                    $filteredSnkFile = Get-ChildItem -Path "$projectDirectory" -Filter "$snkFileName" | Measure-Object
-                    if(($null -eq $filteredSnkFile -or $filteredSnkFile.Count -eq 0)) {
+                    if(!(Test-Path "$projectDirectory\$snkFileName")) {
                         if(-not $base64Snk.Contains("PluginSNK")) {
                             Write-Host "Writing plugin snk file to disk"
                             $bytes = [Convert]::FromBase64String($base64Snk)
