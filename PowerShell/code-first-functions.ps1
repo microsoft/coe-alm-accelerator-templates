@@ -146,14 +146,13 @@ function Add-Codefirst-Projects-To-Cdsproj{
                 $snkFileName = $xmlDoc.Project.PropertyGroup.AssemblyOriginatorKeyFile
                 $signAssembly = $xmlDoc.Project.PropertyGroup.SignAssembly
                 Write-Host "SNKFileName - $snkFileName"
-                Write-Host "SignAssembly? - $signAssembly"
+                Write-Host "SignAssembly - $signAssembly"
                 # Check for existing snk file or pull from global variables
                 if($signAssembly -eq "true") {
                     $projectDirectory = [System.IO.Path]::GetDirectoryName("$csProject.FullName")
                     Write-Host "SNK Path: $projectDirectory\$snkFileName"
                     if(!(Test-Path "$projectDirectory\$snkFileName")) {
                         if(!($base64Snk.Contains('$('))) {
-                            Write-Host "snk file content from variable - $base64Snk"
                             Write-Host "Writing plugin snk file to disk"
                             $bytes = [Convert]::FromBase64String($base64Snk)
                             [IO.File]::WriteAllBytes("$projectDirectory\$snkFileName", $bytes)
