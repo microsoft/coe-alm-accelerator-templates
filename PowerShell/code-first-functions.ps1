@@ -153,6 +153,7 @@ function Add-Codefirst-Projects-To-Cdsproj{
                     Write-Host "SNK Path: $projectDirectory\$snkFileName"
                     if(!(Test-Path "$projectDirectory\$snkFileName")) {
                         if(!($base64Snk.Contains('$('))) {
+                            Write-Host "snk file content from variable - $base64Snk"
                             Write-Host "Writing plugin snk file to disk"
                             $bytes = [Convert]::FromBase64String($base64Snk)
                             [IO.File]::WriteAllBytes("$projectDirectory\$snkFileName", $bytes)
