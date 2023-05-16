@@ -208,9 +208,7 @@ steps:
 - task: VSBuild@1
   inputs:
     solution: '$(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\SolutionPackage\${{parameters.solutionName}}.cdsproj'
-    msbuildArgs: '/t:build /restore'
-    #platform: '$(buildPlatform)'
-    #configuration: '$(buildConfiguration)'
+    msbuildArgs: '/t:build /restore'    
   displayName: 'Build cdsproject'
 
 # Run the unit test cases

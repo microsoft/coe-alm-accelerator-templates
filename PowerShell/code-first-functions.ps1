@@ -93,7 +93,7 @@ function Add-Codefirst-Projects-To-Cdsproj{
         [Parameter(Mandatory)] [String]$repo,
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$pacPath,
-        [Parameter(Mandatory)] [String]$base64Snk
+        [Parameter()] [String]$base64Snk
     )
     if (-not ([string]::IsNullOrEmpty($pacPath)) -and (Test-Path "$pacPath\pac.exe"))
     {
@@ -140,9 +140,13 @@ function Add-Codefirst-Projects-To-Cdsproj{
                 Write-Host "Adding Reference of Plugin Project - " $csProject.FullName
                 $csProjectPath = '"' + $($csProject.FullName) + '"'
                 
+                # Read csproj file's AssemblyOriginatorKeyFile and SignAssembly properties.
+                # We need to read these properties to determine whether the C# project is signed.
                 [xml]$xmlDoc = Get-Content -Path $($csProject.FullName)
                 $snkFileName = $xmlDoc.Project.PropertyGroup.AssemblyOriginatorKeyFile
                 $signAssembly = $xmlDoc.Project.PropertyGroup.SignAssembly
+                Write-Host "SNKFileName - $snkFileName"
+                Write-Host "SignAssembly? - $signAssembly"
                 # Check for existing snk file or pull from global variables
                 if($signAssembly -eq "true") {
                     $projectDirectory = [System.IO.Path]::GetDirectoryName("$csProject.FullName")
@@ -152,7 +156,11 @@ function Add-Codefirst-Projects-To-Cdsproj{
                             Write-Host "Writing plugin snk file to disk"
                             $bytes = [Convert]::FromBase64String($base64Snk)
                             [IO.File]::WriteAllBytes("$projectDirectory\$snkFileName", $bytes)
+                        }else{
+                            Write-Host "No snk found at repo and no snk content defined in variables"
                         }
+                    }else{
+                        Write-Host ".snk file - $snkFileName already presents in the repo. No need to read from variable"
                     }
                 }
 
