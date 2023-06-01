@@ -117,7 +117,8 @@ Describe 'E2E-Pipeline-Test' {
         $headers.Add("Content-Type", "application/json")
 
         $apiVersion = "?api-version=6.0-preview.2"
-        $requestUrl = "$Org/$Project/_apis/build/folders$apiVersion&path=$SolutionName"
+        $requestUrl = "$Org/$Project/_apis/build/folders$apiVersion&path=$Repo - $SolutionName"
+        Write-Host "Delete Request URL: $requestUrl"
         $response = Invoke-RestMethod $requestUrl -Method 'DELETE' -Headers $headers
         $response | ConvertTo-Json -Depth 100
 
