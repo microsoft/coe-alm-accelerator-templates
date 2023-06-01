@@ -35,8 +35,11 @@ function Set-DeploymentSettingsConfiguration
         Remove-Item "$buildSourceDirectory\$repo\$solutionName\config\*eploymentSettings.json" -Force
     }
 
+    # Fetch Repository Id
+    $solutionRepoId = Get-RepositoryIdbyName "$orgUrl" "$projectName" "$azdoAuthType" "$repo"
+
     #Update / Create Deployment Pipelines
-    New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS
+    New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS $solutionRepoId
 
     Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
@@ -58,8 +61,10 @@ function Set-DeploymentSettingsConfiguration
         #Getting the build definition id and variables to be updated
         $buildName = $configurationDataEnvironment.BuildName
         $environmentName = $configurationDataEnvironment.DeploymentEnvironmentName
-        $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?name=$buildName&includeAllProperties=true&api-version=6.0"
-        Write-Host $buildDefinitionResourceUrl
+
+        # Fetch the build definition and update variables
+        $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?repositoryId=$solutionRepoId&repositoryType=TfsGit&name=$buildName&includeAllProperties=true&api-version=6.0"
+        Write-Host "BuildDefinitionResourceUrl - "$buildDefinitionResourceUrl
         $fullBuildDefinitionResponse = Invoke-RestMethod $buildDefinitionResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
@@ -210,11 +215,6 @@ function Set-DeploymentSettingsConfiguration
                         Write-Host "Flow configurationVariableName - $configurationVariableName"
                         $flowSplit = $configurationVariableName.Split(".")
                         
-                        for($indxVariableParts=0;$indxVariableParts -lt $flowSplit.Count;$indxVariableParts++)
-                        {
-                            Write-Host "$indxVariableParts - " $flowSplit[$indxVariableParts]
-                        }
-
                         $flowActivateAsName = $configurationVariableName.Replace(".activate.", ".activateas.")
                         $flowActivateOrderName = $configurationVariableName.Replace(".activate.", ".order.")
 
@@ -369,7 +369,8 @@ function New-DeploymentPipelines
         [Parameter(Mandatory)] [String] [AllowEmptyString()] $pat,
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter()] [System.Object[]] [AllowEmptyCollection()]$configurationData,
-        [Parameter()] [String]$agentOS
+        [Parameter()] [String]$agentOS,
+        [Parameter()] [String]$solutionRepoId
     )
     if($null -ne $configurationData -and $configurationData.length -gt 0) {
         Write-Host "Retrieved " $configurationData.length " deployment environments"
@@ -382,8 +383,10 @@ function New-DeploymentPipelines
         Write-Host "Retrieved " $branchResourceResults.length " branch"
 
         #Update / Create Deployment Pipelines
-        $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"
-        Write-Host $buildDefinitionResourceUrl
+        Write-Host "Fetching build definitions under the repo - $repo"
+        $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?repositoryId=$solutionRepoId&repositoryType=TfsGit&name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"     
+        #$buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?path=\$buildRepositoryName - $solutionName\&name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"
+        Write-Host "BuildDefinitionResourceUrl - "$buildDefinitionResourceUrl
         $fullBuildDefinitionResponse = Invoke-RestMethod $buildDefinitionResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
@@ -443,7 +446,7 @@ function New-DeploymentPipelines
             }
             if(-Not [string]::IsNullOrWhiteSpace($settings)) {
                 $settings = $settings + ",environments=" + $environmentNames
-                Write-Host "environments: " $settings
+                Write-Host "Settings: " $settings
 
                 $currentPath = Get-Location
                 Set-Location "$pipelineSourceDirectory"
@@ -454,13 +457,13 @@ function New-DeploymentPipelines
                 try{
                     . "$env:POWERSHELLPATH/brach-pipeline-policy.ps1"
                     Write-Host "Branch creation start"
-                   $solutionProjectRepo = Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType"
+                   $solutionProjectRepo = Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId"
 
                    if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"                        
-                        Update-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings"
+                        Update-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId"
                         Write-Host "Setting up branch policy start"                        
-                        Set-Branch-Policy "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings"
+                        Set-Branch-Policy "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId"
                    }
                 }
                 catch{
@@ -780,4 +783,41 @@ function Read-File-Content {
     }
 
     return $portalsettingsBase64content
+}
+
+<#
+Fetches the Repository Id by Name.
+#>
+function Get-RepositoryIdbyName {
+    param (
+        [Parameter(Mandatory)] [String]$orgUrl,
+        [Parameter(Mandatory)] [String]$buildProjectName,
+        [Parameter(Mandatory)] [string]$azdoAuthType,
+        [Parameter(Mandatory)] [string]$repoNameToSearch
+    )
+
+    $repoId = $null
+    $uriRepos = "$orgUrl$buildProjectName/_apis/git/repositories"
+    
+    try {
+        $reposResponse = Invoke-RestMethod $uriRepos -Method Get -Headers @{
+            Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
+        }
+
+        # Find the repository ID based on the repository name
+        $repository = $reposResponse.value | Where-Object {$_.name -eq $repoNameToSearch}
+
+        # Check if repository found
+        if ($repository) {
+            return $repository.id
+        } else {
+            Write-Error "Repository not found with name '$repoNameToSearch'"
+            return $null
+        }
+    }
+    catch {
+        Write-Host "Error while retrieving repositories. " $_.Exception.Message
+    }
+
+    return $defaultQueue
 }
