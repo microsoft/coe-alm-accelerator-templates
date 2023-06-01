@@ -86,8 +86,30 @@ Describe 'E2E-Pipeline-Test' {
         # and that the environment name is the same as the first part of the environment url
         $environmentName = $ServiceConnection.Replace('https://', '').Replace('.crm.dynamics.com/', '')
 
+        # Check if a specific import pipeline is configured for this solution, if not use the default import pipeline
+        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+        $token = [Helper]::AccessToken
+        $headers.Add("Authorization", "Bearer $token")
+        $headers.Add("Content-Type", "application/json")
+
+        $apiVersion = "?api-version=7.0"
+        $requestUrl = "$org/$project/_apis/pipelines$apiVersion"
+        $response = Invoke-RestMethod $requestUrl -Method 'GET' -Headers $headers
+        $response | ConvertTo-Json -Depth 100
+
+        $pipelineName = "import-unmanaged-to-dev-environment"
+
+        foreach ($pipeline in $response.value) {
+            if ($pipeline.name -eq "deploy-$environmentName-$SolutionName") {
+                $pipelineName = $pipeline.name
+                break
+            }
+        }
+        
+        Write-Host "Using pipeline $pipelineName"
+
         $result = az pipelines run --org $Org --project $Project --branch $BranchToTest `
-            --name 'import-unmanaged-to-dev-environment' `
+            --name $pipelineName `
             --parameters `
             Branch=$SolutionName `
             CommitMessage='NA' `
