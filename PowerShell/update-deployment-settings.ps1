@@ -20,6 +20,7 @@ function Set-DeploymentSettingsConfiguration
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter()] [String]$agentOS = "",
         [Parameter()] [String]$usePlaceholders = "true",
+        [Parameter(Mandatory)] [String]$currentBranch,
         [Parameter()] [String]$pat = "" # Azure DevOps Personal Access Token only required for running local tests
     )
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
@@ -39,7 +40,7 @@ function Set-DeploymentSettingsConfiguration
     $solutionRepoId = Get-RepositoryIdbyName "$orgUrl" "$projectName" "$azdoAuthType" "$repo"
 
     #Update / Create Deployment Pipelines
-    New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS $solutionRepoId
+    New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS $solutionRepoId "$buildSourceDirectory" "$currentBranch"
 
     Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
@@ -370,12 +371,14 @@ function New-DeploymentPipelines
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter()] [System.Object[]] [AllowEmptyCollection()]$configurationData,
         [Parameter()] [String]$agentOS,
-        [Parameter()] [String]$solutionRepoId
+        [Parameter()] [String]$solutionRepoId,
+        [Parameter(Mandatory)] [String]$buildSourceDirectory,
+        [Parameter(Mandatory)] [String]$currentBranch
     )
     if($null -ne $configurationData -and $configurationData.length -gt 0) {
         Write-Host "Retrieved " $configurationData.length " deployment environments"
         $branchResourceUrl = "$orgUrl$projectName/_apis/git/repositories/$repo/refs?filter=heads/$solutionName&api-version=6.0"
-        Write-Host $branchResourceUrl
+        Write-Host "BranchResourceUrl - "$branchResourceUrl
         $branchResourceResponse = Invoke-RestMethod $branchResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
@@ -461,7 +464,7 @@ function New-DeploymentPipelines
 
                    if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"                        
-                        Update-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId"
+                        Update-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId" "$buildRepositoryName" "$buildSourceDirectory" "$currentBranch"
                         Write-Host "Setting up branch policy start"                        
                         Set-Branch-Policy "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId"
                    }
