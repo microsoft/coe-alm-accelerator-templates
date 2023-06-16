@@ -107,21 +107,38 @@ Describe 'E2E-Pipeline-Test' {
         }
         
         Write-Host "Using pipeline $pipelineName"
+        if($pipelineName -eq "import-unmanaged-to-dev-environment") {
+            $result = az pipelines run --org $Org --project $Project --branch $BranchToTest `
+                --name $pipelineName `
+                --parameters `
+                Branch=$SolutionName `
+                CommitMessage='NA' `
+                Email=$Email `
+                Project=$Project `
+                Repo=$Repo `
+                ServiceConnectionName=$ServiceConnection `
+                ServiceConnectionUrl=$ServiceConnection `
+                SolutionName=$SolutionName `
+                UserName=$UserName `
+                ImportUnmanaged='true' `
+                EnvironmentName=$environmentName
+        } else {
+            $result = az pipelines run --org $Org --project $Project --branch $SolutionName `
+                --name $pipelineName `
+                --parameters `
+                Branch=$SolutionName `
+                CommitMessage='NA' `
+                Email=$Email `
+                Project=$Project `
+                Repo=$Repo `
+                ServiceConnectionName=$ServiceConnection `
+                ServiceConnectionUrl=$ServiceConnection `
+                SolutionName=$SolutionName `
+                UserName=$UserName `
+                ImportUnmanaged='true' `
+                EnvironmentName=$environmentName
 
-        $result = az pipelines run --org $Org --project $Project --branch $BranchToTest `
-            --name $pipelineName `
-            --parameters `
-            Branch=$SolutionName `
-            CommitMessage='NA' `
-            Email=$Email `
-            Project=$Project `
-            Repo=$Repo `
-            ServiceConnectionName=$ServiceConnection `
-            ServiceConnectionUrl=$ServiceConnection `
-            SolutionName=$SolutionName `
-            UserName=$UserName `
-            ImportUnmanaged='true' `
-            EnvironmentName=$environmentName
+        }
         $result = $result | ConvertFrom-Json -Depth 100
         $id = $result.id
         [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
