@@ -112,7 +112,6 @@ function Set-DeploymentSettingsConfiguration
                     }
                     #Set environment variable variables
                     elseif($configurationVariableName.StartsWith("environmentvariable.", "CurrentCultureIgnoreCase")) {
-                        Write-Host "configurationVariableValue - $configurationVariableValue"
                         if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
                         {
                             $schemaName = $configurationVariableName -replace "environmentvariable.", ""
@@ -633,7 +632,7 @@ function Get-Flow-Component-Name{
        $flowComponentName = $arrVariableParts[2]
     }
 
-    Write-Host "flowComponentName - $flowComponentName"
+    #Write-Host "flowComponentName - $flowComponentName"
     return $flowComponentName
 }
 
@@ -654,7 +653,7 @@ function Set-PortalSettings-Files
 
     . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
     $dataverseHost = Get-HostFromUrl "$serviceConnection"
-    Write-Host "dataverseHost - $dataverseHost"
+    #Write-Host "dataverseHost - $dataverseHost"
 
     Write-Host "Inside Set-PortalSettings-Files"
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
