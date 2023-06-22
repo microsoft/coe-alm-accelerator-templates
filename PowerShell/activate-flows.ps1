@@ -135,6 +135,7 @@ function Get-UserConfiguredFlowActivations {
                 $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -Fields clientdata, category, statecode, name
                 $impersonationCallerId = ''
 				
+                # Impersonation is no longer needed.
                 #if($activateConfig.activateAsUser -ne '') {
                 #    $systemUserResult = Get-CrmRecords -conn $conn -EntityLogicalName systemuser -FilterAttribute "internalemailaddress" -FilterOperator "eq" -FilterValue $activateConfig.activateAsUser -Fields systemuserid
                 #    if ($systemUserResult.Count -gt 0) {
