@@ -46,13 +46,9 @@ steps:
       $restoreDirectory = Join-Path -Path $projectDirectory -ChildPath 'packages'
       $configFile = Join-Path -Path $projectDirectory -ChildPath 'packages.config'
 
-      if(Test-Path "$configFile") {
-        Write-Host "Restoring NuGet packages for project - $projectPath"
-        & nuget.exe restore $configFile -PackagesDirectory $restoreDirectory
-      }
-      else {
-        Write-Host "Write-Host "##vso[task.logissue type=warning]Unable to find NuGet package config for project - $projectPath"
-      }      
+      Write-Host "Restoring NuGet packages for project - $projectPath"
+      
+      & nuget.exe restore $configFile -PackagesDirectory $restoreDirectory
     }
   displayName: 'Restore NuGet packages to run unit test cases'
   condition: and(succeeded(),eq(variables['HasCSharpProjects'], 'true'))
