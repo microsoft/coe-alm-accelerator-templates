@@ -69,10 +69,6 @@ function Invoke-ActivateFlows {
                 }
                 elseif ($flowToActivate.activate -ne 'false' -and $flowToActivate.solutionComponent.statecode -ne 1) {
                     Write-Host "Activating Flow: " $flowToActivate.solutionComponent.name " as: " $flowToActivate.impersonationCallerId
-                    #if($flowToActivate.impersonationCallerId -ne '') {
-                    #    $impersonationConn.OrganizationWebProxyClient.CallerId = $flowToActivate.impersonationCallerId
-                    #}
-                    #Write-Host "Impersonation Connection CallerId: " $impersonationConn.OrganizationWebProxyClient.CallerId
                     Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $flowToActivate.solutionComponent.workflowid -StateCode 1 -StatusCode 2
                     $flowToActivate.solutionComponent.statecode = 1
                     $flowsActivatedDeactivatedThisPass = $true
@@ -135,18 +131,6 @@ function Get-UserConfiguredFlowActivations {
                 $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $activateConfig.solutionComponentUniqueName -Fields clientdata, category, statecode, name
                 $impersonationCallerId = ''
 				
-                # Impersonation is no longer needed.
-                #if($activateConfig.activateAsUser -ne '') {
-                #    $systemUserResult = Get-CrmRecords -conn $conn -EntityLogicalName systemuser -FilterAttribute "internalemailaddress" -FilterOperator "eq" -FilterValue $activateConfig.activateAsUser -Fields systemuserid
-                #    if ($systemUserResult.Count -gt 0) {
-                #        $impersonationCallerId = $systemUserResult.CrmRecords[0].systemuserid
-                #    }
-                #    else {
-                #        Write-Host "##vso[task.logissue type=warning]A specified user record was not found in the target environment. Verify your deployment configuration and try again."
-                #        $throwOnComplete = $true
-                #    }
-                #}
-
                 if ($null -eq $flowActivation) {
                     Write-Host "1 - Adding flow " $activateConfig.solutionComponentName " to activation collection"
                     $flowActivation = [PSCustomObject]@{}
@@ -157,14 +141,6 @@ function Get-UserConfiguredFlowActivations {
                     $flowActivation | Add-Member -MemberType NoteProperty -Name 'activate' -Value $activateConfig.activate
                     $flowsToActivate.Add($flowActivation)
                 }
-                #elseif($impersonationCallerId -ne '') {
-                #    Write-Host "1 - Updating existing flow activation " $activateConfig.solutionComponentName
-                #    $flowActivation.solutionComponentUniqueName = $activateConfig.solutionComponentUniqueName
-                #    $flowActivation.solutionComponent = $workflow
-                #    $flowActivation.impersonationCallerId = $impersonationCallerId
-                #    $flowActivation.activate = $activateConfig.activate
-                #    $flowActivation.sortOrder = $activateConfig.sortOrder
-                #}
             }
         }
 
