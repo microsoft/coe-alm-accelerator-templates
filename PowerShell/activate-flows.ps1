@@ -34,20 +34,37 @@ function Invoke-ActivateFlows {
     . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
     $dataverseHost = Get-HostFromUrl "$serviceConnection"
     Write-Host "dataverseHost - $dataverseHost"
+	
+	if(Test-Path "$solutionComponentOwnershipConfiguration"){
+		$content = Get-Content -Path "$solutionComponentOwnershipConfiguration"
+        Write-Host "solutionComponentOwnershipConfiguration content - " $content
+    }
 
-    Write-Host "solutionComponentOwnershipConfiguration - " $solutionComponentOwnershipConfiguration
-    Write-Host "connectionReferences - " $connectionReferences
-    Write-Host "activateFlowConfiguration - " $activateFlowConfiguration
+	if(Test-Path "$connectionReferences"){
+		$content = Get-Content -Path "$connectionReferences"
+        Write-Host "connectionReferences content - " $content
+    }
+    
+    if(Test-Path "$activateFlowConfiguration"){
+		$content = Get-Content -Path "$activateFlowConfiguration"
+        Write-Host "activateFlowConfiguration content - " $content
+    }
+
+    #Write-Host "solutionComponentOwnershipConfiguration content - " $solutionComponentOwnershipConfiguration
+    #Write-Host "connectionReferences - " $connectionReferences
+    #Write-Host "activateFlowConfiguration - " $activateFlowConfiguration
 
     $flowsToActivate = [System.Collections.ArrayList]@()
 
     #Connection Reference based Flow Activations must be first as they shouldn't be overridden by owner based activations
     Get-ConnectionReferenceFlowActivations $solutionName $connectionReferences $activateFlowConfiguration $conn $flowsToActivate
+    Write-Flows "Printing flows post connection reference" $flowsToActivate
     #Owner based Flow Activations must be second as they can't override the connection reference based activations
     Get-OwnerFlowActivations $solutionComponentOwnershipConfiguration $activateFlowConfiguration $conn $flowsToActivate
+    Write-Flows "Printing flows post OwnerFlowActivations" $flowsToActivate
     #User Configured Flow Activations must be last as they should override all other configurations based on the user's input
     Get-UserConfiguredFlowActivations $activateFlowConfiguration $conn $flowsToActivate $token $dataverseHost
-    
+   
     Write-Flows "Printing total active flows" $flowsToActivate
 
     Write-Host "Activating flows..."
