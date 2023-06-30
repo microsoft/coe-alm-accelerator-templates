@@ -36,17 +36,17 @@ function Invoke-ActivateFlows {
     Write-Host "dataverseHost - $dataverseHost"
 	
 	if(Test-Path "$solutionComponentOwnershipConfiguration"){
-		$content = Get-Content -Path "$solutionComponentOwnershipConfiguration"
+        $content = Get-Content -Path "$solutionComponentOwnershipConfiguration" | Out-String
         Write-Host "solutionComponentOwnershipConfiguration content - " $content
     }
 
 	if(Test-Path "$connectionReferences"){
-		$content = Get-Content -Path "$connectionReferences"
+		$content = Get-Content -Path "$connectionReferences"  | Out-String
         Write-Host "connectionReferences content - " $content
     }
     
     if(Test-Path "$activateFlowConfiguration"){
-		$content = Get-Content -Path "$activateFlowConfiguration"
+		$content = Get-Content -Path "$activateFlowConfiguration"  | Out-String
         Write-Host "activateFlowConfiguration content - " $content
     }
 
@@ -85,7 +85,7 @@ function Invoke-ActivateFlows {
                     $flowsActivatedDeactivatedThisPass = $true
                 }
                 elseif ($flowToActivate.activate -ne 'false' -and $flowToActivate.solutionComponent.statecode -ne 1) {
-                    Write-Host "Activating Flow: " $flowToActivate.solutionComponent.name " as: " $flowToActivate.impersonationCallerId
+                    Write-Host "Activating Flow: " $flowToActivate.solutionComponent.name
                     Set-CrmRecordState -conn $impersonationConn -EntityLogicalName workflow -Id $flowToActivate.solutionComponent.workflowid -StateCode 1 -StatusCode 2
                     $flowToActivate.solutionComponent.statecode = 1
                     $flowsActivatedDeactivatedThisPass = $true
@@ -191,11 +191,12 @@ function Get-ConnectionReferenceFlowActivations {
 
 			# Read 'ActivateFlowConfiguration' in a sort order
             $activationConfigs = Get-ActivationConfigurations $activateFlowConfiguration
+			Write-Host "***ActivationConfigs - $activationConfigs"
             $config = Get-Content $connectionReferences | ConvertFrom-Json
 
             foreach ($connectionRefConfig in $config) {
                 if ($connectionRefConfig.LogicalName -ne '' -and $connectionRefConfig.ConnectionId -ne '') {
-                    # Get the connection reference to update
+                    # Fetch all the connection references to update
                     $connRefs = Get-CrmRecords -conn $conn -EntityLogicalName connectionreference -FilterAttribute "connectionreferencelogicalname" -FilterOperator "eq" -FilterValue $connectionRefConfig.LogicalName
                     if ($connRefs.Count -gt 0) {
                         $systemUserId = ""
@@ -226,14 +227,17 @@ function Get-ConnectionReferenceFlowActivations {
                                 # Impersonate the Dataverse systemuser that created the connection when updating the connection reference
                                 $impersonationCallerId = $systemusers.CrmRecords[0].systemuserid
 
+								# Loop through all the solution components and get Workflows
                                 foreach ($solutionComponent in $solutionComponents) {
                                     if ($solutionComponent.componenttype -eq "Workflow") {
                                         $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $solutionComponent.objectid -Fields clientdata, category, statecode, name
 
+										# Fetch the Status (i.e., Active/Inactive) of the workflow
                                         $existingActivation = $flowsToActivate | Where-Object { $_.solutionComponentUniqueName -eq $solutionComponent.objectid } | Select-Object -First 1
                                         if ($null -eq $existingActivation) {
+											# Filter workflow based on the connection references mentioned in the configurations
                                             if ($null -ne $workflow -and $null -ne $workflow.clientdata -and $workflow.clientdata.Contains($connectionRefConfig.LogicalName) -and $workflow.statecode_Property.Value -ne 1) {
-                                                Write-Host "Retrieving activation config"
+												Write-Host "***Flow $($workflow.name) matched with connection reference $($connectionRefConfig.LogicalName)"
                                                 $sortOrder = [int]::MaxValue
                                                 $activateFlow = 'true'
                                                 if ($null -ne $activationConfigs) {
@@ -257,7 +261,7 @@ function Get-ConnectionReferenceFlowActivations {
                                                     $flowsToActivate.Add($flowActivation)
                                                 }
                                                 else {
-                                                    Write-Host "Excluding flow " $activationConfig.workflow.name "from activation collection"
+                                                    Write-Host "Excluding flow " $workflow.name "from activation collection"
                                                 }
                                             }
                                         }

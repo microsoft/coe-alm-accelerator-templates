@@ -147,17 +147,17 @@ steps:
   condition: and(succeeded(), ne(variables['IsUnmanaged'], 'true'))
 
 # If the TriggerSolutionUpgrade variable is false, then import the solution as an Update
-#- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
-#  displayName: 'Import Managed Solution as Update'
-#  inputs:
-#    authenticationType: PowerPlatformSPN
-#    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
-#    SolutionInputFile: $(ManagedSolutionPath)
-#    PublishWorkflows: true
-#    OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
-#    UseDeploymentSettingsFile: $(UseDeploymentSettings)
-#    DeploymentSettingsFile: $(DeploymentSettingsPath)
-#  condition: and(succeeded(), ne(variables['IsUnmanaged'], 'true'), or(eq(variables['TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'false')))
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
+  displayName: 'Import Managed Solution as Update'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
+    SolutionInputFile: $(ManagedSolutionPath)
+    PublishWorkflows: true
+    OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
+    UseDeploymentSettingsFile: $(UseDeploymentSettings)
+    DeploymentSettingsFile: $(DeploymentSettingsPath)
+  condition: and(succeeded(), ne(variables['IsUnmanaged'], 'true'), or(eq(variables['TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'false')))
 
 # If the TriggerSolutionUpgrade variable is true, then import the solution as an Upgrade, staging it as a holding solution, so we can apply a solution Upgrade.
 # Doing this will ensure that items removed from the solution in development are also removed from the solution in the target environment after the Upgrade is applied.
