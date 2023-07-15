@@ -53,6 +53,12 @@ parameters:
 - name: CommitScope
   type: string
   default: "1"
+- name: AgentPool
+  type: string
+  default: ""
+- name: VMImage
+  type: string
+  default: "windows-latest"
 trigger: none
 pr: none
 
@@ -68,8 +74,12 @@ stages:
   - job: import_unmanaged_solution
   
     pool:
-      vmImage: 'windows-2022'
-
+      ${{ if and(ne(parameters.AgentPool, 'NA'), ne(parameters.AgentPool, '')) }}:
+        name: ${{parameters.AgentPool}}
+      ${{ elseif and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
+        vmImage: ${{parameters.VMImage}}
+      ${{ else }}:
+        vmImage: 'windows-latest'
     steps:
     - checkout: self
       path: 'PipelineUtils'

@@ -58,6 +58,12 @@ parameters:
 - name: CommitScope
   type: string
   default: "1"
+- name: AgentPool
+  type: string
+  default: ""
+- name: VMImage
+  type: string
+  default: "windows-latest"
 trigger: none
 pr: none
 
@@ -65,15 +71,18 @@ name: delete-unmanaged-${{parameters.SolutionName}}-and-components-from-environm
 
 variables:
 - group: alm-accelerator-variable-group
-- name: vmImage
-  value: 'windows-2022'
 
 stages:
 - stage: exportAndDeleteUnmanaged
   jobs:
     - job: exportAndDeleteUnmanaged  
       pool:
-        vmImage: ${{ variables.vmImage }}
+        ${{ if and(ne(parameters.AgentPool, 'NA'), ne(parameters.AgentPool, '')) }}:
+          name: ${{parameters.AgentPool}}
+        ${{ elseif and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
+          vmImage: ${{parameters.VMImage}}
+        ${{ else }}:
+          vmImage: 'windows-latest'
       steps:
       - checkout: none
 
@@ -120,7 +129,12 @@ stages:
   jobs:
     - job: importAndDeleteManaged  
       pool:
-        vmImage: ${{ variables.vmImage }}
+        ${{ if and(ne(parameters.AgentPool, 'NA'), ne(parameters.AgentPool, '')) }}:
+          name: ${{parameters.AgentPool}}
+        ${{ elseif and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
+          vmImage: ${{parameters.VMImage}}
+        ${{ else }}:
+          vmImage: 'windows-latest'
       steps:
       - checkout: none
 

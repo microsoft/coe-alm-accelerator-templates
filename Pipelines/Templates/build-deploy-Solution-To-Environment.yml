@@ -8,8 +8,9 @@ stages:
   jobs:
   - job: build_and_deploy_job
     timeoutInMinutes: 0
-    pool: 
-      vmImage: 'windows-2022'
+    pool:
+      ${{ if eq(variables.Agent.Name, 'Azure Pipelines') }}:
+        vmImage: 'windows-latest'
     steps:
       
     - template: build-unmanaged-managed-Solution.yml

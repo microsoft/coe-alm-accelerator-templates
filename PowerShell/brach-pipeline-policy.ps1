@@ -353,13 +353,14 @@ function Update-Build-for-Branch{
         [Parameter(Mandatory)] [string]$solutionRepoId,
         [Parameter(Mandatory)] [String]$buildRepoName,
         [Parameter(Mandatory)] [String]$buildDirectory,
-        [Parameter(Mandatory)] [String]$currentBranch
+        [Parameter(Mandatory)] [String]$currentBranch,
+        [Parameter(Mandatory)] [String]$agentPool
     )
 
     Write-Host "Retrieving default Queue"
-    $defaultAgentQueue = Get-AgentQueueByName "$orgUrl" "$solutionProjectName" "$azdoAuthType" "Azure Pipelines"
+    $defaultAgentQueue = Get-AgentQueueByName "$orgUrl" "$solutionProjectName" "$azdoAuthType" "$agentPool"
     if($null -ne $defaultAgentQueue){
-        Write-Host "Default queue (Azure Pipelines) is available"
+        Write-Host "Default queue ($agentPool) is available"
         # If Environment Names not provided, fall back to validation|test|prod.
         if([string]::IsNullOrEmpty($environmentNames)){
             Write-Host "EnvironmentNames not found in Settings. Falling back."
@@ -376,7 +377,7 @@ function Update-Build-for-Branch{
             Invoke-Clone-Build-Settings "$orgUrl" "$solutionProjectName" "$settings" $definitions "$environmentName" "$solutionName" $repo "$azdoAuthType" $defaultAgentQueue "$solutionProjectName" "$buildRepoName" "$buildDirectory" "$currentBranch"
         }
     }else{
-        Write-Host "'Azure Pipelines' queue Not Found. You will need to set the default queue manually. Please verify the permissions for the user executing this command include access to queues."
+        Write-Host "'$agentPool' queue Not Found. You will need to set the default queue manually. Please verify the permissions for the user executing this command include access to queues."
     }
 }
 
@@ -726,7 +727,8 @@ function Set-Branch-Policy{
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [object]$repo,
         [Parameter(Mandatory)] [object]$settings,
-        [Parameter(Mandatory)] [string]$solutionRepoId
+        [Parameter(Mandatory)] [string]$solutionRepoId,
+        [Parameter(Mandatory)] [string]$agentPool
     )
 
     Write-Host "Fetching Project Build Definitions to set the policy"

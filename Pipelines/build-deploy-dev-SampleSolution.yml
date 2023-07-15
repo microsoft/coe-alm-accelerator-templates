@@ -53,6 +53,12 @@ parameters:
 - name: CommitScope
   type: string
   default: "1"
+- name: AgentPool
+  type: string
+  default: ""
+- name: VMImage
+  type: string
+  default: "windows-latest"
 trigger: none
 pr: none
 #You can use this sample template if you plan to store the pipeline templates in one repo and your pipeline YAML in another. This is useful for when you have multiple repos and don't want to maintain the templates in multiple places.'
@@ -78,7 +84,12 @@ stages:
   - job: import_unmanaged_solution
   
     pool:
-      vmImage: 'windows-2022'
+      ${{ if and(ne(parameters.AgentPool, 'NA'), ne(parameters.AgentPool, '')) }}:
+        name: ${{parameters.AgentPool}}
+      ${{ elseif and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
+        vmImage: ${{parameters.VMImage}}
+      ${{ else }}:
+        vmImage: 'windows-latest'
 
     steps:
     - checkout: PipelineRepo

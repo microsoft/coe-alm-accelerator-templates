@@ -65,6 +65,12 @@ parameters:
 - name: CommitScope
   type: string
   default: "1"
+- name: AgentPool
+  type: string
+  default: "NA"
+- name: VMImage
+  type: string
+  default: "windows-latest"
 trigger: none
 pr: none
 
@@ -80,8 +86,12 @@ stages:
   - job: export_solution_to_git
 
     pool:
-      vmImage: 'windows-2022'
-
+      ${{ if and(ne(parameters.AgentPool, 'NA'), ne(parameters.AgentPool, '')) }}:
+        name: ${{parameters.AgentPool}}
+      ${{ elseif and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
+        vmImage: ${{parameters.VMImage}}
+      ${{ else }}:
+        vmImage: 'windows-latest'
     steps:
     - pwsh: |
         # Workaround for git Filename too long issue 
@@ -113,4 +123,5 @@ stages:
         configurationData: ${{parameters.Data}}
         portalSiteName: ${{parameters.PortalSiteName}}
         publishCustomizations: ${{parameters.PublishCustomizations}}
-        commitScope: ${{parameters.CommitScope}}        
+        commitScope: ${{parameters.CommitScope}}
+        agentPool: ${{parameters.AgentPool}}

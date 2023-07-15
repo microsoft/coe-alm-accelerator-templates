@@ -53,6 +53,18 @@ parameters:
 - name: commitScope
   type: string
   default: '1'
+- name: agentPool
+  type: string
+  default: 'Azure Pipelines'
+- name: artifactUrl
+  type: string
+  default: ""
+- name: pipelinesServiceConnectionName
+  type: string
+  default: ""
+- name: pipelinesServiceConnectionUrl
+  type: string
+  default: ""
 steps:
 - template: set-service-connection-url.yml
   parameters:
@@ -232,6 +244,7 @@ steps:
     useDeploymentSettingsPlaceholders: $(UseDeploymentSettingsPlaceholders)
     commitScope: '${{parameters.commitScope}}'
     currentBranch: '${{ parameters.branch }}'
+    agentPool: '${{ parameters.agentPool }}'
 
 # Set paths to deployment settings
 - template: set-deployment-configuration-paths.yml
