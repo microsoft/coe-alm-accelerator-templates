@@ -90,7 +90,6 @@ stages:
         vmImage: ${{parameters.VMImage}}
       ${{ else }}:
         vmImage: 'windows-latest'
-
     steps:
     - checkout: PipelineRepo
       path: 'PipelineUtils'

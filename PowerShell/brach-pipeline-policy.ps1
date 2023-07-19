@@ -12,7 +12,8 @@ function Create-Branch{
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$environmentNames,
         [Parameter(Mandatory)] [String]$azdoAuthType,
-        [Parameter(Mandatory)] [string]$solutionRepoId
+        [Parameter(Mandatory)] [string]$solutionRepoId,
+        [Parameter(Mandatory)] [string]$agentPool
     )
         Write-Host "Pipeline Project: $buildProjectName"
         Write-Host "Getting Pipeline Project Repositories"
@@ -117,7 +118,7 @@ function Create-Branch{
                 foreach ($environmentName in $collEnvironmentNames) {
                     Write-Host "Check if content yml file available for $environmentName. If not downloads and commit them to solution branch."
                     # Fetch Commit Changes Collection
-                    $commitChange = Get-Git-Commit-Changes "$organizationURL" "$buildProjectName" "$solutionProjectName" "$solutionRepositoryName" "$buildRepositoryName" "$solutionName" "$environmentName" "$sourceBranch"
+                    $commitChange = Get-Git-Commit-Changes "$organizationURL" "$buildProjectName" "$solutionProjectName" "$solutionRepositoryName" "$buildRepositoryName" "$solutionName" "$environmentName" "$sourceBranch" "$agentPool"
                     if($null -ne $commitChange){
                         $commitChanges.Add($commitChange)
                     }
@@ -250,7 +251,8 @@ function Get-Git-Commit-Changes{
         [Parameter(Mandatory)] [String]$buildRepositoryName,
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$environmentName,
-        [Parameter(Mandatory)] [String]$sourceBranch
+        [Parameter(Mandatory)] [String]$sourceBranch,
+        [Parameter(Mandatory)] [String]$agentPool
     )
 
     $commitChange = $null
@@ -307,6 +309,9 @@ function Get-Git-Commit-Changes{
             # Replace with 'Build-Templates-Project/Repo'
             $pipelineContent = $pipelineContent -replace "RepositoryContainingTheBuildTemplates", "$buildProjectName/$buildRepositoryName"
             $pipelineContent = $pipelineContent -replace "SampleSolutionName", $solutionName
+            if($agentPool -ne "Azure Pipelines"){
+                $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment.yml", "build-deploy-Solution-To-Environment-Hosted.yml"
+            }
 
             $variableGroup = Get-Value-From-settings $settings "$environmentName-variablegroup"
             if($null -ne $variableGroup){

@@ -470,7 +470,7 @@ function New-DeploymentPipelines
                 try{
                     . "$env:POWERSHELLPATH/brach-pipeline-policy.ps1"
                     Write-Host "Branch creation start"
-                   $solutionProjectRepo = Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId"
+                   $solutionProjectRepo = Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool"
 
                    if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"

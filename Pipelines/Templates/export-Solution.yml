@@ -160,11 +160,37 @@ steps:
       Set-Pac-Tools-Path "$(Agent.OS)"
   displayName: 'Set pac tools path'
 
+# Download the solution artifact if it is provided
+- pwsh: |
+      . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+      Invoke-Download-Solution-Artifact "${{parameters.pipelinesServiceConnectionUrl}}" "$(AADHost)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$(pipelineHostVariables.BuildTools.TenantId)" "$(Pipeline.Workspace)" "${{parameters.repo}}" "${{parameters.solutionName}}" "${{parameters.artifactUrl}}"
+  displayName: 'Download Solution Artifacts'
+  condition: and(succeeded(), ne('${{parameters.artifactUrl}}', ''), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
+
+# Unpack the solution artifact if it is provided
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.unpack-solution.PowerPlatformUnpackSolution@2
+  inputs:
+    SolutionInputFile: '$(Pipeline.Workspace)\${{parameters.solutionName}}.zip'
+    SolutionTargetFolder: '$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}\SolutionPackage\src'
+    SolutionType: 'Both'
+    ProcessCanvasApps: $(localProcessCanvasApps)
+    OverwriteFiles: true
+  displayName: 'Unpack Solution Artifacts'
+  condition: and(succeeded(), ne('${{parameters.artifactUrl}}', ''), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
+
+# Initialize the cdsproj for the unpacked solution
+- pwsh: |
+      . "$env:POWERSHELLPATH/code-first-functions.ps1"
+      Invoke-Generate-CdsProj-For-Unpacked-Solution "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)"
+  displayName: 'pac - Initialize cdsproj for unpacked solution'
+  condition: and(succeeded(), ne('${{parameters.artifactUrl}}', ''), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
+
+# Clone or sync the solution if the artifact is not provided
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
       Invoke-Clone-Or-Sync-Solution "${{parameters.serviceConnectionUrl}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)" "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)" "$(Agent.BuildDirectory)" "$(localProcessCanvasApps)"
   displayName: 'pac - Clone or Sync Solution'
-  condition: and(succeeded(), or(eq('${{parameters.commitScope}}', '1'),eq('${{parameters.commitScope}}', '2')))
+  condition: and(succeeded(), eq('${{parameters.artifactUrl}}', ''), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
 
 - pwsh: |
     . "$env:POWERSHELLPATH/code-first-functions.ps1"
