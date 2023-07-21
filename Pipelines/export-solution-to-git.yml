@@ -67,7 +67,7 @@ parameters:
   default: "1"
 - name: AgentPool
   type: string
-  default: "NA"
+  default: "Azure Pipelines"
 - name: VMImage
   type: string
   default: "windows-latest"

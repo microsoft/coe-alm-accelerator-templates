@@ -59,7 +59,7 @@ parameters:
   default: "1"
 - name: agentPool
   type: string
-  default: ''
+  default: 'Azure Pipelines'
 - name: artifactUrl
   type: string
   default: ""

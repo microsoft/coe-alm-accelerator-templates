@@ -21,7 +21,7 @@ parameters:
   type: string
 - name: agentPool
   type: string
-  default: ''
+  default: 'Azure Pipelines'
 
 steps:
 - powershell: |

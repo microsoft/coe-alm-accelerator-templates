@@ -58,7 +58,7 @@ parameters:
   default: "1"
 - name: AgentPool
   type: string
-  default: " "
+  default: "Azure Pipelines"
 - name: VMImage
   type: string
   default: "windows-2022"    
@@ -72,7 +72,7 @@ parameters:
   type: string
 - name: AgentPool
   type: string
-  default: ""
+  default: "Azure Pipelines"
 - name: VMImage
   type: string
   default: "windows-latest"
