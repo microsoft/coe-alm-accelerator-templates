@@ -61,7 +61,7 @@ parameters:
   default: "Azure Pipelines"
 - name: VMImage
   type: string
-  default: "windows-2022"    
+  default: "windows-latest"    
 - name: ArtifactUrl
   type: string
 - name: PipelinesServiceConnectionName
