@@ -90,8 +90,6 @@ stages:
         name: ${{parameters.AgentPool}}
       ${{ if and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
         vmImage: ${{parameters.VMImage}}
-      ${{ else }}:
-        vmImage: 'windows-latest'
     steps:
     - pwsh: |
         # Workaround for git Filename too long issue 
