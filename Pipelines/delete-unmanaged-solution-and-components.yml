@@ -129,10 +129,8 @@ stages:
       pool:
         ${{ if and(ne(parameters.AgentPool, 'NA'), ne(parameters.AgentPool, '')) }}:
           name: ${{parameters.AgentPool}}
-        ${{ elseif and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
+        ${{ if and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
           vmImage: ${{parameters.VMImage}}
-        ${{ else }}:
-          vmImage: 'windows-latest'
       steps:
       - checkout: none
 
