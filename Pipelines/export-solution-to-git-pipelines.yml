@@ -56,12 +56,6 @@ parameters:
 - name: CommitScope
   type: string
   default: "1"
-- name: AgentPool
-  type: string
-  default: "Azure Pipelines"
-- name: VMImage
-  type: string
-  default: "windows-latest"    
 - name: ArtifactUrl
   type: string
 - name: PipelinesServiceConnectionName
@@ -93,10 +87,8 @@ stages:
     pool:
       ${{ if and(ne(parameters.AgentPool, 'NA'), ne(parameters.AgentPool, '')) }}:
         name: ${{parameters.AgentPool}}
-      ${{ elseif and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
+      ${{ if and(ne(parameters.VMImage, 'NA'), ne(parameters.VMImage, '')) }}:
         vmImage: ${{parameters.VMImage}}
-      ${{ else }}:
-        vmImage: 'windows-latest'
     steps:
     - pwsh: |
         # Workaround for git Filename too long issue 
