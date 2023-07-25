@@ -112,17 +112,17 @@ steps:
   condition: and(succeeded(), ne(variables['CacheEnabled'], 'false'))
 
 # Configure email/name and checkout git branch
-- script: |
+- pwsh: |
    git config user.email "${{parameters.email}}"
    git config user.name "${{parameters.userName}}"
-   git checkout origin/${{parameters.branch}} --track
+   git checkout origin/${{parameters.branch}} || git checkout -b origin/${{parameters.branch}}
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Initialize Git'
 
 # If the BranchToCreate variable *does not* contain an empty string, then
 # create a branch based on BranchToCreate variable value and checkout that branch.
-- script: |
-   git checkout -b ${{parameters.branchToCreate}} ${{parameters.branch}}
+- pwsh: |
+   git checkout ${{parameters.branchToCreate}} || git checkout -b ${{parameters.branchToCreate}} ${{parameters.branch}}
   displayName: 'Create New Git Branch: ${{parameters.branchToCreate}}'
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   condition: and(succeeded(), ne('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter')) # If an empty value is passed for the BranchToCreate variable, then skip this task
