@@ -115,14 +115,14 @@ steps:
 - pwsh: |
    git config user.email "${{parameters.email}}"
    git config user.name "${{parameters.userName}}"
-   git checkout origin/${{parameters.branch}} || git checkout -b origin/${{parameters.branch}}
+   git checkout origin/${{parameters.branch}} --track
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Initialize Git'
 
 # If the BranchToCreate variable *does not* contain an empty string, then
 # create a branch based on BranchToCreate variable value and checkout that branch.
 - pwsh: |
-   git checkout ${{parameters.branchToCreate}} || git checkout -b ${{parameters.branchToCreate}} ${{parameters.branch}}
+   git checkout -b ${{parameters.branchToCreate}} ${{parameters.branch}}
   displayName: 'Create New Git Branch: ${{parameters.branchToCreate}}'
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   condition: and(succeeded(), ne('${{parameters.branchToCreate}}', 'Commit to existing branch specified in Branch parameter')) # If an empty value is passed for the BranchToCreate variable, then skip this task
@@ -165,7 +165,7 @@ steps:
       . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
       Invoke-Download-Solution-Artifact "${{parameters.pipelinesServiceConnectionUrl}}" "$(AADHost)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$(pipelineHostVariables.BuildTools.TenantId)" "$(Pipeline.Workspace)" "${{parameters.repo}}" "${{parameters.solutionName}}" "${{parameters.artifactUrl}}"
   displayName: 'Download Solution Artifacts'
-  condition: and(succeeded(), ne('${{parameters.artifactUrl}}', ''), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
+  condition: and(succeeded(), and(ne('${{parameters.artifactUrl}}', ''), ne('${{parameters.artifactUrl}}', 'NA')), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
 
 # Unpack the solution artifact if it is provided
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.unpack-solution.PowerPlatformUnpackSolution@2
@@ -176,21 +176,21 @@ steps:
     ProcessCanvasApps: $(localProcessCanvasApps)
     OverwriteFiles: true
   displayName: 'Unpack Solution Artifacts'
-  condition: and(succeeded(), ne('${{parameters.artifactUrl}}', ''), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
+  condition: and(succeeded(), and(ne('${{parameters.artifactUrl}}', ''), ne('${{parameters.artifactUrl}}', 'NA')), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
 
 # Initialize the cdsproj for the unpacked solution
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
       Invoke-Generate-CdsProj-For-Unpacked-Solution "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)"
   displayName: 'pac - Initialize cdsproj for unpacked solution'
-  condition: and(succeeded(), ne('${{parameters.artifactUrl}}', ''), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
+  condition: and(succeeded(), and(ne('${{parameters.artifactUrl}}', ''), ne('${{parameters.artifactUrl}}', 'NA')), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
 
 # Clone or sync the solution if the artifact is not provided
 - pwsh: |
       . "$env:POWERSHELLPATH/code-first-functions.ps1"
       Invoke-Clone-Or-Sync-Solution "${{parameters.serviceConnectionUrl}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)" "$(Build.SourcesDirectory)" "${{parameters.repo}}" "${{parameters.solutionName}}" "$(pacPath)" "$(Agent.BuildDirectory)" "$(localProcessCanvasApps)"
   displayName: 'pac - Clone or Sync Solution'
-  condition: and(succeeded(), eq('${{parameters.artifactUrl}}', ''), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
+  condition: and(succeeded(), or(eq('${{parameters.artifactUrl}}', ''), eq('${{parameters.artifactUrl}}', 'NA')), or(eq('${{parameters.commitScope}}', '1'), eq('${{parameters.commitScope}}', '2')))
 
 - pwsh: |
     . "$env:POWERSHELLPATH/code-first-functions.ps1"
