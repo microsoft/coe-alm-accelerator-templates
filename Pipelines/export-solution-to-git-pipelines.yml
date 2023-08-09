@@ -135,6 +135,7 @@ stages:
         commitScope: ${{parameters.CommitScope}}
         agentPool: ${{parameters.AgentPool}}
         artifactUrl: ${{parameters.ArtifactUrl}}
+        pipelineStageRunId: ${{parameters.PipelinesStageRunId}}
         pipelinesServiceConnectionName: ${{parameters.PipelinesServiceConnectionName}}
         pipelinesServiceConnectionUrl: ${{parameters.PipelinesServiceConnectionUrl}}
 

@@ -59,6 +59,9 @@ parameters:
 - name: artifactUrl
   type: string
   default: ""
+- name: pipelineStageRunId
+  type: string
+  default: ""
 - name: pipelinesServiceConnectionName
   type: string
   default: ""
@@ -271,6 +274,7 @@ steps:
     commitScope: '${{parameters.commitScope}}'
     currentBranch: '${{ parameters.branch }}'
     agentPool: '${{ parameters.agentPool }}'
+    pipelineStageRunId: '${{ parameters.pipelineStageRunId }}'
 
 # Set paths to deployment settings
 - template: set-deployment-configuration-paths.yml
