@@ -63,12 +63,18 @@ parameters:
 - name: artifactUrl
   type: string
   default: ""
-- name: pipelinesServiceConnectionName
+- name: pipelineServiceConnectionName
   type: string
   default: ""
-- name: pipelinesServiceConnectionUrl
+- name: pipelineServiceConnectionUrl
   type: string
   default: ""
+- name: createPR
+  type: string
+  default: "false"
+- name: autoCompletePR
+  type: string
+  default: "false"  
 steps:
     - template: export-Solution.yml@PipelineRepo
       parameters:

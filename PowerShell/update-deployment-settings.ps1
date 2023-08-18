@@ -18,6 +18,8 @@ function Set-DeploymentSettingsConfiguration
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter()] [String]$pipelineServiceConnectionName = "",
+        [Parameter()] [String]$pipelineServiceConnectionUrl = "",
         [Parameter()] [String]$pipelineStageRunId = "",
         [Parameter()] [String]$agentPool = "Azure Pipelines",
         [Parameter()] [String]$usePlaceholders = "true",
@@ -90,7 +92,8 @@ function Set-DeploymentSettingsConfiguration
 
         # Updating PipelineStageRunId if the pipeline is triggered from a Power Platform Pipeline Invoke-Create-Update-PipelineStageRun-Parameter
         if($null -ne $newBuildDefinitionVariables -and $null -ne $pipelineStageRunId -and $pipelineStageRunId -ne ""){
-            Invoke-Create-Update-PipelineStageRun-Parameter $pipelineStageRunId $newBuildDefinitionVariables
+            Write-Host "Updating PipelineStageRunId - $pipelineStageRunId"
+            Invoke-Create-Update-PipelineStageRun-Parameter $pipelineStageRunId $pipelineServiceConnectionName $pipelineServiceConnectionUrl $newBuildDefinitionVariables
         }
 
         if($null -ne $configurationDataEnvironment) {
@@ -483,7 +486,7 @@ function New-DeploymentPipelines
                 try{
                     . "$env:POWERSHELLPATH/brach-pipeline-policy.ps1"
                     Write-Host "Branch creation start"
-                   $solutionProjectRepo = Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool"
+                   $solutionProjectRepo = Invoke-Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool" "$pipelineStageRunId"
 
                    if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"
@@ -502,7 +505,7 @@ function New-DeploymentPipelines
                 }
                 Set-Location $currentPath
             }
-        }
+       }
     }
 }
 
@@ -539,6 +542,8 @@ function Set-BuildDefinitionVariables {
 function Invoke-Create-Update-PipelineStageRun-Parameter{
     param (
         [Parameter()] [String]$PipelineStageRunId,
+        [Parameter()] [String]$PipelineServiceConnectionName,
+        [Parameter()] [String]$PipelineServiceConnectionUrl,
         [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
     )
     Write-Host "Inside Invoke-Create-Update-PipelineStageRun-Parameter"
@@ -551,6 +556,21 @@ function Invoke-Create-Update-PipelineStageRun-Parameter{
         }
 
         $newBuildDefinitionVariables.PipelineStageRunId.value = $PipelineStageRunId
+
+        $found = Get-Parameter-Exists "PipelineServiceConnectionName" $newBuildDefinitionVariables
+        if(!$found) { 
+            $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "PipelineServiceConnectionName" -Value @{value = ''}
+        }
+
+        $newBuildDefinitionVariables.PipelineServiceConnectionName.value = $PipelineServiceConnectionName        
+
+        $found = Get-Parameter-Exists "PipelineServiceConnectionUrl" $newBuildDefinitionVariables
+        if(!$found) { 
+            $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name "PipelineServiceConnectionUrl" -Value @{value = ''}
+        }
+
+        $newBuildDefinitionVariables.PipelineServiceConnectionUrl.value = $PipelineServiceConnectionUrl        
+
     }
 }
 

@@ -2,6 +2,10 @@
 # -Building the solution when changes to the contents of the solution folder are triggered (see trigger-SolutionName.yml for example trigger)
 # -Deploying the solution to a specific environment based on pipeline variables
 # This is most commonly used for PR Validation where both the build and deploy must suceeed in order for the PR checks to succeed.
+parameters:
+- name: pipelineDeploymentStage
+  type: string
+  default: "PreDeployment"
 stages:
 - stage: build_and_deploy
   displayName: 'Build and Deploy' 
@@ -10,3 +14,5 @@ stages:
     timeoutInMinutes: 0
     steps:
     - template: build-deploy-Solution-To-Environment-Common.yml
+      parameters:
+        pipelineDeploymentStage: '${{parameters.PipelineDeploymentStage}}'    

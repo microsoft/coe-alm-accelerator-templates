@@ -59,15 +59,21 @@ parameters:
 - name: ArtifactUrl
   type: string
   default: "NA"
-- name: PipelinesServiceConnectionName
+- name: PipelineServiceConnectionName
   type: string
   default: "NA"
-- name: PipelinesServiceConnectionUrl
+- name: PipelineServiceConnectionUrl
   type: string
   default: "NA"
-- name: PipelinesStageRunId
+- name: PipelineStageRunId
   type: string
   default: "NA"
+- name: CreatePR
+  type: string
+  default: "false"
+- name: AutoCompletePR
+  type: string
+  default: "false"
 - name: AgentPool
   type: string
   default: "Azure Pipelines"
@@ -114,7 +120,7 @@ stages:
       name: pipelineHostVariables
       inputs:
         authenticationType: 'PowerPlatformSPN'
-        PowerPlatformSPN: '${{parameters.PipelinesServiceConnectionName}}'
+        PowerPlatformSPN: '${{parameters.PipelineServiceConnectionName}}'
 
     # Other tasks, which use the PowerApps PowerShell cmdlets, need the environment guid.  Setting it for future use.
     - template: Templates\export-Solution.yml
@@ -135,11 +141,12 @@ stages:
         commitScope: ${{parameters.CommitScope}}
         agentPool: ${{parameters.AgentPool}}
         artifactUrl: ${{parameters.ArtifactUrl}}
-        pipelineStageRunId: ${{parameters.PipelinesStageRunId}}
-        pipelinesServiceConnectionName: ${{parameters.PipelinesServiceConnectionName}}
-        pipelinesServiceConnectionUrl: ${{parameters.PipelinesServiceConnectionUrl}}
+        pipelineStageRunId: ${{parameters.PipelineStageRunId}}
+        pipelineServiceConnectionName: ${{parameters.PipelineServiceConnectionName}}
+        pipelineServiceConnectionUrl: ${{parameters.PipelineServiceConnectionUrl}}
 
-    # Create a pull request for the new branch
+
+      # Conditionally create a pull request to the solution branch for the new branch
     - pwsh: |
         $sourceBranch = "refs/heads/${{parameters.BranchToCreate}}"
         $targetBranch = "refs/heads/${{parameters.SolutionName}}"
@@ -148,13 +155,13 @@ stages:
         }
 
         # Check for existing active PR for the branch and repo
-        $uri = "$(System.TeamFoundationCollectionUri)/${{parameters.project}}/_apis/git/pullrequests?searchCriteria.repositoryId=${{parameters.repo}}&searchCriteria.sourceRefName=$sourceBranch&searchCriteria.status=active&searchCriteria.targetRefName=$targetBranch&api-version=7.0"
+        $uri = "$(System.TeamFoundationCollectionUri)/${{parameters.Project}}/_apis/git/pullrequests?searchCriteria.repositoryId=${{parameters.Repo}}&searchCriteria.sourceRefName=$sourceBranch&searchCriteria.status=active&searchCriteria.targetRefName=$targetBranch&api-version=7.0"
         $response = Invoke-RestMethod $uri -Method Get -Headers @{
             Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
         }
         if($response.value.length -eq 0) {
           # Define API endpoint
-          $uri = "$(System.TeamFoundationCollectionUri)/${{parameters.project}}/_apis/git/repositories/${{parameters.repo}}/pullrequests?api-version=6.0"
+          $uri = "$(System.TeamFoundationCollectionUri)/${{parameters.Project}}/_apis/git/repositories/${{parameters.Repo}}/pullrequests?api-version=6.0"
 
           # Define request body
           $body = @{
@@ -170,64 +177,70 @@ stages:
               "Content-Type" = "application/json"
           } -Body $body
 
-          # Define API endpoint for update
-          $uri = "$(System.TeamFoundationCollectionUri)${{parameters.project}}/_apis/git/repositories/${{parameters.repo}}/pullrequests/" + $createPRResponse.pullRequestId + "?api-version=6.0"
+          if("${{parameters.AutoCompletePR}}" -eq "true") {
+            # Define API endpoint for update
+            $uri = "$(System.TeamFoundationCollectionUri)${{parameters.Project}}/_apis/git/repositories/${{parameters.Repo}}/pullrequests/" + $createPRResponse.pullRequestId + "?api-version=6.0"
 
-          Write-Host $uri
-          # Set the PR to auto-complete
-          $body = @{
-              autoCompleteSetBy = @{
-                  id = $createPRResponse.createdBy.id
-              }
-              completionOptions = @{
-                  deleteSourceBranch = $true
-                  bypassPolicy = $false
-              }
-          } | ConvertTo-Json
+            Write-Host $uri
+            # Set the PR to auto-complete
+            $body = @{
+                autoCompleteSetBy = @{
+                    id = $createPRResponse.createdBy.id
+                }
+                completionOptions = @{
+                    deleteSourceBranch = $true
+                    bypassPolicy = $false
+                }
+            } | ConvertTo-Json
 
-          Write-Host $body
-          Invoke-RestMethod -Uri $uri -Method Patch -Headers @{
-              Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
-              "Content-Type" = "application/json"
-          } -Body $body
-
+            Write-Host $body
+            Invoke-RestMethod -Uri $uri -Method Patch -Headers @{
+                Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN"
+                "Content-Type" = "application/json"
+            } -Body $body
+          }
         }
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       displayName: 'Create a pull request for the new branch'
-      condition: succeeded()
-
+      condition: and(succeeded(), ne(variables['NothingToCommit'], 'true'), eq('${{parameters.CreatePR}}', 'true'))
 
     # Mark the deployment stage as succeeded
     - pwsh: |
-        Write-Host "##vso[task.setvariable variable=pipelineRunStatus]20"
-      displayName: 'Mark the deployment stage as succeeded'
-      enabled: true
-      condition: succeeded()
-
-
-    # Mark the deployment stage as failed
-    - pwsh: |
-        Write-Host "##vso[task.setvariable variable=pipelineRunStatus]30"
-      displayName: 'Mark the deployment stage as failed'
-      enabled: true
-      condition: failed()
-
-    # Mark the deployment stage as completed. Success or failed
-    - pwsh: |
+        $pipelineRunStatus = 20
         . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
-        $dataverseHost = Get-HostFromUrl "${{parameters.PipelinesServiceConnectionUrl}}"
+        $dataverseHost = Get-HostFromUrl "${{parameters.PipelineServiceConnectionUrl}}"
         $spnToken = Get-SpnToken "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$dataverseHost" "$(AADHost)"
 
         # Set up the request body
         $requestBody = @{
-            StageRunId = "${{parameters.PipelinesStageRunId}}"
-            PreDeploymentStepStatus = $(pipelineRunStatus)
+            StageRunId = "${{parameters.PipelineStageRunId}}"
+            PreDeploymentStepStatus = "$pipelineRunStatus"
         }
         $jsonBody = $requestBody | ConvertTo-Json
 
         Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
-        Write-Host "${{parameters.PipelinesServiceConnectionUrl}}"
-      displayName: 'Mark the deployment stage as completed. Success or failed'
+        Write-Host "${{parameters.PipelineServiceConnectionUrl}}"
+      displayName: 'Mark the deployment stage as succeeded'
       enabled: true
-      condition: succeededOrFailed()
+      condition: and(succeeded(), or(eq(variables['NothingToCommit'], 'true'), ne('${{parameters.CreatePR}}', 'true')))
+
+    # Mark the deployment stage as failed
+    - pwsh: |
+        $pipelineRunStatus = 30
+        . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+        $dataverseHost = Get-HostFromUrl "${{parameters.PipelineServiceConnectionUrl}}"
+        $spnToken = Get-SpnToken "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$dataverseHost" "$(AADHost)"
+
+        # Set up the request body
+        $requestBody = @{
+            StageRunId = "${{parameters.PipelineStageRunId}}"
+            PreDeploymentStepStatus = "$pipelineRunStatus"
+        }
+        $jsonBody = $requestBody | ConvertTo-Json
+
+        Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
+        Write-Host "${{parameters.PipelineServiceConnectionUrl}}"
+      displayName: 'Mark the deployment stage as failed'
+      enabled: true
+      condition: failed()

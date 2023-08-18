@@ -1,0 +1,97 @@
+# Multi-stage starter template for:
+# -Building the solution when changes to the contents of the solution folder are triggered (see trigger-SolutionName.yml for example trigger)
+# -Deploying the solution to a specific environment based on pipeline variables
+# This is most commonly used for PR Validation where both the build and deploy must suceeed in order for the PR checks to succeed.
+parameters:
+- name: pipelineDeploymentStage
+  type: string
+  default: "PreDeployment"
+steps:
+    - template: set-service-connection-url.yml
+      parameters:
+        serviceConnectionName: $(ServiceConnection)
+        serviceConnectionUrl: $(ServiceConnectionUrl)
+
+    - checkout: PipelineRepo
+      path: 'PipelineUtils'
+      displayName: 'Checkout Pipeline Branch'
+
+    # Use set-connection-variables task to get values from AzDO Service Connection to be used in scripts that don't use tasks
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.set-connection-variables.PowerPlatformSetConnectionVariables@2
+      displayName: 'Set Pipeline Connection Variables'
+      name: pipelineHostVariables
+      inputs:
+        authenticationType: 'PowerPlatformSPN'
+        PowerPlatformSPN: '$(PipelineServiceConnectionName)'
+      condition: and(succeeded(), ne(variables['PipelineServiceConnectionName'], ''), not(contains(variables['PipelineServiceConnectionName'], 'PipelineServiceConnectionName')))
+
+    # Use set-connection-variables task to get values from AzDO Service Connection to be used in scripts that don't use tasks
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.set-connection-variables.PowerPlatformSetConnectionVariables@2
+      displayName: 'Set Environment Connection Variables'
+      name: environmentHostVariables
+      inputs:
+        authenticationType: 'PowerPlatformSPN'
+        PowerPlatformSPN: '$(ServiceConnection)'
+      condition: and(succeeded(), ne(variables['ServiceConnection'], ''), not(contains(variables['ServiceConnection'], 'ServiceConnection')))
+
+    - template: set-spn-token.yml
+      parameters:
+        serviceConnection: $(ServiceConnectionUrl)
+        tenantId: $(environmentHostVariables.BuildTools.TenantId)
+        clientId: $(environmentHostVariables.BuildTools.ApplicationId)
+        clientSecret: $(environmentHostVariables.BuildTools.ClientSecret)
+
+    - pwsh: |
+        Write-Host "Running the Post Deployment Settings Updates"
+        Write-Host "##vso[task.setvariable variable=SkipSolutionImport]true"
+      displayName: "Run Post Deployment Settings Update"
+      condition: and(succeeded(), eq('${{ parameters.pipelineDeploymentStage }}', 'PostDeployment'))
+
+    - ${{ if eq(parameters.pipelineDeploymentStage, 'PostDeployment') }}:
+      - template: deploy-Solution.yml
+        parameters:
+          serviceConnectionName: '$(ServiceConnection)'
+          serviceConnectionUrl: '$(ServiceConnectionUrl)'
+          environmentName: '$(EnvironmentName)'
+          solutionName: '$(SolutionName)'
+          cacheEnabled: 'true'
+
+    # Mark as succeeded
+    - pwsh: |
+        # Mark the deployment stage as succeeded
+        Write-Host "##vso[task.setvariable variable=pipelineRunStatus]20"
+        . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+        $dataverseHost = Get-HostFromUrl "$(PipelineServiceConnectionUrl)"
+        $spnToken = Get-SpnToken "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$dataverseHost" "$(AADHost)"
+
+        # Set up the request body
+        $requestBody = @{
+            StageRunId = "$(PipelineStageRunId)"
+            PreDeploymentStepStatus = 30
+        }
+        $jsonBody = $requestBody | ConvertTo-Json
+
+        Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
+        Write-Host "$(PipelineServiceConnectionUrl)"
+      displayName: "Mark the deployment as successful in Pipelines"
+      condition: and(succeeded(), ne(variables['PipelineStageRunId'], ''), not(contains(variables['PipelineStageRunId'], 'PipelineStageRunId')))
+
+    # Mark as failed
+    - pwsh: |
+        # Mark the deployment stage as failed
+        Write-Host "##vso[task.setvariable variable=pipelineRunStatus]30"
+        . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
+        $dataverseHost = Get-HostFromUrl "$(PipelineServiceConnectionUrl)"
+        $spnToken = Get-SpnToken "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$dataverseHost" "$(AADHost)"
+
+        # Set up the request body
+        $requestBody = @{
+            StageRunId = "$(PipelineStageRunId)"
+            PreDeploymentStepStatus = 30
+        }
+        $jsonBody = $requestBody | ConvertTo-Json
+
+        Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
+        Write-Host "$(PipelineServiceConnectionUrl)"
+      displayName: "Mark the deployment as failed in Pipelines"
+      condition: and(failed(), ne(variables['PipelineStageRunId'], ''), not(contains(variables['PipelineStageRunId'], 'PipelineStageRunId')))

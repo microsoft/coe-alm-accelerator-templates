@@ -2,7 +2,7 @@
 This function creates a new repo branch with the committed solution name.
 Copies the environment deployment pipeline files to the newly created branch.
 #>
-function Create-Branch{
+function Invoke-Create-Branch{
     param (
         [Parameter(Mandatory)] [String]$organizationURL,
         [Parameter(Mandatory)] [String]$buildProjectName,
@@ -13,7 +13,8 @@ function Create-Branch{
         [Parameter(Mandatory)] [String]$environmentNames,
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [string]$solutionRepoId,
-        [Parameter(Mandatory)] [string]$agentPool
+        [Parameter(Mandatory)] [string]$agentPool,
+        [Parameter(Mandatory)] [string]$pipelineStageRunId
     )
         Write-Host "Pipeline Project - $buildProjectName Solution Project - $solutionProjectName"
         Write-Host "Pipeline Repository - $buildRepositoryName Solution Repository - $solutionRepositoryName"
@@ -119,7 +120,7 @@ function Create-Branch{
                 foreach ($environmentName in $collEnvironmentNames) {
                     Write-Host "Check if content yml file available for $environmentName. If not downloads and commit them to solution branch."
                     # Fetch Commit Changes Collection
-                    $commitChange = Get-Git-Commit-Changes "$organizationURL" "$buildProjectName" "$solutionProjectName" "$solutionRepositoryName" "$buildRepositoryName" "$solutionName" "$environmentName" "$sourceBranch" "$agentPool"
+                    $commitChange = Get-Git-Commit-Changes "$organizationURL" "$buildProjectName" "$solutionProjectName" "$solutionRepositoryName" "$buildRepositoryName" "$solutionName" "$environmentName" "$sourceBranch" "$agentPool" "$pipelineStageRunId"
                     if($null -ne $commitChange){
                         $commitChanges.Add($commitChange)
                     }
@@ -223,7 +224,7 @@ function Create-Branch{
 }
 
 <#
-This function is a child function of Create-Branch.
+This function is a child function of Invoke-Create-Branch.
 Checks and returns existence of repos under a project.
 #>
 function Get-Repositories{
@@ -245,7 +246,7 @@ function Get-Repositories{
 }
 
 <#
-This function is a child function of Create-Branch.
+This function is a child function of Invoke-Create-Branch.
 Gets the deployment pipelines content from pipeline repo.
 Commits the pipeline files to the solution branch.
 #>
@@ -259,7 +260,8 @@ function Get-Git-Commit-Changes{
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$environmentName,
         [Parameter(Mandatory)] [String]$sourceBranch,
-        [Parameter(Mandatory)] [String]$agentPool
+        [Parameter(Mandatory)] [String]$agentPool,
+        [Parameter(Mandatory)] [String]$pipelineStageRunId
     )
 
     $commitChange = $null
@@ -316,7 +318,16 @@ function Get-Git-Commit-Changes{
             $pipelineContent = $pipelineContent -replace "RepositoryContainingTheBuildTemplates", "$buildProjectName/$buildRepositoryName"
             $pipelineContent = $pipelineContent -replace "SampleSolutionName", $solutionName
             if($agentPool -ne "Azure Pipelines"){
-                $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment.yml", "build-deploy-Solution-To-Environment-Hosted.yml"
+                if($pipelineStageRunId -ne '') {
+                    Write-Host "Updating to build-deploy-Solution-To-Environment-Hosted-Pipelines.yml for $pipelineStageRunId"
+                    $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment.yml", "build-deploy-Solution-To-Environment-Hosted-Pipelines.yml"
+                } else {
+                    Write-Host "Updating to build-deploy-Solution-To-Environment-Hosted.yml for $pipelineStageRunId"
+                    $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment.yml", "build-deploy-Solution-To-Environment-Hosted.yml"
+                }
+            } elseif($pipelineStageRunId -ne '') {
+                Write-Host "Updating to build-deploy-Solution-To-Environment-Pipelines.yml for $pipelineStageRunId"
+                $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment.yml", "build-deploy-Solution-To-Environment-Pipelines.yml"
             }
 
             $variableGroup = Get-Value-From-settings $settings "$environmentName-variablegroup"

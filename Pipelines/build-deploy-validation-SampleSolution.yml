@@ -1,4 +1,8 @@
 #You can use this sample template if you plan to store the pipeline templates in one repo and your pipeline YAML in another. This is useful for when you have multiple repos and don't want to maintain the templates in multiple places.'
+parameters:
+- name: PipelineDeploymentStage
+  type: string
+  default: "PreDeployment"
 resources:
   repositories:
   - repository: PipelineRepo  # repository name (DO NOT CHANGE THIS VALUE) 
@@ -28,3 +32,5 @@ variables:
 
 stages:
 - template: Pipelines\Templates\build-deploy-Solution-To-Environment.yml@PipelineRepo #The @PipelineRepo tells the pipeline where to look for the templates based on the name of the repo you specified above
+  parameters:
+    pipelineDeploymentStage: '${{parameters.PipelineDeploymentStage}}'
