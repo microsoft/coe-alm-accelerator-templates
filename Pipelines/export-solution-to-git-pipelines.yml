@@ -207,40 +207,16 @@ stages:
 
     # Mark the deployment stage as succeeded
     - pwsh: |
-        $pipelineRunStatus = 20
-        . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
-        $dataverseHost = Get-HostFromUrl "${{parameters.PipelineServiceConnectionUrl}}"
-        $spnToken = Get-SpnToken "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$dataverseHost" "$(AADHost)"
-
-        # Set up the request body
-        $requestBody = @{
-            StageRunId = "${{parameters.PipelineStageRunId}}"
-            PreDeploymentStepStatus = "$pipelineRunStatus"
-        }
-        $jsonBody = $requestBody | ConvertTo-Json
-
-        Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
-        Write-Host "${{parameters.PipelineServiceConnectionUrl}}"
+        . "$env:POWERSHELLPATH/pipeline-functions.ps1"
+        Invoke-Pre-Deployment-Status-Update "${{parameters.PipelineStageRunId}}" "20" "${{parameters.PipelineServiceConnectionUrl}}" "$(AADHost)" "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)"
       displayName: 'Mark the deployment stage as succeeded'
       enabled: true
       condition: and(succeeded(), or(eq(variables['NothingToCommit'], 'true'), ne('${{parameters.CreatePR}}', 'true')))
 
     # Mark the deployment stage as failed
     - pwsh: |
-        $pipelineRunStatus = 30
-        . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
-        $dataverseHost = Get-HostFromUrl "${{parameters.PipelineServiceConnectionUrl}}"
-        $spnToken = Get-SpnToken "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$dataverseHost" "$(AADHost)"
-
-        # Set up the request body
-        $requestBody = @{
-            StageRunId = "${{parameters.PipelineStageRunId}}"
-            PreDeploymentStepStatus = "$pipelineRunStatus"
-        }
-        $jsonBody = $requestBody | ConvertTo-Json
-
-        Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
-        Write-Host "${{parameters.PipelineServiceConnectionUrl}}"
+        . "$env:POWERSHELLPATH/pipeline-functions.ps1"
+        Invoke-Pre-Deployment-Status-Update "${{parameters.PipelineStageRunId}}" "30" "${{parameters.PipelineServiceConnectionUrl}}" "$(AADHost)" "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)"
       displayName: 'Mark the deployment stage as failed'
       enabled: true
       condition: failed()

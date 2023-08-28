@@ -317,6 +317,7 @@ function Set-DeploymentSettingsConfiguration
                 }
             } elseif($null -ne $configurationDataEnvironment.DeploymentSettings) { 
                 Write-Host "Deployment Settings found for environment $environmentName - $configurationDataEnvironment.DeploymentSettings"
+                
             }
             else {
                 Write-Host "No configuration data found for environment $environmentName"
