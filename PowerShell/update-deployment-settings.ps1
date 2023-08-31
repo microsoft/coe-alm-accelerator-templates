@@ -50,6 +50,9 @@ function Set-DeploymentSettingsConfiguration
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
     $conn = Get-CrmConnection -ConnectionString "$dataverseConnectionString"
 
+    #Load util function
+    . "$env:POWERSHELLPATH/util.ps1"
+
     #Loop through the build definitions we found and update the pipeline variables based on the placeholders we put in the deployment settings files.
     foreach($configurationDataEnvironment in $configurationData)
     {
@@ -96,28 +99,40 @@ function Set-DeploymentSettingsConfiguration
             Invoke-Create-Update-PipelineStageRun-Parameter $pipelineStageRunId $pipelineServiceConnectionName $pipelineServiceConnectionUrl $newBuildDefinitionVariables
         }
 
-        if($null -ne $configurationDataEnvironment) {
-            if($null -ne $configurationDataEnvironment.UserSettings) {
-                foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
-                    $configurationVariableName = $configurationVariable.Name
-                    $configurationVariableValue = $configurationVariable.Value
-                    if (-not ([string]::IsNullOrEmpty($configurationVariableName)))
-                    {				
-                        #Set connection reference variables
-                        if($configurationVariableName.StartsWith("connectionreference.user.", "CurrentCultureIgnoreCase")) {
-                            $schemaName = $configurationVariableName -replace "connectionreference.user.", ""
-                            $connRefResults = Get-CrmRecords -conn $conn -EntityLogicalName connectionreference -FilterAttribute "connectionreferencelogicalname" -FilterOperator "eq" -FilterValue $schemaName -Fields connectorid
-                            if ($connRefResults.Count -gt 0){
-                                $connectorId = $connRefResults.CrmRecords[0].connectorid
-                                $connectionVariable = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq "connectionreference.$schemaName" } | Select-Object -First 1
-                                $connectionVariableName = $connectionVariable.Name
-                                $connectionVariableValue = $connectionVariable.Value
-                                if($null -ne $connectionVariable) {
-                                    $connRef = [PSCustomObject]@{"LogicalName"="$schemaName"; "ConnectionId"="#{$connectionVariableName}#"; "ConnectorId"= "$connectorId"; "ConnectionOwner"="#{$configurationVariableName}#" }
-                                    if($usePlaceholders.ToLower() -eq 'false') {
-                                        $connRef = [PSCustomObject]@{"LogicalName"="$schemaName"; "ConnectionId"="$connectionVariableValue"; "ConnectorId"= "$connectorId"; "ConnectionOwner"="$configurationVariableValue" }
-                                    }
-                                    $connectionReferences.Add($connRef)
+        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
+            foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
+                $userSettingsJson = $configurationDataEnvironment.UserSettings | ConvertTo-Json
+
+                $configurationVariableName = $configurationVariable.Name
+                $configurationVariableValue = $configurationVariable.Value
+
+                # See if the $configurationVariableName repeated
+                # If repeated append "_index" to the $configurationVariableName
+                $matchinIndex = Get-IndicesOfNodesWithValue -jsonString "$userSettingsJson" -searchName "$configurationVariableName" -searchValue "$configurationVariableValue"
+                if ($matchinIndex -ne -1) {
+                    Write-Host "Multiple $configurationVariableName defined."
+                    $configurationVariableName = $configurationVariableName + "_$matchinIndex"
+                    Write-Host "Appended the MatchingIndices - $matchinIndex. Update Variable Name - $configurationVariableName"
+                } else {
+                    Write-Host "No multiple $configurationVariableName defined."
+                }
+
+
+                if (-not ([string]::IsNullOrEmpty($configurationVariableName)))
+                {				
+                    #Set connection reference variables
+                    if($configurationVariableName.StartsWith("connectionreference.user.", "CurrentCultureIgnoreCase")) {
+                        $schemaName = $configurationVariableName -replace "connectionreference.user.", ""
+                        $connRefResults = Get-CrmRecords -conn $conn -EntityLogicalName connectionreference -FilterAttribute "connectionreferencelogicalname" -FilterOperator "eq" -FilterValue $schemaName -Fields connectorid
+                        if ($connRefResults.Count -gt 0){
+                            $connectorId = $connRefResults.CrmRecords[0].connectorid
+                            $connectionVariable = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq "connectionreference.$schemaName" } | Select-Object -First 1
+                            $connectionVariableName = $connectionVariable.Name
+                            $connectionVariableValue = $connectionVariable.Value
+                            if($null -ne $connectionVariable) {
+                                $connRef = [PSCustomObject]@{"LogicalName"="$schemaName"; "ConnectionId"="#{$connectionVariableName}#"; "ConnectorId"= "$connectorId"; "ConnectionOwner"="#{$configurationVariableName}#" }
+                                if($usePlaceholders.ToLower() -eq 'false') {
+                                    $connRef = [PSCustomObject]@{"LogicalName"="$schemaName"; "ConnectionId"="$connectionVariableValue"; "ConnectorId"= "$connectorId"; "ConnectionOwner"="$configurationVariableValue" }
                                 }
                             }
                         }
