@@ -6,6 +6,9 @@ parameters:
 - name: pipelineDeploymentStage
   type: string
   default: "PreDeployment"
+- name: deploymentSettings
+  type: string
+  default: ""
 stages:
 - stage: build_and_deploy
   displayName: 'Build and Deploy' 

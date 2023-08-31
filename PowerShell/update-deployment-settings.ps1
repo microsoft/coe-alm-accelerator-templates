@@ -317,7 +317,7 @@ function Set-DeploymentSettingsConfiguration
                 }
             } elseif($null -ne $configurationDataEnvironment.DeploymentSettings) { 
                 Write-Host "Deployment Settings found for environment $environmentName - $configurationDataEnvironment.DeploymentSettings"
-                
+
             }
             else {
                 Write-Host "No configuration data found for environment $environmentName"
@@ -491,7 +491,7 @@ function New-DeploymentPipelines
 
                    if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"
-                        Update-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId" "$buildRepositoryName" "$buildSourceDirectory" "$currentBranch" "$agentPool"
+                        Update-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId" "$buildRepositoryName" "$buildSourceDirectory" "$currentBranch" "$agentPool" "$pipelineStageRunId"
                         Write-Host "Setting up branch policy start"
                         Set-Branch-Policy "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId" "$agentPool"
                    }

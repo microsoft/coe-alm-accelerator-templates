@@ -287,6 +287,10 @@ function Get-Git-Commit-Changes{
         # Fetch the Template from pipeline Repo
         $deployPipelineName = "build-deploy-$environmentName".ToLower()
         $templatePath = "/Pipelines/$deployPipelineName-SampleSolution.yml"
+        if($null -ne $pipelineStageRunId -and $pipelineStageRunId -ne "") {
+            # Fetch the Pipelines for PP template from pipeline Repo
+            $templatePath = "/Pipelines/$deployPipelineName-Pipelines.yml"
+        }
         Write-Host "Check for buildtemplate in settings. Key - $environmentName-buildtemplate"
         $settingsTemplatePath = Get-Value-From-settings $settings "$environmentName-buildtemplate"
         if($null -ne $settingsTemplatePath){
@@ -320,14 +324,11 @@ function Get-Git-Commit-Changes{
             if($agentPool -ne "Azure Pipelines"){
                 if($pipelineStageRunId -ne '') {
                     Write-Host "Updating to build-deploy-Solution-To-Environment-Hosted-Pipelines.yml for $pipelineStageRunId"
-                    $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment.yml", "build-deploy-Solution-To-Environment-Hosted-Pipelines.yml"
+                    $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment-Pipelines.yml", "build-deploy-Solution-To-Environment-Hosted-Pipelines.yml"
                 } else {
                     Write-Host "Updating to build-deploy-Solution-To-Environment-Hosted.yml for $pipelineStageRunId"
                     $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment.yml", "build-deploy-Solution-To-Environment-Hosted.yml"
                 }
-            } elseif($pipelineStageRunId -ne '') {
-                Write-Host "Updating to build-deploy-Solution-To-Environment-Pipelines.yml for $pipelineStageRunId"
-                $pipelineContent = $pipelineContent -replace "build-deploy-Solution-To-Environment.yml", "build-deploy-Solution-To-Environment-Pipelines.yml"
             }
 
             $variableGroup = Get-Value-From-settings $settings "$environmentName-variablegroup"
@@ -376,7 +377,8 @@ function Update-Build-for-Branch{
         [Parameter(Mandatory)] [String]$buildRepoName,
         [Parameter(Mandatory)] [String]$buildDirectory,
         [Parameter(Mandatory)] [String]$currentBranch,
-        [Parameter(Mandatory)] [String]$agentPool
+        [Parameter(Mandatory)] [String]$agentPool,
+        [Parameter(Mandatory)] [String]$pipelineStageRunId
     )
 
     Write-Host "Retrieving default Queue"
@@ -396,7 +398,7 @@ function Update-Build-for-Branch{
         # Get 'pipelines' content for all environments
         $collEnvironmentNames = $environmentNames.Split('|')
         foreach ($environmentName in $collEnvironmentNames) {
-            Invoke-Clone-Build-Settings "$orgUrl" "$solutionProjectName" "$settings" $definitions "$environmentName" "$solutionName" $repo "$azdoAuthType" $defaultAgentQueue "$solutionProjectName" "$buildRepoName" "$buildDirectory" "$currentBranch"
+            Invoke-Clone-Build-Settings "$orgUrl" "$solutionProjectName" "$settings" $definitions "$environmentName" "$solutionName" $repo "$azdoAuthType" $defaultAgentQueue "$solutionProjectName" "$buildRepoName" "$buildDirectory" "$currentBranch" "$pipelineStageRunId"
         }
     }else{
         Write-Host "'$agentPool' queue Not Found. You will need to set the default queue manually. Please verify the permissions for the user executing this command include access to queues."
@@ -421,7 +423,8 @@ function Invoke-Clone-Build-Settings {
         [Parameter(Mandatory)] [String]$solutionProjectName,
         [Parameter(Mandatory)] [String]$buildRepoName,
         [Parameter(Mandatory)] [String]$buildDirectory,
-        [Parameter(Mandatory)] [String]$currentBranch
+        [Parameter(Mandatory)] [String]$currentBranch,
+        [Parameter(Mandatory)] [String]$pipelineStageRunId
     )
 
     $destinationBuildName = "deploy-$environmentName".ToLower()
@@ -447,7 +450,7 @@ function Invoke-Clone-Build-Settings {
         return;
     }else{
         # Create new Pipeline
-        Update-Build-Definition "$orgUrl" "$buildProjectName" "$settings" "$environmentName" "$solutionName" $repo "$destinationBuildName" "$azdoAuthType" $defaultAgentQueue $pathofMatchedBuild "$solutionProjectName" "$buildRepoName" "$buildDirectory" "$currentBranch"
+        Update-Build-Definition "$orgUrl" "$buildProjectName" "$settings" "$environmentName" "$solutionName" $repo "$destinationBuildName" "$azdoAuthType" $defaultAgentQueue $pathofMatchedBuild "$solutionProjectName" "$buildRepoName" "$buildDirectory" "$currentBranch" "$pipelineStageRunId"
     }
 }
 
@@ -470,7 +473,8 @@ Param(
     [Parameter(Mandatory)] [String]$solutionProjectName,
     [Parameter(Mandatory)] [String]$buildRepoName,
     [Parameter(Mandatory)] [String]$buildSourceDirectory,
-    [Parameter(Mandatory)] [String]$currentBranch
+    [Parameter(Mandatory)] [String]$currentBranch,
+    [Parameter(Mandatory)] [String]$pipelineStageRunId
 )
     #Yaml file name
     $deployPipelineName = "deploy-$environmentName".ToLower()
@@ -484,6 +488,10 @@ Param(
         Write-Host "yml content file unavailable at $yamlFileName under Project - $solutionProjectName and Repo - $($repo.name) and Branch - $solutionName. Need to downloading the file."
         Write-Host "Downloading yml content file logic starts"
         $templatePath = "/Pipelines/$deployPipelineName-SampleSolution.yml"
+        if($null -ne $pipelineStageRunId -and $pipelineStageRunId -ne "") {
+            # Fetch the Pipelines for PP template from pipeline Repo
+            $templatePath = "/Pipelines/$deployPipelineName-Pipelines.yml"
+        }
         Write-Host "Check for buildtemplate in settings. Key - $environmentName-buildtemplate"
         $settingsTemplatePath = Get-Value-From-settings $settings "$environmentName-buildtemplate"
         if($null -ne $settingsTemplatePath){

@@ -6,6 +6,18 @@ parameters:
 - name: pipelineDeploymentStage
   type: string
   default: "PreDeployment"
+- name: sourceBranch
+  type: string
+  default: "NA"
+- name: targetBranch
+  type: string
+  default: "NA"
+- name: commitMessage
+  type: string
+  default: ""
+- name: autoCompletePR
+  type: string
+  default: "false"
 steps:
     - template: set-service-connection-url.yml
       parameters:
@@ -44,10 +56,20 @@ steps:
     - pwsh: |
         Write-Host "Running the Post Deployment Settings Updates"
         Write-Host "##vso[task.setvariable variable=SkipSolutionImport]true"
-      displayName: "Run Post Deployment Settings Update"
+      displayName: "Setting SkipSolutionImport to true for the Post Deployment Settings Updates"
       condition: and(succeeded(), eq('${{ parameters.pipelineDeploymentStage }}', 'PostDeployment'))
 
-    - ${{ if eq(parameters.pipelineDeploymentStage, 'PostDeployment') }}:
+    # Conditionally create a PR if the source and target branches are specified
+    - pwsh: |
+        . "$env:POWERSHELLPATH/pipeline-functions.ps1"
+        New-Pull-Request "$(SolutionName)" "$(System.TeamFoundationCollectionUri)" "$(System.TeamProject)" "$(Build.Repository.Name)" "${{parameters.sourceBranch}}" "${{parameters.sourceBranch}}" "refs/heads/${{parameters.targetBranch}}" "${{parameters.commitMessage}}" "${{parameters.autoCompletePR}}" "$env:SYSTEM_ACCESSTOKEN"
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      displayName: "Conditionally Create a PR to trigger the deployment"
+      condition: and(succeeded(), ne('${{ parameters.sourceBranch }}', 'NA'), ne('${{ parameters.targetBranch }}', 'NA'))
+
+    # Run the post deployment settings updates
+    - ${{ if and(eq(parameters.pipelineDeploymentStage, 'PostDeployment'), eq(parameters.sourceBranch, 'NA'), eq(parameters.targetBranch, 'NA')) }}:
       - template: deploy-Solution.yml
         parameters:
           serviceConnectionName: '$(ServiceConnection)'
@@ -58,40 +80,14 @@ steps:
 
     # Mark as succeeded
     - pwsh: |
-        # Mark the deployment stage as succeeded
-        Write-Host "##vso[task.setvariable variable=pipelineRunStatus]20"
-        . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
-        $dataverseHost = Get-HostFromUrl "$(PipelineServiceConnectionUrl)"
-        $spnToken = Get-SpnToken "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$dataverseHost" "$(AADHost)"
-
-        # Set up the request body
-        $requestBody = @{
-            StageRunId = "$(PipelineStageRunId)"
-            PreDeploymentStepStatus = 30
-        }
-        $jsonBody = $requestBody | ConvertTo-Json
-
-        Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
-        Write-Host "$(PipelineServiceConnectionUrl)"
+        . "$env:POWERSHELLPATH/pipeline-functions.ps1"
+        Invoke-Pre-Deployment-Status-Update "$(PipelineStageRunId)" "20" "$(PipelineServiceConnectionUrl)" "$(AADHost)" "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)"
       displayName: "Mark the deployment as successful in Pipelines"
-      condition: and(succeeded(), ne(variables['PipelineStageRunId'], ''), not(contains(variables['PipelineStageRunId'], 'PipelineStageRunId')))
+      condition: and(succeeded(), eq('${{ parameters.sourceBranch }}', 'NA'), eq('${{ parameters.targetBranch }}', 'NA'), ne(variables['PipelineStageRunId'], ''), not(contains(variables['PipelineStageRunId'], 'PipelineStageRunId')))
 
     # Mark as failed
     - pwsh: |
-        # Mark the deployment stage as failed
-        Write-Host "##vso[task.setvariable variable=pipelineRunStatus]30"
-        . "$env:POWERSHELLPATH/dataverse-webapi-functions.ps1"
-        $dataverseHost = Get-HostFromUrl "$(PipelineServiceConnectionUrl)"
-        $spnToken = Get-SpnToken "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)" "$dataverseHost" "$(AADHost)"
-
-        # Set up the request body
-        $requestBody = @{
-            StageRunId = "$(PipelineStageRunId)"
-            PreDeploymentStepStatus = 30
-        }
-        $jsonBody = $requestBody | ConvertTo-Json
-
-        Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
-        Write-Host "$(PipelineServiceConnectionUrl)"
+        . "$env:POWERSHELLPATH/pipeline-functions.ps1"
+        Invoke-Pre-Deployment-Status-Update "$(PipelineStageRunId)" "30" "$(PipelineServiceConnectionUrl)" "$(AADHost)" "$(pipelineHostVariables.BuildTools.TenantId)" "$(pipelineHostVariables.BuildTools.ApplicationId)" "$(pipelineHostVariables.BuildTools.ClientSecret)"
       displayName: "Mark the deployment as failed in Pipelines"
       condition: and(failed(), ne(variables['PipelineStageRunId'], ''), not(contains(variables['PipelineStageRunId'], 'PipelineStageRunId')))
