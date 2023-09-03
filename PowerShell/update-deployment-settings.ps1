@@ -20,7 +20,7 @@ function Set-DeploymentSettingsConfiguration
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter()] [String]$pipelineServiceConnectionName = "",
         [Parameter()] [String]$pipelineServiceConnectionUrl = "",
-        [Parameter()] [String]$pipelineStageRunId = "",
+        [Parameter()] [String] [AllowEmptyString()]$pipelineStageRunId = "",
         [Parameter()] [String]$agentPool = "Azure Pipelines",
         [Parameter()] [String]$usePlaceholders = "true",
         [Parameter(Mandatory)] [String]$currentBranch,
@@ -255,20 +255,21 @@ function Set-DeploymentSettingsConfiguration
                         #if($null -ne $flowActivateAs -and $null -ne $flowActivateOrder) {
                         if($null -ne $flowActivateOrder) {
                             $flowActivateOrderValue = $flowActivateOrder.Value
-
-                            $solutionComponentName = Get-Flow-Component-Name $configurationVariableName
-                            $flowActivateConfig = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "sortOrder"="#{$flowActivateOrderName}#"; "activate"="#{$configurationVariableName}#"}
-                            if($usePlaceholders.ToLower() -eq 'false') {
-                                $flowActivateConfig = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "sortOrder"="$flowActivateOrderValue"; "activate"="$configurationVariableValue"}
-                            }
-							
-                            # Convert the PSCustomObject to a JSON string
-                            $jsonString = $flowActivateConfig | ConvertTo-Json
-
-                            # Print the JSON string
-                            Write-Host "FlowActivateConfig json string -" $jsonString							
-                            $flowActivationUsers.Add($flowActivateConfig)
+                        } else {
+                            $flowActivateOrderValue = 0
                         }
+                        $solutionComponentName = Get-Flow-Component-Name $configurationVariableName
+                        $flowActivateConfig = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "sortOrder"="#{$flowActivateOrderName}#"; "activate"="#{$configurationVariableName}#"}
+                        if($usePlaceholders.ToLower() -eq 'false') {
+                            $flowActivateConfig = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "sortOrder"="$flowActivateOrderValue"; "activate"="$configurationVariableValue"}
+                        }
+                        
+                        # Convert the PSCustomObject to a JSON string
+                        $jsonString = $flowActivateConfig | ConvertTo-Json
+
+                        # Print the JSON string
+                        Write-Host "FlowActivateConfig json string -" $jsonString							
+                        $flowActivationUsers.Add($flowActivateConfig)
                     }
                     elseif($configurationVariableName.StartsWith("connector.teamname.", "CurrentCultureIgnoreCase")) {
                         $connectorSplit = $configurationVariableName.Split(".")

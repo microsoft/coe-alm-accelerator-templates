@@ -14,7 +14,7 @@ function Invoke-Create-Branch{
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [string]$solutionRepoId,
         [Parameter(Mandatory)] [string]$agentPool,
-        [Parameter(Mandatory)] [string]$pipelineStageRunId
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$pipelineStageRunId
     )
         Write-Host "Pipeline Project - $buildProjectName Solution Project - $solutionProjectName"
         Write-Host "Pipeline Repository - $buildRepositoryName Solution Repository - $solutionRepositoryName"
@@ -261,7 +261,7 @@ function Get-Git-Commit-Changes{
         [Parameter(Mandatory)] [String]$environmentName,
         [Parameter(Mandatory)] [String]$sourceBranch,
         [Parameter(Mandatory)] [String]$agentPool,
-        [Parameter(Mandatory)] [String]$pipelineStageRunId
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$pipelineStageRunId
     )
 
     $commitChange = $null
@@ -378,7 +378,7 @@ function Update-Build-for-Branch{
         [Parameter(Mandatory)] [String]$buildDirectory,
         [Parameter(Mandatory)] [String]$currentBranch,
         [Parameter(Mandatory)] [String]$agentPool,
-        [Parameter(Mandatory)] [String]$pipelineStageRunId
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$pipelineStageRunId
     )
 
     Write-Host "Retrieving default Queue"
@@ -424,7 +424,7 @@ function Invoke-Clone-Build-Settings {
         [Parameter(Mandatory)] [String]$buildRepoName,
         [Parameter(Mandatory)] [String]$buildDirectory,
         [Parameter(Mandatory)] [String]$currentBranch,
-        [Parameter(Mandatory)] [String]$pipelineStageRunId
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$pipelineStageRunId
     )
 
     $destinationBuildName = "deploy-$environmentName".ToLower()
@@ -474,7 +474,7 @@ Param(
     [Parameter(Mandatory)] [String]$buildRepoName,
     [Parameter(Mandatory)] [String]$buildSourceDirectory,
     [Parameter(Mandatory)] [String]$currentBranch,
-    [Parameter(Mandatory)] [String]$pipelineStageRunId
+    [Parameter(Mandatory)] [String] [AllowEmptyString()]$pipelineStageRunId
 )
     #Yaml file name
     $deployPipelineName = "deploy-$environmentName".ToLower()
