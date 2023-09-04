@@ -72,7 +72,7 @@ function Set-DeploymentSettingsConfiguration
 
         # Fetch the build definition and update variables
         $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?name=$buildName&includeAllProperties=true&api-version=6.0"
-        Write-Host "Fetching Builds fro report BuildDefinitionResourceUrl - "$buildDefinitionResourceUrl
+        Write-Host "Fetching Builds for report BuildDefinitionResourceUrl - "$buildDefinitionResourceUrl
         $fullBuildDefinitionResponse = Invoke-RestMethod $buildDefinitionResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
