@@ -171,21 +171,7 @@ function ByPass-Canvas-App-Consents
         $optionSetMetadata = $null
         foreach ($c in $solutionComponents){
             $componentType = $c.componenttype
-            Write-Host "Componenttype - $componentType"           
-
-            # Logic to check the MDA
-            #if($optionSetMetadata -eq $null){
-            #    $entityLogicalName = "solutioncomponent"
-            #    $attributeName = "componenttype"
-            #    $optionSetMetadata = Get-OptionSetOptions $conn $entityLogicalName $attributeName
-            #}
-
-            #if($optionSetMetadata -ne $null){
-            #    $componentTypeValue = Get-ValueFromLabel $componentType $optionSetMetadata
-            #    Write-Host "Component Type ($componentType) Value: $componentTypeValue"
-            #}else{
-            #    Write-Host "OptionSetMetadata is null"
-            #}
+            Write-Host "Componenttype - $componentType"
 
             if ($c.componenttype -eq "Canvas App" -and $c.objectid -ne ""){
                 Write-Host "Bypassing the canvas app $($c.objectid) consent. Environment - $environmentName"
@@ -194,47 +180,6 @@ function ByPass-Canvas-App-Consents
                 Set-AdminPowerAppApisToBypassConsent –EnvironmentName $environmentName –AppName $($c.objectid)
             }
         }
-    }
-}
-
-function Get-OptionSetOptions {
-    param (
-        [Microsoft.Xrm.Tooling.Connector.CrmServiceClient] $CrmClient,
-        [string] $EntityLogicalName,
-        [string] $OptionSetAttributeName
-    )
-
-    # Create a RetrieveAttributeRequest to fetch Attribute metadata
-    $AttributeRequest = [Microsoft.Xrm.Sdk.Messages.RetrieveAttributeRequest]::new()
-    $AttributeRequest.EntityLogicalName = $EntityLogicalName
-    $AttributeRequest.LogicalName = $OptionSetAttributeName
-    $AttributeRequest.RetrieveAsIfPublished = $True
-    $AttributeResponse = [Microsoft.Xrm.Sdk.Messages.RetrieveAttributeResponse]$CrmClient.Execute($AttributeRequest)
-
-    # Return the Value/Label pairs as an array of objects
-    return $AttributeResponse.AttributeMetadata.OptionSet.Options | Select-Object -Property @{
-        Name = "Value"
-        Expression = {$_.Value}
-    }, @{
-        Name = "Label"
-        Expression = {$_.Label.UserLocalizedLabel.Label}
-    }
-}
-
-function Get-ValueFromLabel {
-    param (
-        [string] $label,
-        [array] $options
-    )
-
-    # Find the option with the matching label
-    $matchingOption = $options | Where-Object { $_.Label -eq $label }
-
-    # If a matching option is found, return its value; otherwise, return $null
-    if ($matchingOption -ne $null) {
-        return $matchingOption.Value
-    } else {
-        return $null
     }
 }
 
