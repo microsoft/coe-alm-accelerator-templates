@@ -22,14 +22,13 @@ function Set-DeploymentSettingsConfiguration
         [Parameter()] [String]$pipelineServiceConnectionUrl = "",
         [Parameter()] [String] [AllowEmptyString()]$pipelineStageRunId = "",
         [Parameter()] [String]$agentPool = "Azure Pipelines",
+        [Parameter()] [String]$agentOS = "",
         [Parameter()] [String]$usePlaceholders = "true",
         [Parameter(Mandatory)] [String]$currentBranch,
-        [Parameter()] [String]$pat = "", # Azure DevOps Personal Access Token only required for running local tests
-        [Parameter()] [String]$agentOS = ""
+        [Parameter()] [String]$pat = "" # Azure DevOps Personal Access Token only required for running local tests
     )
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
     $reservedVariables = @("TriggerSolutionUpgrade")
-    Write-Host (ConvertTo-Json -Depth 10 $configurationData)
 
     #Generate Deployment Settings
     Write-Host "Update Deployment Settings"
@@ -44,7 +43,7 @@ function Set-DeploymentSettingsConfiguration
     $solutionRepoId = Get-RepositoryIdbyName "$orgUrl" "$projectName" "$azdoAuthType" "$repo"
 
     #Update / Create Deployment Pipelines
-    New-DeploymentPipelines "$pipelineSourceDirectory" "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS $solutionRepoId "$buildSourceDirectory" "$currentBranch" "$agentPool"
+    New-DeploymentPipelines "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS $solutionRepoId "$pipelineSourceDirectory" "$buildSourceDirectory" "$currentBranch" "$agentPool"
 
     Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
@@ -70,12 +69,13 @@ function Set-DeploymentSettingsConfiguration
         $buildName = $configurationDataEnvironment.BuildName
         $environmentName = $configurationDataEnvironment.DeploymentEnvironmentName
 
-        # Fetch the build definition and update variables
+        # Fetch the first build definition by name and update variables
         $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?name=$buildName&includeAllProperties=true&api-version=6.0"
         Write-Host "Fetching Builds for report BuildDefinitionResourceUrl - "$buildDefinitionResourceUrl
         $fullBuildDefinitionResponse = Invoke-RestMethod $buildDefinitionResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
+        # If more than one build is returned search based on the repo
         if($fullBuildDefinitionResponse.count -gt 1) {
             $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?repositoryId=$solutionRepoId&repositoryType=TfsGit&name=$buildName&includeAllProperties=true&api-version=6.0"
             Write-Host "Fetching Builds for report BuildDefinitionResourceUrl - "$buildDefinitionResourceUrl
@@ -105,239 +105,211 @@ function Set-DeploymentSettingsConfiguration
             Write-Host "Updating PipelineStageRunId - $pipelineStageRunId"
             Invoke-Create-Update-PipelineStageRun-Parameter $pipelineStageRunId $pipelineServiceConnectionName $pipelineServiceConnectionUrl $newBuildDefinitionVariables
         }
-        if($null -ne $configurationDataEnvironment -and $null -ne $configurationDataEnvironment.UserSettings) {
-            foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
-                $userSettingsJson = $configurationDataEnvironment.UserSettings | ConvertTo-Json
+        if($null -ne $configurationDataEnvironment) {
+            if($null -ne $configurationDataEnvironment.UserSettings) {
+                foreach($configurationVariable in $configurationDataEnvironment.UserSettings) {
+                    $userSettingsJson = $configurationDataEnvironment.UserSettings | ConvertTo-Json
 
-                $configurationVariableName = $configurationVariable.Name
-                $configurationVariableValue = $configurationVariable.Value
+                    $configurationVariableName = $configurationVariable.Name
+                    $configurationVariableValue = $configurationVariable.Value
 
-                # See if the $configurationVariableName repeated
-                # If repeated append "_index" to the $configurationVariableName
-                $matchinIndex = Get-IndicesOfNodesWithValue -jsonString "$userSettingsJson" -searchName "$configurationVariableName" -searchValue "$configurationVariableValue"
-                if ($matchinIndex -ne -1) {
-                    Write-Host "Multiple $configurationVariableName defined."
-                    $configurationVariableName = $configurationVariableName + "_$matchinIndex"
-                    Write-Host "Appended the MatchingIndices - $matchinIndex. Update Variable Name - $configurationVariableName"
-                } else {
-                    Write-Host "No multiple $configurationVariableName defined."
-                }
+                    # See if the $configurationVariableName repeated
+                    # If repeated append "_index" to the $configurationVariableName
+                    $jsonArray = ConvertFrom-Json $userSettingsJson
+                    $configurationVariableName = Update-IndicesOfNodesWithValue -jsonArray $jsonArray -searchName "$configurationVariableName" -searchValue "$configurationVariableValue"
 
-
-                if (-not ([string]::IsNullOrEmpty($configurationVariableName)))
-                {				
-                    #Set connection reference variables
-                    if($configurationVariableName.StartsWith("connectionreference.user.", "CurrentCultureIgnoreCase")) {
-                        $schemaName = $configurationVariableName -replace "connectionreference.user.", ""
-                        $connRefResults = Get-CrmRecords -conn $conn -EntityLogicalName connectionreference -FilterAttribute "connectionreferencelogicalname" -FilterOperator "eq" -FilterValue $schemaName -Fields connectorid
-                        if ($connRefResults.Count -gt 0){
-                            $connectorId = $connRefResults.CrmRecords[0].connectorid
-                            $connectionVariable = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq "connectionreference.$schemaName" } | Select-Object -First 1
-                            $connectionVariableName = $connectionVariable.Name
-                            $connectionVariableValue = $connectionVariable.Value
-                            if($null -ne $connectionVariable) {
-                                $connRef = [PSCustomObject]@{"LogicalName"="$schemaName"; "ConnectionId"="#{$connectionVariableName}#"; "ConnectorId"= "$connectorId"; "ConnectionOwner"="#{$configurationVariableName}#" }
-                                if($usePlaceholders.ToLower() -eq 'false') {
-                                    $connRef = [PSCustomObject]@{"LogicalName"="$schemaName"; "ConnectionId"="$connectionVariableValue"; "ConnectorId"= "$connectorId"; "ConnectionOwner"="$configurationVariableValue" }
-                                }
-                                $connectionReferences.Add($connRef)
-                            }
-                        }
-                    }
-                    elseif($configurationVariableName.StartsWith("environmentvariable.", "CurrentCultureIgnoreCase")) {
-                        #Set environment variable variables
-                        if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
-                        {
-                            $schemaName = $configurationVariableName -replace "environmentvariable.", ""
-                            $envVarResults =  Get-CrmRecords -conn $conn -EntityLogicalName environmentvariabledefinition -FilterAttribute "schemaname" -FilterOperator "eq" -FilterValue $schemaName -Fields type
-                            if ($envVarResults.Count -gt 0){
-                                $type = $envVarResults.CrmRecords[0].type_Property.Value.Value
-                                Write-Host "configurationVariableValue is not null or empty - $configurationVariableValue"
-                                $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="#{$configurationVariableName}#"}
-                                if($usePlaceholders.ToLower() -eq 'false') {
-                                    $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="$configurationVariableValue"}
-                                }
-                                $environmentVariables.Add($envVar)                                
-                            }
-                        }
-                        else{
-                            Write-Host "Environment variable $configurationVariableName is Null or Empty"
-                        }
-                    }
-                    elseif($configurationVariableName.StartsWith("webhookurl.", "CurrentCultureIgnoreCase")) {
-                        #Set WebHook URL variables
-                        if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
-                        {
-                            $schemaName = $configurationVariableName -replace "webhookurl.", ""
-                            $endPointResults =  Get-CrmRecords -conn $conn -EntityLogicalName "serviceendpoint" -FilterAttribute "name" -FilterOperator "eq" -FilterValue $schemaName -Fields "name"
-                            if ($endPointResults.Count -gt 0){
-                                $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="#{$configurationVariableName}#"}
-                                if($usePlaceholders.ToLower() -eq 'false') {
-                                    $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="$configurationVariableValue"}
-                                }
-                                $webHookUrls.Add($envVar)                                
-                            }
-                        }
-                        else{
-                            Write-Host "Service Endpoint variable $configurationVariableName is Null or Empty for $environmentName"
-                        }
-                    }
-                    elseif($configurationVariableName.StartsWith("sdkstep.", "CurrentCultureIgnoreCase")) {
-                        #Set SDK Step configurations
-                        if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
-                        {
-							try{
-                                # SDK step configuration format will be "sdkstep.{unsec/sec}.{sdkmessageprocessingstep}"
-                                $sdkmessageprocessingstepid = $configurationVariableName -replace "sdkstep.unsec.", "" -replace "sdkstep.sec.", "" 
-                                Write-Host "Sdkmessageprocessingstepid - $sdkmessageprocessingstepid"
-                                $configKey = $configurationVariableName -replace "sdkstep.", "" 
-                                $sdkmessageprocessingstepRecord = Get-CrmRecord -conn $conn -EntityLogicalName "sdkmessageprocessingstep" -Id "$sdkmessageprocessingstepid" -Fields sdkmessageprocessingstepid
-                                if($null -ne $sdkmessageprocessingstepRecord){
-                                    $sdkConfig = [PSCustomObject]@{"Config"="$configKey"; "Value"="#{$configurationVariableName}#"}
-                                    if($usePlaceholders.ToLower() -eq 'false' -or $isDevEnvironment) {
-                                        $sdkConfig = [PSCustomObject]@{"Config"="$configKey"; "Value"="$configurationVariableValue"}
+                    if (-not ([string]::IsNullOrEmpty($configurationVariableName)))
+                    {				
+                        #Set connection reference variables
+                        if($configurationVariableName.StartsWith("connectionreference.user.", "CurrentCultureIgnoreCase")) {
+                            $schemaName = $configurationVariableName -replace "connectionreference.user.", ""
+                            $connRefResults = Get-CrmRecords -conn $conn -EntityLogicalName connectionreference -FilterAttribute "connectionreferencelogicalname" -FilterOperator "eq" -FilterValue $schemaName -Fields connectorid
+                            if ($connRefResults.Count -gt 0){
+                                $connectorId = $connRefResults.CrmRecords[0].connectorid
+                                $connectionVariable = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq "connectionreference.$schemaName" } | Select-Object -First 1
+                                $connectionVariableName = $connectionVariable.Name
+                                $connectionVariableValue = $connectionVariable.Value
+                                if($null -ne $connectionVariable) {
+                                    $connRef = [PSCustomObject]@{"LogicalName"="$schemaName"; "ConnectionId"="#{$connectionVariableName}#"; "ConnectorId"= "$connectorId"; "ConnectionOwner"="#{$configurationVariableName}#" }
+                                    if($usePlaceholders.ToLower() -eq 'false') {
+                                        $connRef = [PSCustomObject]@{"LogicalName"="$schemaName"; "ConnectionId"="$connectionVariableValue"; "ConnectorId"= "$connectorId"; "ConnectionOwner"="$configurationVariableValue" }
                                     }
-                                    $sdkMessages.Add($sdkConfig)
-                                }								
+                                    $connectionReferences.Add($connRef)
+                                }
                             }
-                            catch {
-                                Write-Host "Error occurred while retrieving the SDK step - $($_.Exception.Message)"
-                            }                            
                         }
-                        else{
-                            Write-Host "SDK Message Variable $configurationVariableName value is either Null or Empty for $environmentName"
+                        elseif($configurationVariableName.StartsWith("environmentvariable.", "CurrentCultureIgnoreCase")) {
+                            #Set environment variable variables
+                            if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
+                            {
+                                $schemaName = $configurationVariableName -replace "environmentvariable.", ""
+                                $envVarResults =  Get-CrmRecords -conn $conn -EntityLogicalName environmentvariabledefinition -FilterAttribute "schemaname" -FilterOperator "eq" -FilterValue $schemaName -Fields type
+                                if ($envVarResults.Count -gt 0){
+                                    Write-Host "configurationVariableValue is not null or empty - $configurationVariableValue"
+                                    $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="#{$configurationVariableName}#"}
+                                    if($usePlaceholders.ToLower() -eq 'false') {
+                                        $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="$configurationVariableValue"}
+                                    }
+                                    $environmentVariables.Add($envVar)                                
+                                }
+                            }
+                            else{
+                                Write-Host "Environment variable $configurationVariableName is Null or Empty"
+                            }
                         }
-                    }
-                    elseif($configurationVariableName.StartsWith("canvasshare.aadGroupId.", "CurrentCultureIgnoreCase")) {
-                        $schemaSuffix = $configurationVariableName -replace "canvasshare.aadGroupId.", ""
-                        $schemaName = $configurationVariableName.Split(".")[2]
+                        elseif($configurationVariableName.StartsWith("webhookurl.", "CurrentCultureIgnoreCase")) {
+                            #Set WebHook URL variables
+                            if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
+                            {
+                                $schemaName = $configurationVariableName -replace "webhookurl.", ""
+                                $endPointResults =  Get-CrmRecords -conn $conn -EntityLogicalName "serviceendpoint" -FilterAttribute "name" -FilterOperator "eq" -FilterValue $schemaName -Fields "name"
+                                if ($endPointResults.Count -gt 0){
+                                    $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="#{$configurationVariableName}#"}
+                                    if($usePlaceholders.ToLower() -eq 'false') {
+                                        $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="$configurationVariableValue"}
+                                    }
+                                    $webHookUrls.Add($envVar)                                
+                                }
+                            }
+                            else{
+                                Write-Host "Service Endpoint variable $configurationVariableName is Null or Empty for $environmentName"
+                            }
+                        }
+                        elseif($configurationVariableName.StartsWith("sdkstep.", "CurrentCultureIgnoreCase")) {
+                            #Set SDK Step configurations
+                            if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
+                            {
+                                try{
+                                    # SDK step configuration format will be "sdkstep.{unsec/sec}.{sdkmessageprocessingstep}"
+                                    $sdkmessageprocessingstepid = $configurationVariableName -replace "sdkstep.unsec.", "" -replace "sdkstep.sec.", "" 
+                                    Write-Host "Sdkmessageprocessingstepid - $sdkmessageprocessingstepid"
+                                    $configKey = $configurationVariableName -replace "sdkstep.", "" 
+                                    $sdkmessageprocessingstepRecord = Get-CrmRecord -conn $conn -EntityLogicalName "sdkmessageprocessingstep" -Id "$sdkmessageprocessingstepid" -Fields sdkmessageprocessingstepid
+                                    if($null -ne $sdkmessageprocessingstepRecord){
+                                        $sdkConfig = [PSCustomObject]@{"Config"="$configKey"; "Value"="#{$configurationVariableName}#"}
+                                        if($usePlaceholders.ToLower() -eq 'false' -or $isDevEnvironment) {
+                                            $sdkConfig = [PSCustomObject]@{"Config"="$configKey"; "Value"="$configurationVariableValue"}
+                                        }
+                                        $sdkMessages.Add($sdkConfig)
+                                    }								
+                                }
+                                catch {
+                                    Write-Host "Error occurred while retrieving the SDK step - $($_.Exception.Message)"
+                                }                            
+                            }
+                            else{
+                                Write-Host "SDK Message Variable $configurationVariableName value is either Null or Empty for $environmentName"
+                            }
+                        }
+                        elseif($configurationVariableName.StartsWith("canvasshare.aadGroupId.", "CurrentCultureIgnoreCase")) {
+                            $schemaSuffix = $configurationVariableName -replace "canvasshare.aadGroupId.", ""
+                            $schemaName = $configurationVariableName.Split(".")[2]
 
-                        $roleVariable = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq "canvasshare.roleName.$schemaSuffix" } | Select-Object -First 1
-                        $canvasAppResults =  Get-CrmRecords -conn $conn -EntityLogicalName canvasapp -FilterAttribute "name" -FilterOperator "eq" -FilterValue $schemaName -Fields displayname
-                        if($canvasAppResults.Count -gt 0 -and $null -ne $roleVariable) {
-                            $canvasAppResult = $canvasAppResults.CrmRecords[0]
-                            $roleVariableName = $roleVariable.Name
-                            $roleVariableValue = $roleVariable.Value
-                            $canvasConfig = [PSCustomObject]@{"aadGroupId"="#{$configurationVariableName}#"; "canvasNameInSolution"=$schemaName; "canvasDisplayName"= $canvasAppResult.displayname; "roleName"="#{$roleVariableName}#"}
+                            $roleVariable = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq "canvasshare.roleName.$schemaSuffix" } | Select-Object -First 1
+                            $canvasAppResults =  Get-CrmRecords -conn $conn -EntityLogicalName canvasapp -FilterAttribute "name" -FilterOperator "eq" -FilterValue $schemaName -Fields displayname
+                            if($canvasAppResults.Count -gt 0 -and $null -ne $roleVariable) {
+                                $canvasAppResult = $canvasAppResults.CrmRecords[0]
+                                $roleVariableName = $roleVariable.Name
+                                $roleVariableValue = $roleVariable.Value
+                                $canvasConfig = [PSCustomObject]@{"aadGroupId"="#{$configurationVariableName}#"; "canvasNameInSolution"=$schemaName; "canvasDisplayName"= $canvasAppResult.displayname; "roleName"="#{$roleVariableName}#"}
+                                if($usePlaceholders.ToLower() -eq 'false') {
+                                    $canvasConfig = [PSCustomObject]@{"aadGroupId"="$configurationVariableValue"; "canvasNameInSolution"=$schemaName; "canvasDisplayName"= $canvasAppResult.displayname; "roleName"="$roleVariableValue"}
+                                }
+                                $canvasApps.Add($canvasConfig)
+                            }
+                        }
+                        elseif($configurationVariableName.StartsWith("owner.ownerEmail.", "CurrentCultureIgnoreCase")) {
+                            #Create the flow ownership deployment settings
+                            $flowSplit = $configurationVariableName.Split(".")
+                            $solutionComponentName = Get-Flow-Component-Name $configurationVariableName
+
+                            $flowOwnerConfig = [PSCustomObject]@{"solutionComponentType"=29; "solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "ownerEmail"="#{$configurationVariableName}#"}
                             if($usePlaceholders.ToLower() -eq 'false') {
-                                $canvasConfig = [PSCustomObject]@{"aadGroupId"="$configurationVariableValue"; "canvasNameInSolution"=$schemaName; "canvasDisplayName"= $canvasAppResult.displayname; "roleName"="$roleVariableValue"}
+                                $flowOwnerConfig = [PSCustomObject]@{"solutionComponentType"=29; "solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "ownerEmail"="$configurationVariableValue"}
                             }
-                            $canvasApps.Add($canvasConfig)
+                            $flowOwnerships.Add($flowOwnerConfig)
                         }
-                    }
-                    elseif($configurationVariableName.StartsWith("owner.ownerEmail.", "CurrentCultureIgnoreCase")) {
-                        #Create the flow ownership deployment settings
-                        $flowSplit = $configurationVariableName.Split(".")
-                        $solutionComponentName = Get-Flow-Component-Name $configurationVariableName
-
-                        $flowOwnerConfig = [PSCustomObject]@{"solutionComponentType"=29; "solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "ownerEmail"="#{$configurationVariableName}#"}
-                        if($usePlaceholders.ToLower() -eq 'false') {
-                            $flowOwnerConfig = [PSCustomObject]@{"solutionComponentType"=29; "solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "ownerEmail"="$configurationVariableValue"}
-                        }
-                        $flowOwnerships.Add($flowOwnerConfig)
-                    }
-                    elseif($configurationVariableName.StartsWith("flow.sharing.", "CurrentCultureIgnoreCase")) {
-                        $flowSplit = $configurationVariableName.Split(".")
-                        $solutionComponentName = Get-Flow-Component-Name $configurationVariableName
-                        $flowSharing = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "aadGroupTeamName"="#{$configurationVariableName}#"}
-                        if($usePlaceholders.ToLower() -eq 'false') {
-                            $flowSharing = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "aadGroupTeamName"="$configurationVariableValue"}
-                        }
-                        $flowSharings.Add($flowSharing)
-                    }
-                    elseif($configurationVariableName.StartsWith("activateflow.activate.", "CurrentCultureIgnoreCase")) {
-                        Write-Host "Flow configurationVariableName - $configurationVariableName"
-                        $flowSplit = $configurationVariableName.Split(".")
-                        
-                        for($indxVariableParts=0;$indxVariableParts -lt $flowSplit.Count;$indxVariableParts++)
-                        {
-                            Write-Host "$indxVariableParts - " $flowSplit[$indxVariableParts]
-                        }
-
-                        $flowActivateOrderName = $configurationVariableName.Replace(".activate.", ".order.")
-
-                        $flowActivateOrder = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq $flowActivateOrderName } | Select-Object -First 1
-
-                        Write-Host "FlowActivateOrder - $flowActivateOrder"
-                        #if($null -ne $flowActivateAs -and $null -ne $flowActivateOrder) {
-                        if($null -ne $flowActivateOrder) {
-                            $flowActivateOrderValue = $flowActivateOrder.Value
-                        } else {
-                            $flowActivateOrderValue = 0
-                        }
-                        $solutionComponentName = Get-Flow-Component-Name $configurationVariableName
-                        $flowActivateConfig = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "sortOrder"="#{$flowActivateOrderName}#"; "activate"="#{$configurationVariableName}#"}
-                        if($usePlaceholders.ToLower() -eq 'false') {
-                            $flowActivateConfig = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "sortOrder"="$flowActivateOrderValue"; "activate"="$configurationVariableValue"}
-                        }
-                        
-                        # Convert the PSCustomObject to a JSON string
-                        $jsonString = $flowActivateConfig | ConvertTo-Json
-
-                        # Print the JSON string
-                        Write-Host "FlowActivateConfig json string -" $jsonString							
-                        $flowActivationUsers.Add($flowActivateConfig)
-                    }
-                    elseif($configurationVariableName.StartsWith("connector.teamname.", "CurrentCultureIgnoreCase")) {
-                        $connectorSplit = $configurationVariableName.Split(".")
-                        if($connectorSplit.length -eq 4){
-                            $connectorSharingConfig = [PSCustomObject]@{"solutionComponentName"=$connectorSplit[2]; "solutionComponentUniqueName"=$connectorSplit[3]; "aadGroupTeamName"="#{$configurationVariableName}#"}
+                        elseif($configurationVariableName.StartsWith("flow.sharing.", "CurrentCultureIgnoreCase")) {
+                            $flowSplit = $configurationVariableName.Split(".")
+                            $solutionComponentName = Get-Flow-Component-Name $configurationVariableName
+                            $flowSharing = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "aadGroupTeamName"="#{$configurationVariableName}#"}
                             if($usePlaceholders.ToLower() -eq 'false') {
-                                $connectorSharingConfig = [PSCustomObject]@{"solutionComponentName"=$connectorSplit[2]; "solutionComponentUniqueName"=$connectorSplit[3]; "aadGroupTeamName"="$configurationVariableValue"}
+                                $flowSharing = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "aadGroupTeamName"="$configurationVariableValue"}
                             }
-                            $customConnectorSharings.Add($connectorSharingConfig)
+                            $flowSharings.Add($flowSharing)
                         }
-                    }
-                    elseif($configurationVariableName.StartsWith("groupTeam.", "CurrentCultureIgnoreCase")) {
-                        $teamName = Get-Group-Team-Name $configurationVariableName
-                        $teamGroupRoles = $configurationVariable.Data.split(',')
-                        $businessUnitVariableName = $configurationVariableName.Replace("groupTeam", "businessUnit")
-                        $teamBusinessUnit = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq $businessUnitVariableName } | Select-Object -First 1
-                        $teamBusinessUnitValue = ""
-                        if($null -ne $teamBusinessUnit) {
-                            $teamBusinessUnitValue = $teamBusinessUnit.Value
-                        }
-                        $teamSkipRolesVariableName = $configurationVariableName.Replace("groupTeam", "teamnameskiproles")
-                        Write-Host "teamSkipRolesVariableName - $teamSkipRolesVariableName"
-                        $teamSkipRoles = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq $teamSkipRolesVariableName } | Select-Object -First 1
-                        $teamSkipRolesValue = ""
-                        if($null -ne $teamSkipRoles) {
-                            $teamSkipRolesValue = $teamSkipRoles.Value
-                        }
-                        Write-Host "teamSkipRolesValue - $teamSkipRolesValue"
-                        $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadGroupTeamBusinessUnitId"="#{$businessUnitVariableName}#"; "aadSecurityGroupId"="#{$configurationVariableName}#"; "dataverseSecurityRoleNames"=@($teamGroupRoles);"skipRolesDeletion"=$teamSkipRolesValue;}
-                        if($usePlaceholders.ToLower() -eq 'false') {
-                            $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadGroupTeamBusinessUnitId"="$teamBusinessUnitValue"; "aadSecurityGroupId"="$configurationVariableValue"; "dataverseSecurityRoleNames"=@($teamGroupRoles)}
-                        }
-                        $groupTeams.Add($groupTeamConfig)
-                    }
-				}
+                        elseif($configurationVariableName.StartsWith("activateflow.activate.", "CurrentCultureIgnoreCase")) {
+                            Write-Host "Flow configurationVariableName - $configurationVariableName"
+                            $flowSplit = $configurationVariableName.Split(".")
+                            
+                            for($indxVariableParts=0;$indxVariableParts -lt $flowSplit.Count;$indxVariableParts++)
+                            {
+                                Write-Host "$indxVariableParts - " $flowSplit[$indxVariableParts]
+                            }
 
-                #See if the variable already exists
-                if($null -ne $newBuildDefinitionVariables) {
-                    $found = Get-Parameter-Exists $configurationVariableName $newBuildDefinitionVariables                
-                    #Add the configuration variable to the list of pipeline variables if usePlaceholders is not false
-                    if($usePlaceholders.ToLower() -ne 'false') {
-                        #If the variable was not found create it 
-                        if(!$found) { 
-                            $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name $configurationVariableName -Value @{value = ''}
-                        }
+                            $flowActivateOrderName = $configurationVariableName.Replace(".activate.", ".order.")
 
-                        # Set the value to the value passed in on the configuration data
-                        if($null -eq $configurationVariableValue -or [string]::IsNullOrWhiteSpace($configurationVariableValue)) {
-                            $newBuildDefinitionVariables.$configurationVariableName.value = ''
-                        } else {
-                            $newBuildDefinitionVariables.$configurationVariableName.value = $configurationVariableValue
+                            $flowActivateOrder = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq $flowActivateOrderName } | Select-Object -First 1
+
+                            Write-Host "FlowActivateOrder - $flowActivateOrder"
+                            #if($null -ne $flowActivateAs -and $null -ne $flowActivateOrder) {
+                            if($null -ne $flowActivateOrder) {
+                                $flowActivateOrderValue = $flowActivateOrder.Value
+                            } else {
+                                $flowActivateOrderValue = 0
+                            }
+                            $solutionComponentName = Get-Flow-Component-Name $configurationVariableName
+                            $flowActivateConfig = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "sortOrder"="#{$flowActivateOrderName}#"; "activate"="#{$configurationVariableName}#"}
+                            if($usePlaceholders.ToLower() -eq 'false') {
+                                $flowActivateConfig = [PSCustomObject]@{"solutionComponentName"=$solutionComponentName; "solutionComponentUniqueName"=$flowSplit[$flowSplit.Count-1]; "sortOrder"="$flowActivateOrderValue"; "activate"="$configurationVariableValue"}
+                            }
+                            
+                            # Convert the PSCustomObject to a JSON string
+                            $jsonString = $flowActivateConfig | ConvertTo-Json
+
+                            # Print the JSON string
+                            Write-Host "FlowActivateConfig json string -" $jsonString							
+                            $flowActivationUsers.Add($flowActivateConfig)
+                        }
+                        elseif($configurationVariableName.StartsWith("connector.teamname.", "CurrentCultureIgnoreCase")) {
+                            $connectorSplit = $configurationVariableName.Split(".")
+                            if($connectorSplit.length -eq 4){
+                                $connectorSharingConfig = [PSCustomObject]@{"solutionComponentName"=$connectorSplit[2]; "solutionComponentUniqueName"=$connectorSplit[3]; "aadGroupTeamName"="#{$configurationVariableName}#"}
+                                if($usePlaceholders.ToLower() -eq 'false') {
+                                    $connectorSharingConfig = [PSCustomObject]@{"solutionComponentName"=$connectorSplit[2]; "solutionComponentUniqueName"=$connectorSplit[3]; "aadGroupTeamName"="$configurationVariableValue"}
+                                }
+                                $customConnectorSharings.Add($connectorSharingConfig)
+                            }
+                        }
+                        elseif($configurationVariableName.StartsWith("groupTeam.", "CurrentCultureIgnoreCase")) {
+                            $teamName = Get-Group-Team-Name $configurationVariableName
+                            $teamGroupRoles = $configurationVariable.Data.split(',')
+                            $businessUnitVariableName = $configurationVariableName.Replace("groupTeam", "businessUnit")
+                            $teamBusinessUnit = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq $businessUnitVariableName } | Select-Object -First 1
+                            $teamBusinessUnitValue = ""
+                            if($null -ne $teamBusinessUnit) {
+                                $teamBusinessUnitValue = $teamBusinessUnit.Value
+                            }
+                            $teamSkipRolesVariableName = $configurationVariableName.Replace("groupTeam", "teamnameskiproles")
+                            Write-Host "teamSkipRolesVariableName - $teamSkipRolesVariableName"
+                            $teamSkipRoles = $configurationDataEnvironment.UserSettings | Where-Object { $_.Name -eq $teamSkipRolesVariableName } | Select-Object -First 1
+                            $teamSkipRolesValue = ""
+                            if($null -ne $teamSkipRoles) {
+                                $teamSkipRolesValue = $teamSkipRoles.Value
+                            }
+                            Write-Host "teamSkipRolesValue - $teamSkipRolesValue"
+                            $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadGroupTeamBusinessUnitId"="#{$businessUnitVariableName}#"; "aadSecurityGroupId"="#{$configurationVariableName}#"; "dataverseSecurityRoleNames"=@($teamGroupRoles);"skipRolesDeletion"=$teamSkipRolesValue;}
+                            if($usePlaceholders.ToLower() -eq 'false') {
+                                $groupTeamConfig = [PSCustomObject]@{"aadGroupTeamName"=$teamName; "aadGroupTeamBusinessUnitId"="$teamBusinessUnitValue"; "aadSecurityGroupId"="$configurationVariableValue"; "dataverseSecurityRoleNames"=@($teamGroupRoles)}
+                            }
+                            $groupTeams.Add($groupTeamConfig)
                         }
                     }
-                    elseif($reservedVariables -contains $configurationVariableName) {
-                        #If the variable is in the reserved variables list then set the value to the value passed in on the configuration data
-                        if(!$found) { 
-                            $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name $configurationVariableName -Value @{value = ''}
-                        }
-                        $newBuildDefinitionVariables.$configurationVariableName.value = $configurationVariableValue
-                    }
+
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
                 }
+            } elseif($null -ne $configurationDataEnvironment.DeploymentSettings) {
+                Update-Deployment-Settings-Slugs $configurationDataEnvironment.DeploymentSettings $newBuildDefinitionVariables $reservedVariables $environmentVariables $connectionReferences $flowActivationUsers $customConnectorSharings $flowOwnerships $flowSharings $canvasApps $groupTeams $webHookUrls $sdkMessages
             }
 
             if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\") {
@@ -383,6 +355,7 @@ function Set-DeploymentSettingsConfiguration
             Write-Host "Creating custom deployment settings"
             $json = ConvertTo-Json -Depth 10 $newCustomConfiguration
             $json = [System.Text.RegularExpressions.Regex]::Unescape($json)
+            Write-Host "Custom Deployment Settings - $json"
             if ($PSVersionTable.PSVersion.Major -gt 5) {
                 Set-Content -Path $customDeploymentSettingsFilePath -Value $json
             }
@@ -391,19 +364,145 @@ function Set-DeploymentSettingsConfiguration
                 $jsonBytes = $utf8NoBomEncoding.GetBytes($json)
                 Set-Content -Path $customDeploymentSettingsFilePath -Value $jsonBytes -Encoding Byte
             }
-            #Set the build variables
-            Set-BuildDefinitionVariables $orgUrl $projectName $azdoAuthType $buildDefinitionResponseResults[0] $buildDefinitionResponseResults[0].id $newBuildDefinitionVariables
+        }
+        #Set the build variables
+        Write-Host "Updating Build Definition Variables"
+        Set-BuildDefinitionVariables $orgUrl $projectName $azdoAuthType $buildDefinitionResponseResults[0] $buildDefinitionResponseResults[0].id $newBuildDefinitionVariables
+    }
+}
+<#
+This function updates deployment settings that contains plain text values with placeholders. 
+#>
+function Update-Deployment-Settings-Slugs
+{
+    param(
+        [Parameter(Mandatory)] [String][AllowEmptyString()] $deploymentSettingsJson,
+        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables,
+        [Parameter(Mandatory)] [System.Object]$reservedVariables,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $environmentVariables,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $connectionReferences,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $flowActivationUsers,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $customConnectorSharings,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $flowOwnerships,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $flowSharings,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $canvasApps,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $groupTeams,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $webHookUrls,
+        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $sdkMessages
+    )
+    if($null -ne $deploymentSettingsJson -and $deploymentSettingsJson -ne "") {
+        $deploymentSettings = $deploymentSettingsJson | ConvertFrom-Json
+
+        if($null -ne $deploymentSettings.EnvironmentVariables) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($environmentVariable in $deploymentSettings.EnvironmentVariables) {
+                    $configurationVariableName = "environmentvariable.$($environmentVariable.SchemaName)"
+                    $configurationVariableValue = $environmentVariable.Value
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $environmentVariable.Value = "#{$configurationVariableName}#"
+                }
+            }
+            $environmentVariables = $deploymentSettings.EnvironmentVariables
+        }
+        if($null -ne $deploymentSettings.ConnnectionReferences) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($connectionReference in $deploymentSettings.ConnnectionReferences) {
+                    $configurationVariableName = "connectionreference.$($connectionReference.LogicalName)"
+                    $configurationVariableValue = $connectionReference.ConnectionId
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $connectionReference.ConnectionId = "#{$configurationVariableName}#"
+                }
+            }
+            $connectionReferences = $deploymentSettings.ConnnectionReferences
+        } 
+        if($null -ne $deploymentSettings.ActivateFlowConfiguration) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($activateFlowConfiguration in $deploymentSettings.ActivateFlowConfiguration) {
+                    $flowName = Update-IndicesOfNodesWithValue -jsonArray $deploymentSettings.ActivateFlowConfiguration -searchName $activateFlowConfiguration.solutionComponentName -searchValue $activateFlowConfiguration.solutionComponentUniqueName -searchProperty "solutionComponentName"
+                    $configurationVariableName = "activateflow.$($flowName)"
+                    $configurationVariableValue = $activateFlowConfiguration.solutionComponentUniqueName
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $connectionReference.ConnectionId = "#{$configurationVariableName}#"
+                }
+            }
+            $flowActivationUsers = $deploymentSettings.ActivateFlowConfiguration
+        } 
+        if($null -ne $deploymentSettings.ConnectorShareWithGroupTeamConfiguration) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($connectorSharing in $deploymentSettings.ConnectorShareWithGroupTeamConfiguration) {
+                    $configurationVariableName = "activateflow.$($activateFlowConfiguration.solutionComponentName)"
+                    $configurationVariableValue = $activateFlowConfiguration.solutionComponentUniqueName
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $connectionReference.ConnectionId = "#{$configurationVariableName}#"
+                }
+            }
+            $customConnectorSharings = $deploymentSettings.ConnectorShareWithGroupTeamConfiguration
+        } 
+        if($null -ne $deploymentSettings.SolutionComponentOwnershipConfiguration) {
+            $flowOwnerships = $deploymentSettings.SolutionComponentOwnershipConfiguration
+        } 
+        if($null -ne $deploymentSettings.FlowShareWithGroupTeamConfiguration) {
+            $flowSharings = $deploymentSettings.FlowShareWithGroupTeamConfiguration
+        } 
+        if($null -ne $deploymentSettings.AadGroupCanvasConfiguration) {
+            $canvasApps = $deploymentSettings.AadGroupCanvasConfiguration
+        }
+        if($null -ne $deploymentSettings.AadGroupTeamConfiguration) {
+            $groupTeams = $deploymentSettings.AadGroupTeamConfiguration
+        } 
+        if($null -ne $deploymentSettings.WebhookUrls) {
+            $webHookUrls = $deploymentSettings.WebhookUrls
+        } 
+        if($null -ne $deploymentSettings.SDKMessages) {
+            $sdkMessages = $deploymentSettings.SDKMessages
         }
     }
 }
+<#
+This function adds or updates a variable on the build definition.
+#>
+function Add-Pipeline-Variable
+{
+    param(
+        [Parameter(Mandatory)] [String] $configurationVariableName,
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$configurationVariableValue,
+        [Parameter(Mandatory)] [System.Object]$newBuildDefinitionVariables,
+        [Parameter(Mandatory)] [System.Object]$reservedVariables
+    )
 
+    #See if the variable already exists
+    if($null -ne $newBuildDefinitionVariables) {
+        $found = Get-Parameter-Exists $configurationVariableName $newBuildDefinitionVariables                
+        #Add the configuration variable to the list of pipeline variables if usePlaceholders is not false
+        if($usePlaceholders.ToLower() -ne 'false') {
+            #If the variable was not found create it 
+            if(!$found) { 
+                $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name $configurationVariableName -Value @{value = ''}
+            }
+
+            # Set the value to the value passed in on the configuration data
+            if($null -eq $configurationVariableValue -or [string]::IsNullOrWhiteSpace($configurationVariableValue)) {
+                $newBuildDefinitionVariables.$configurationVariableName.value = ''
+            } else {
+                $newBuildDefinitionVariables.$configurationVariableName.value = $configurationVariableValue
+            }
+        }
+        elseif($reservedVariables -contains $configurationVariableName) {
+            #If the variable is in the reserved variables list then set the value to the value passed in on the configuration data
+            if(!$found) { 
+                $newBuildDefinitionVariables | Add-Member -MemberType NoteProperty -Name $configurationVariableName -Value @{value = ''}
+            }
+            $newBuildDefinitionVariables.$configurationVariableName.value = $configurationVariableValue
+        }
+    }
+
+}
 <#
 This function creates the deployment pipeline definitions.
 #>
 function New-DeploymentPipelines
 {
     param (
-        [Parameter(Mandatory)] [String]$pipelineSourceDirectory,
         [Parameter(Mandatory)] [String]$buildProjectName,
         [Parameter(Mandatory)] [String]$buildRepositoryName,
         [Parameter(Mandatory)] [String]$orgUrl,
@@ -415,6 +514,7 @@ function New-DeploymentPipelines
         [Parameter()] [System.Object[]] [AllowEmptyCollection()]$configurationData,
         [Parameter()] [String]$agentOS,
         [Parameter()] [String]$solutionRepoId,
+        [Parameter(Mandatory)] [String]$pipelineSourceDirectory,
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$currentBranch,
         [Parameter(Mandatory)] [String]$agentPool
@@ -431,15 +531,18 @@ function New-DeploymentPipelines
 
         #Update / Create Deployment Pipelines
         Write-Host "Fetching build definitions in all repos"
-        $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"     
+        $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"
         Write-Host "BuildDefinitionResourceUrl - "$buildDefinitionResourceUrl
         $fullBuildDefinitionResponse = Invoke-RestMethod $buildDefinitionResourceUrl -Method Get -Headers @{
             Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
         }
 
-        if($fullBuildDefinitionResponse.count -gt 1) {
+        if($fullBuildDefinitionResponse.count -gt $deploymentConfigurationData.length) {
             Write-Host "Fetching build definitions under the repo - $repo"
-            $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?repositoryId=$solutionRepoId&repositoryType=TfsGit&name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"     
+            $buildDefinitionResourceUrl = "$orgUrl$projectName/_apis/build/definitions?repositoryId=$solutionRepoId&repositoryType=TfsGit&name=deploy-*-$solutionName&includeAllProperties=true&api-version=6.0"
+            $fullBuildDefinitionResponse = Invoke-RestMethod $buildDefinitionResourceUrl -Method Get -Headers @{
+                Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
+            }
         }
         $buildDefinitionResponseResults = $fullBuildDefinitionResponse.value
         Write-Host "Retrieved " $buildDefinitionResponseResults.length " builds"
@@ -506,16 +609,16 @@ function New-DeploymentPipelines
                 }
                 
                 try{
-                    . "$env:POWERSHELLPATH/brach-pipeline-policy.ps1"
+                    . "$env:POWERSHELLPATH/branch-pipeline-policy.ps1"
                     Write-Host "Branch creation start"
-                   $solutionProjectRepo = Invoke-Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool" "$pipelineStageRunId"
+                    $solutionProjectRepo = Invoke-Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$pipelineSourceDirectory" "$buildSourceDirectory" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool" "$pipelineStageRunId"
 
-                   if($null -ne $solutionProjectRepo){
+                    if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"
                         Update-Build-for-Branch "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId" "$buildRepositoryName" "$buildSourceDirectory" "$currentBranch" "$agentPool" "$pipelineStageRunId"
                         Write-Host "Setting up branch policy start"
                         Set-Branch-Policy "$orgUrl" "$projectName" "$azdoAuthType" "$environmentNames" "$solutionName" $solutionProjectRepo "$settings" "$solutionRepoId" "$agentPool"
-                   }
+                    }
                 }
                 catch{
                     # Code to handle the error goes here
@@ -594,6 +697,7 @@ function Invoke-Create-Update-PipelineStageRun-Parameter{
         $newBuildDefinitionVariables.PipelineServiceConnectionUrl.value = $PipelineServiceConnectionUrl        
 
     }
+    Write-Host "newBuildDefinitionVariables - $newBuildDefinitionVariables"
 }
 
 <#

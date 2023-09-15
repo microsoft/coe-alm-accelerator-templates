@@ -71,6 +71,9 @@ parameters:
 - name: CreatePR
   type: string
   default: "false"
+- name: PRTargetBranch
+  type: string
+  default: "NA"
 - name: AutoCompletePR
   type: string
   default: "false"
@@ -167,10 +170,10 @@ stages:
     - pwsh: |
         . "$env:POWERSHELLPATH/pipeline-functions.ps1"
         $sourceBranch = "${{parameters.Branch}}"
-        if(${{parameters.BranchToCreate}} -ne "Commit to existing branch specified in Branch parameter") {
+        if("${{parameters.BranchToCreate}}" -ne "Commit to existing branch specified in Branch parameter") {
           $sourceBranch = "${{parameters.BranchToCreate}}"
         }
-        New-Pull-Request "${{parameters.SolutionName}}" "$(System.TeamFoundationCollectionUri)" "${{parameters.Project}}" "${{parameters.Repo}}" "${{parameters.Branch}}" "refs/heads/${{parameters.BranchToCreate}}" "refs/heads/${{parameters.SolutionName}}" "${{parameters.CommitMessage}}" "${{parameters.AutoCompletePR}}" "$env:SYSTEM_ACCESSTOKEN"
+        New-Pull-Request "${{parameters.SolutionName}}" "$(System.TeamFoundationCollectionUri)" "${{parameters.Project}}" "${{parameters.Repo}}" "${{parameters.Branch}}" "refs/heads/$sourceBranch" "refs/heads/${{parameters.SolutionName}}" '${{parameters.CommitMessage}}' "${{parameters.AutoCompletePR}}" "$env:SYSTEM_ACCESSTOKEN"
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       displayName: 'Create a pull request for the new branch'

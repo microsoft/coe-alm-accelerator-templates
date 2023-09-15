@@ -37,13 +37,16 @@ function New-Pull-Request {
         [Parameter(Mandatory)] [String]$branch,
         [Parameter(Mandatory)] [String]$sourceBranch,
         [Parameter(Mandatory)] [String]$targetBranch,
-        [Parameter(Mandatory)] [String]$commitMessage,
+        [Parameter(Mandatory)][AllowEmptyString()] [String]$commitMessage,
         [Parameter(Mandatory)] [String]$autocompletePR,
         [Parameter(Mandatory)] [String]$accessToken
     )
-    if("$sourceBranch" -eq "Commit to existing branch specified in Branch parameter") {
+    . "$env:POWERSHELLPATH/util.ps1"
+    Write-Host "Source Branch: $sourceBranch"
+    if("$sourceBranch" -match "Commit to existing branch specified in Branch parameter") {
       $sourceBranch = "refs/heads/$branch"
     }
+    Write-Host "Source Branch: $sourceBranch"
 
     # Check for existing active PR for the branch and repo
     $uri = "$org/$project/_apis/git/pullrequests?searchCriteria.repositoryId=$repo&searchCriteria.sourceRefName=$sourceBranch&searchCriteria.status=active&searchCriteria.targetRefName=$targetBranch&api-version=7.0"
@@ -56,10 +59,10 @@ function New-Pull-Request {
 
       # Define request body
       $body = @{
-          sourceRefName = "$sourceBranch"
-          targetRefName = "$targetBranch"
-          title = "$solutionName - Deployment Approval Pull Request"
-          description = "$commitMessage"
+          sourceRefName = "$sourceBranch";
+          targetRefName = "$targetBranch";
+          title = "$solutionName - Deployment Approval Pull Request";
+          description = [System.Web.HttpUtility]::UrlEncode($commitMessage)
       } | ConvertTo-Json
 
       Write-Host "Body: $body"
@@ -67,7 +70,7 @@ function New-Pull-Request {
       # Send API request
       $createPRResponse = Invoke-RestMethod -Uri $uri -Method Post -Headers @{
           Authorization = "Bearer $accessToken"
-          "Content-Type" = "application/json"
+          "Content-Type" = "application/json; charset=utf-8"
       } -Body $body
 
       if("$autocompletePR" -eq "true") {
