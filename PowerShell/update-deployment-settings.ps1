@@ -28,7 +28,8 @@ function Set-DeploymentSettingsConfiguration
         [Parameter()] [String]$pat = "" # Azure DevOps Personal Access Token only required for running local tests
     )
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
-    $reservedVariables = @("TriggerSolutionUpgrade")
+    $reservedVariables = @("TriggerSolutionUpgrade","BypassAppConsent")
+    Write-Host (ConvertTo-Json -Depth 10 $configurationData)
 
     #Generate Deployment Settings
     Write-Host "Update Deployment Settings"
