@@ -557,7 +557,7 @@ function Add-Pipeline-Variable
     param(
         [Parameter(Mandatory)] [String] $configurationVariableName,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$configurationVariableValue,
-        [Parameter(Mandatory)] [System.Object]$newBuildDefinitionVariables,
+        [Parameter(Mandatory)] [System.Object][AllowEmptyCollection()]$newBuildDefinitionVariables,
         [Parameter(Mandatory)] [System.Object]$reservedVariables
     )
 
