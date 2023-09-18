@@ -422,7 +422,7 @@ function Update-Deployment-Settings-Slugs
                     $configurationVariableName = "activateflow.$($flowName)"
                     $configurationVariableValue = $activateFlowConfiguration.solutionComponentUniqueName
                     Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
-                    $connectionReference.ConnectionId = "#{$configurationVariableName}#"
+                    $activateFlowConfiguration.solutionComponentUniqueName = "#{$configurationVariableName}#"
                 }
             }
             $flowActivationUsers = $deploymentSettings.ActivateFlowConfiguration
@@ -430,30 +430,120 @@ function Update-Deployment-Settings-Slugs
         if($null -ne $deploymentSettings.ConnectorShareWithGroupTeamConfiguration) {
             if($usePlaceholders.ToLower() -ne 'false') {
                 foreach($connectorSharing in $deploymentSettings.ConnectorShareWithGroupTeamConfiguration) {
-                    $configurationVariableName = "activateflow.$($activateFlowConfiguration.solutionComponentName)"
-                    $configurationVariableValue = $activateFlowConfiguration.solutionComponentUniqueName
+                    #Unique Name
+                    $configurationVariableName = "connector.$($connectorSharing.solutionComponentName)"
+                    $configurationVariableValue = $connectorSharing.solutionComponentUniqueName
                     Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
-                    $connectionReference.ConnectionId = "#{$configurationVariableName}#"
+                    $connectorSharing.solutionComponentUniqueName = "#{$configurationVariableName}#"
+                    #Team Name
+                    $configurationVariableName = "connector.teamname.$($connectorSharing.solutionComponentName)"
+                    $configurationVariableValue = $connectorSharing.solutionComponentUniqueName
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $connectorSharing.solutionComponentUniqueName = "#{$configurationVariableName}#"
                 }
             }
             $customConnectorSharings = $deploymentSettings.ConnectorShareWithGroupTeamConfiguration
         } 
         if($null -ne $deploymentSettings.SolutionComponentOwnershipConfiguration) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($componentOwnership in $deploymentSettings.SolutionComponentOwnershipConfiguration) {
+                    #Unique Name
+                    $configurationVariableName = "owner.$($componentOwnership.solutionComponentName)"
+                    $configurationVariableValue = $componentOwnership.solutionComponentUniqueName
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $componentOwnership.solutionComponentUniqueName = "#{$configurationVariableName}#"
+                    #Email
+                    $configurationVariableName = "owner.ownerEmail.$($componentOwnership.solutionComponentName)"
+                    $configurationVariableValue = $componentOwnership.ownerEmail
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $componentOwnership.ownerEmail = "#{$configurationVariableName}#"
+                }
+            }
             $flowOwnerships = $deploymentSettings.SolutionComponentOwnershipConfiguration
         } 
         if($null -ne $deploymentSettings.FlowShareWithGroupTeamConfiguration) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($flowSharing in $deploymentSettings.FlowShareWithGroupTeamConfiguration) {
+                    #Unique Name
+                    $configurationVariableName = "flow.$($connectorSharing.solutionComponentName)"
+                    $configurationVariableValue = $flowSharing.solutionComponentUniqueName
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $flowSharing.solutionComponentUniqueName = "#{$configurationVariableName}#"
+                    #Team Name
+                    $configurationVariableName = "flow.sharing.$($flowSharing.solutionComponentName)"
+                    $configurationVariableValue = $flowSharing.aadGroupTeamName
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $flowSharing.aadGroupTeamName = "#{$configurationVariableName}#"
+                }
+            }
             $flowSharings = $deploymentSettings.FlowShareWithGroupTeamConfiguration
         } 
         if($null -ne $deploymentSettings.AadGroupCanvasConfiguration) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($canvasConfig in $deploymentSettings.AadGroupCanvasConfiguration) {
+                    #AAD Group ID
+                    $configurationVariableName = "canvasshare.aadGroupId.$($canvasConfig.canvasNameInSolution)"
+                    $configurationVariableValue = $canvasConfig.aadGroupId
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $canvasConfig.aadGroupId = "#{$configurationVariableName}#"
+                }
+            }
             $canvasApps = $deploymentSettings.AadGroupCanvasConfiguration
         }
         if($null -ne $deploymentSettings.AadGroupTeamConfiguration) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($aadGroupTeam in $deploymentSettings.AadGroupTeamConfigurations) {
+                    #AAD Group ID
+                    if($aadGroupTeam.PSobject.Properties.Name -contains "aadGroupTeamId") {
+                        $configurationVariableName = "groupTeam.$($aadGroupTeam.aadGroupTeamId).$($aadGroupTeam.aadGroupTeamName)"
+                    }
+                    else {
+                        $configurationVariableName = "groupTeam.$($aadGroupTeam.aadGroupTeamName)"
+                    }
+                    $configurationVariableValue = $aadGroupTeam.aadSecurityGroupId
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $aadGroupTeam.aadSecurityGroupId = "#{$configurationVariableName}#"
+
+                    #Business Unit ID
+                    if($aadGroupTeam.PSobject.Properties.Name -contains "aadGroupTeamId") {
+                        $configurationVariableName = "businessunit.$($aadGroupTeam.aadGroupTeamId).$($aadGroupTeam.aadGroupTeamName)"
+                    }
+                    else {
+                        $configurationVariableName = "businessunit.$($aadGroupTeam.aadGroupTeamName)"
+                    }
+                    $configurationVariableValue = $aadGroupTeam.aadGroupTeamBusinessUnitId
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $aadGroupTeam.aadGroupTeamBusinessUnitId = "#{$configurationVariableName}#"
+                }
+            }
             $groupTeams = $deploymentSettings.AadGroupTeamConfiguration
         } 
         if($null -ne $deploymentSettings.WebhookUrls) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($webHook in $deploymentSettings.WebhookUrls) {
+                    #Webhook Url
+                    $configurationVariableName = "webhookurl.$($webHook.SchemaName)"
+                    $configurationVariableValue = $webHook.Value
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $webHook.Value = "#{$configurationVariableName}#"
+                }
+            }
             $webHookUrls = $deploymentSettings.WebhookUrls
         } 
         if($null -ne $deploymentSettings.SDKMessages) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($sdkMessage in $deploymentSettings.SDKMessages) {
+                    #Webhook Url
+                    $split = $sdkMessage.Config.Split(".")
+                    if($split.length -eq 2) {
+                        $sdkMessage.Config = $split[1]
+                        $configurationVariableName = "sdkstep.$split[0].$($webHook.SchemaName)"
+                        $configurationVariableValue = $webHook.Value
+                        Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                        $sdkMessage.Value = "#{$configurationVariableName}#"
+                    }
+                }
+            }
             $sdkMessages = $deploymentSettings.SDKMessages
         }
     }

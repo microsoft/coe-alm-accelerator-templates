@@ -62,7 +62,7 @@ function New-Pull-Request {
           sourceRefName = "$sourceBranch";
           targetRefName = "$targetBranch";
           title = "$solutionName - Deployment Approval Pull Request";
-          description = [System.Web.HttpUtility]::UrlEncode($commitMessage)
+          description = [System.Web.HttpUtility]::UrlDecode(([System.Web.HttpUtility]::UrlEncode($commitMessage)))
       } | ConvertTo-Json
 
       Write-Host "Body: $body"
