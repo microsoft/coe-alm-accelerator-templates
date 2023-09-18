@@ -557,7 +557,7 @@ function Add-Pipeline-Variable
     param(
         [Parameter(Mandatory)] [String] $configurationVariableName,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$configurationVariableValue,
-        [Parameter(Mandatory)] [System.Object][AllowEmptyCollection()]$newBuildDefinitionVariables,
+        [Parameter(Mandatory)] [System.Object] [AllowNull()]$newBuildDefinitionVariables,
         [Parameter(Mandatory)] [System.Object]$reservedVariables
     )
 
@@ -735,7 +735,7 @@ function Set-BuildDefinitionVariables {
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter()] [PSCustomObject]$buildDefinitionResult,
         [Parameter()] [String]$definitionId,
-        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
+        [Parameter()] [PSCustomObject] [AllowNull()]$newBuildDefinitionVariables
     )
     if($null -ne $newBuildDefinitionVariables) {
         #Set the build definition variables to the newly created list
@@ -760,7 +760,7 @@ function Invoke-Create-Update-PipelineStageRun-Parameter{
         [Parameter()] [String]$PipelineStageRunId,
         [Parameter()] [String]$PipelineServiceConnectionName,
         [Parameter()] [String]$PipelineServiceConnectionUrl,
-        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
+        [Parameter()] [PSCustomObject][AllowNull()]$newBuildDefinitionVariables
     )
     Write-Host "Inside Invoke-Create-Update-PipelineStageRun-Parameter"
     Write-Host "newBuildDefinitionVariables - $newBuildDefinitionVariables"
@@ -798,7 +798,7 @@ function Invoke-Create-Update-ServiceConnection-Parameters{
     param (
         [Parameter()] [String]$DeploymentEnvironmentUrl,
         [Parameter()] [String]$ServiceConnectionName,
-        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
+        [Parameter()] [PSCustomObject][AllowNull()]$newBuildDefinitionVariables
     )
     Write-Host "Inside Invoke-Create-Update-ServiceConnection-Parameters"
     Write-Host "newBuildDefinitionVariables - $newBuildDefinitionVariables"
@@ -831,7 +831,7 @@ This is child function. Checks whether the parameter exists in pipeline definiti
 function Get-Parameter-Exists{
     param (
         [Parameter()] [String]$configurationVariableName,
-        [Parameter()] [PSCustomObject]$newBuildDefinitionVariables
+        [Parameter()] [PSCustomObject][AllowNull()]$newBuildDefinitionVariables
     )
     $found = $false
     if($null -ne $newBuildDefinitionVariables){
