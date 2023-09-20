@@ -62,7 +62,7 @@ steps:
     # Conditionally create a PR if the source and target branches are specified
     - pwsh: |
         . "$env:POWERSHELLPATH/pipeline-functions.ps1"
-        New-Pull-Request "$(SolutionName)" "$(System.TeamFoundationCollectionUri)" "$(System.TeamProject)" "$(Build.Repository.Name)" "${{parameters.sourceBranch}}" "${{parameters.sourceBranch}}" "refs/heads/${{parameters.targetBranch}}" "${{parameters.commitMessage}}" "${{parameters.autoCompletePR}}" "$env:SYSTEM_ACCESSTOKEN"
+        New-Pull-Request "$(SolutionName)" "$(System.TeamFoundationCollectionUri)" "$(System.TeamProject)" "$(Build.Repository.Name)" "${{parameters.sourceBranch}}" "${{parameters.sourceBranch}}" "refs/heads/${{parameters.targetBranch}}" '${{parameters.commitMessage}}' "${{parameters.autoCompletePR}}" "$env:SYSTEM_ACCESSTOKEN"
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       displayName: "Conditionally Create a PR to trigger the deployment"

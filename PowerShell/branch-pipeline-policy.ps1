@@ -16,6 +16,7 @@ function Invoke-Create-Branch{
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [string]$solutionRepoId,
         [Parameter(Mandatory)] [string]$agentPool,
+        [Parameter(Mandatory)] [String]$currentBranch,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$pipelineStageRunId
     )
         Write-Host "Pipeline Project - $buildProjectName Solution Project - $solutionProjectName"
@@ -100,13 +101,6 @@ function Invoke-Create-Branch{
                     return $solutionProjectRepo
                 }
 
-                if($solutionBranchExists -eq $true){
-                    Write-Host "Solution Branch $solutionName already exists. Exiting."
-                    return $solutionProjectRepo
-                }else{
-                    Write-Host "Proceeding with Solution Branch - $solutionName creation"
-                }
-
                 # If Environment Names not provided, fall back to validation|test|prod.
                 if([string]::IsNullOrEmpty($environmentNames)){
                     Write-Host "EnvironmentNames not found in Settings. Falling back."
@@ -123,46 +117,48 @@ function Invoke-Create-Branch{
                     Get-Git-Commit-Changes "$organizationURL" "$buildProjectName" "$solutionProjectName" "$solutionRepositoryName" "$pipelineSourceDirectory" "$buildRepositoryName" "$buildSourceDirectory" "$solutionName" "$environmentName" "$sourceBranch" "$agentPool" "$pipelineStageRunId"
                 }
 
-                # Create a new Branch
-                Write-Host "No commit changes. Creating new solution branch - $solutionName"
-                # Construct the request body for creating a new branch
-                $body = @"
-                [
-                    {
-                        "name": "refs/heads/$solutionName",
-                        "newObjectId": "$sourceRefId",
-                        "oldObjectId": "0000000000000000000000000000000000000000"
-                    }
-                ]
+                if($solutionBranchExists -ne $true -and $currentBranch -ne "$solutionName"){
+                    # Create a new Branch
+                    Write-Host "No commit changes. Creating new solution branch - $solutionName"
+                    # Construct the request body for creating a new branch
+                    $body = @"
+                    [
+                        {
+                            "name": "refs/heads/$solutionName",
+                            "newObjectId": "$sourceRefId",
+                            "oldObjectId": "0000000000000000000000000000000000000000"
+                        }
+                    ]
 "@
-                        
-                # Construct the API endpoint URL for creating a new branch
-                $apiUrl = "$organizationURL$solutionProjectName/_apis/git/repositories/$solutionRepositoryName/refs?api-version=5.0"
-                Write-Host "New branch creation apiUrl - $apiUrl"
+                            
+                    # Construct the API endpoint URL for creating a new branch
+                    $apiUrl = "$organizationURL$solutionProjectName/_apis/git/repositories/$solutionRepositoryName/refs?api-version=5.0"
+                    Write-Host "New branch creation apiUrl - $apiUrl"
 
-                $response = $null
-                try{
-                    # Send a POST request to the API endpoint to create a new branch
-                    $response = Invoke-RestMethod -Uri $apiUrl -Method Post -Headers @{
-                        Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
-                        "Content-Type" = "application/json"
-                    } -Body $body
-                }
-                catch {
-                    Write-Host "Error while posting $body to $apiUrl. Message - $($_.Exception.Message)"
-                }
+                    $response = $null
+                    try{
+                        # Send a POST request to the API endpoint to create a new branch
+                        $response = Invoke-RestMethod -Uri $apiUrl -Method Post -Headers @{
+                            Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
+                            "Content-Type" = "application/json"
+                        } -Body $body
+                    }
+                    catch {
+                        Write-Host "Error while posting $body to $apiUrl. Message - $($_.Exception.Message)"
+                    }
 
-                Write-Host "Branch creation response - $response"
+                    Write-Host "Branch creation response - $response"
 
-                if($null -ne $response){
-                    Write-Host "New branch created with ref name $($response.name) and object ID $($response.objectId)"
+                    if($null -ne $response){
+                        Write-Host "New branch created with ref name $($response.name) and object ID $($response.objectId)"
+                    }
+                    else{
+                        Write-Host "##vso[task.logissue type=warning]Unable to create solution branch - $solutionName."
+                        throw
+                    }
+                }else{
+                    Write-Host "No commits to this repository yet. Initialize this repository before creating new branches"
                 }
-                else{
-                    Write-Host "##vso[task.logissue type=warning]Unable to create solution branch - $solutionName."
-                    throw
-                }
-            }else{
-                Write-Host "No commits to this repository yet. Initialize this repository before creating new branches"
             }
         }
         

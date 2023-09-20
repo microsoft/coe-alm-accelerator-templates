@@ -18,13 +18,13 @@ function Set-DeploymentSettingsConfiguration
         [Parameter(Mandatory)] [String]$azdoAuthType,
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$solutionName,
+        [Parameter(Mandatory)] [String]$currentBranch,
         [Parameter()] [String]$pipelineServiceConnectionName = "",
         [Parameter()] [String]$pipelineServiceConnectionUrl = "",
         [Parameter()] [String] [AllowEmptyString()]$pipelineStageRunId = "",
         [Parameter()] [String]$agentPool = "Azure Pipelines",
         [Parameter()] [String]$agentOS = "",
         [Parameter()] [String]$usePlaceholders = "true",
-        [Parameter(Mandatory)] [String]$currentBranch,
         [Parameter()] [String]$pat = "" # Azure DevOps Personal Access Token only required for running local tests
     )
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
@@ -702,7 +702,7 @@ function New-DeploymentPipelines
                 try{
                     . "$env:POWERSHELLPATH/branch-pipeline-policy.ps1"
                     Write-Host "Branch creation start"
-                    $solutionProjectRepo = Invoke-Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$pipelineSourceDirectory" "$buildSourceDirectory" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool" "$pipelineStageRunId"
+                    $solutionProjectRepo = Invoke-Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$pipelineSourceDirectory" "$buildSourceDirectory" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool" "$currentBranch" "$pipelineStageRunId"
 
                     if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"
