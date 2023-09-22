@@ -41,4 +41,4 @@ stages:
   parameters:
     pipelineDeploymentStage: '${{parameters.PipelineDeploymentStage}}'
     sourceBranch: '${{parameters.SourceBranch}}'
-    targetBranch: '${{parameters.TargetBranch}}'    
+    targetBranch: '${{parameters.TargetBranch}}'   
