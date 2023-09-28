@@ -24,7 +24,19 @@ function Invoke-Pre-Deployment-Status-Update{
 
     Invoke-DataverseHttpPost "$spnToken" "$dataverseHost" "UpdatePreDeploymentStepStatus" "$jsonBody"
 }
-
+<#
+Creates a new Pull Request based on the source and target branches and conditionally auto completes it.
+#>
+function Remove-Unicode-Characters
+{
+    param (
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$text
+    )
+    $chars = $text.Normalize([System.Text.NormalizationForm]::FormD).GetEnumerator().Where{ 
+        [System.Char]::GetUnicodeCategory($_) -ne [System.Globalization.UnicodeCategory]::NonSpacingMark
+    }
+    (-join $chars).Normalize([System.Text.NormalizationForm]::FormC)
+}
 <#
 Creates a new Pull Request based on the source and target branches and conditionally auto completes it.
 #>
@@ -37,7 +49,7 @@ function New-Pull-Request {
         [Parameter(Mandatory)] [String]$branch,
         [Parameter(Mandatory)] [String]$sourceBranch,
         [Parameter(Mandatory)] [String]$targetBranch,
-        [Parameter(Mandatory)][AllowEmptyString()] [String]$commitMessage,
+        [Parameter(Mandatory)][AllowEmptyString()] [String]$encodedCommitMessage,
         [Parameter(Mandatory)] [String]$autocompletePR,
         [Parameter(Mandatory)] [String]$accessToken
     )
@@ -62,7 +74,7 @@ function New-Pull-Request {
           sourceRefName = "$sourceBranch";
           targetRefName = "$targetBranch";
           title = "$solutionName - Deployment Approval Pull Request";
-          description = [System.Web.HttpUtility]::UrlDecode(([System.Web.HttpUtility]::UrlEncode($commitMessage)))
+          description = $encodedCommitMessage
       } | ConvertTo-Json
 
       Write-Host "Body: $body"

@@ -23,6 +23,9 @@ parameters:
 - name: branchToCreate
   type: string
   default: ''
+- name: createSolutionBranch
+  type: string
+  default: 'true'
 - name: commitMessage
   type: string
   default: ''
@@ -274,6 +277,7 @@ steps:
     commitScope: '${{parameters.commitScope}}'
     currentBranch: '${{ parameters.branch }}'
     branchToCreate: '${{ parameters.branchToCreate }}'
+    createSolutionBranch: '${{ parameters.createSolutionBranch }}'
     agentPool: '${{ parameters.agentPool }}'
     pipelineServiceConnectionName: '${{ parameters.pipelineServiceConnectionName }}'
     pipelineServiceConnectionUrl: '${{ parameters.pipelineServiceConnectionUrl }}'

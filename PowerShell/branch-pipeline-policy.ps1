@@ -17,6 +17,7 @@ function Invoke-Create-Branch{
         [Parameter(Mandatory)] [string]$solutionRepoId,
         [Parameter(Mandatory)] [string]$agentPool,
         [Parameter(Mandatory)] [String]$currentBranch,
+        [Parameter(Mandatory)] [String]$createSolutionBranch,
         [Parameter(Mandatory)] [String] [AllowEmptyString()]$pipelineStageRunId
     )
         Write-Host "Pipeline Project - $buildProjectName Solution Project - $solutionProjectName"
@@ -117,7 +118,7 @@ function Invoke-Create-Branch{
                     Get-Git-Commit-Changes "$organizationURL" "$buildProjectName" "$solutionProjectName" "$solutionRepositoryName" "$pipelineSourceDirectory" "$buildRepositoryName" "$buildSourceDirectory" "$solutionName" "$environmentName" "$sourceBranch" "$agentPool" "$pipelineStageRunId"
                 }
 
-                if($solutionBranchExists -ne $true -and $currentBranch -ne "$solutionName"){
+                if($solutionBranchExists -ne $true -and $createSolutionBranch -ne "false" -and $currentBranch -ne "$solutionName"){
                     # Create a new Branch
                     Write-Host "No commit changes. Creating new solution branch - $solutionName"
                     # Construct the request body for creating a new branch

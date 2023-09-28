@@ -19,6 +19,7 @@ function Set-DeploymentSettingsConfiguration
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter(Mandatory)] [String]$solutionName,
         [Parameter(Mandatory)] [String]$currentBranch,
+        [Parameter(Mandatory)] [String]$createSolutionBranch,
         [Parameter()] [String]$pipelineServiceConnectionName = "",
         [Parameter()] [String]$pipelineServiceConnectionUrl = "",
         [Parameter()] [String] [AllowEmptyString()]$pipelineStageRunId = "",
@@ -44,7 +45,7 @@ function Set-DeploymentSettingsConfiguration
     $solutionRepoId = Get-RepositoryIdbyName "$orgUrl" "$projectName" "$azdoAuthType" "$repo"
 
     #Update / Create Deployment Pipelines
-    New-DeploymentPipelines "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS $solutionRepoId "$pipelineSourceDirectory" "$buildSourceDirectory" "$currentBranch" "$agentPool"
+    New-DeploymentPipelines "$buildProjectName" "$buildRepositoryName" "$orgUrl" "$projectName" "$repo" "$azdoAuthType" "$pat" "$solutionName" $configurationData $agentOS $solutionRepoId "$pipelineSourceDirectory" "$buildSourceDirectory" "$currentBranch" "$createSolutionBranch" "$agentPool"
 
     Write-Host "Importing PowerShell Module: $microsoftXrmDataPowerShellModule - $xrmDataPowerShellVersion"
     Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $xrmDataPowerShellVersion -ArgumentList @{ NonInteractive = $true }
@@ -608,6 +609,7 @@ function New-DeploymentPipelines
         [Parameter(Mandatory)] [String]$pipelineSourceDirectory,
         [Parameter(Mandatory)] [String]$buildSourceDirectory,
         [Parameter(Mandatory)] [String]$currentBranch,
+        [Parameter(Mandatory)] [String]$createSolutionBranch,
         [Parameter(Mandatory)] [String]$agentPool
     )
     if($null -ne $configurationData -and $configurationData.length -gt 0) {
@@ -702,7 +704,7 @@ function New-DeploymentPipelines
                 try{
                     . "$env:POWERSHELLPATH/branch-pipeline-policy.ps1"
                     Write-Host "Branch creation start"
-                    $solutionProjectRepo = Invoke-Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$pipelineSourceDirectory" "$buildSourceDirectory" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool" "$currentBranch" "$pipelineStageRunId"
+                    $solutionProjectRepo = Invoke-Create-Branch "$orgUrl" "$buildProjectName" "$projectName" "$repo" "$buildRepositoryName" "$pipelineSourceDirectory" "$buildSourceDirectory" "$solutionName" "$environmentNames" "$azdoAuthType" "$solutionRepoId" "$agentPool" "$currentBranch" "$createSolutionBranch" "$pipelineStageRunId"
 
                     if($null -ne $solutionProjectRepo){
                         Write-Host "Creation of build definitions start"

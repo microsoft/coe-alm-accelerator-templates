@@ -21,6 +21,9 @@ parameters:
   type: string
 - name: branchToCreate
   type: string
+- name: createSolutionBranch
+  type: string
+  default: 'true'
 - name: agentPool
   type: string
   default: 'Azure Pipelines'
@@ -73,7 +76,7 @@ steps:
         $currentBranch = '${{parameters.branchToCreate}}'
       }
       #Call the deployment settings powershell
-      Set-DeploymentSettingsConfiguration '$(Build.SourcesDirectory)' '$(Agent.BuildDirectory)\PipelineUtils' "$pipelineProject" "$pipelineRepo" '$(connectionVariables.BuildTools.DataverseConnectionString)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '${{parameters.orgUrl}}' '${{parameters.projectName}}' '${{parameters.repo}}' 'Bearer' '${{parameters.serviceConnection}}' '${{parameters.solutionName}}' $currentBranch '${{parameters.pipelineServiceConnectionName}}' '${{parameters.pipelineServiceConnectionUrl}}' '${{parameters.pipelineStageRunId}}' '${{parameters.agentPool}}' '$(Agent.OS)' '${{parameters.useDeploymentSettingsPlaceholders}}'
+      Set-DeploymentSettingsConfiguration '$(Build.SourcesDirectory)' '$(Agent.BuildDirectory)\PipelineUtils' "$pipelineProject" "$pipelineRepo" '$(connectionVariables.BuildTools.DataverseConnectionString)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '${{parameters.orgUrl}}' '${{parameters.projectName}}' '${{parameters.repo}}' 'Bearer' '${{parameters.serviceConnection}}' '${{parameters.solutionName}}' $currentBranch '${{parameters.createSolutionBranch}}' '${{parameters.pipelineServiceConnectionName}}' '${{parameters.pipelineServiceConnectionUrl}}' '${{parameters.pipelineStageRunId}}' '${{parameters.agentPool}}' '$(Agent.OS)' '${{parameters.useDeploymentSettingsPlaceholders}}'
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     DEPLOYMENT_SETTINGS: ${{parameters.configurationData}}
