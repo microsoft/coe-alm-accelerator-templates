@@ -3,19 +3,13 @@ parameters:
 - name: PipelineDeploymentStage
   type: string
   default: "PreDeployment"
-- name: SourceBranch
-  type: string
-  default: "NA"
-- name: TargetBranch
-  type: string
-  default: "NA"
 resources:
   repositories:
   - repository: PipelineRepo  # repository name (DO NOT CHANGE THIS VALUE) 
     type: git
     ref: BranchContainingTheBuildTemplates  # If your pipeline templates are in a branch other than the default branch specify the branch here. Otherwise the default branch will be used by default.
     name: RepositoryContainingTheBuildTemplates  #This is the name of the repo in the current project in Azure Devops that has the pipeline templates. If the repo is in a different project you can specify the project and repo using the format ProjectContainingTheBuildTemplates/RepositoryContainingTheBuildTemplates (https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema%2Cparameter-schema#type)
-trigger: none
+trigger:
   branches:
     include:
     # Replace the following with actual branch name(s) in your repo for which you want to trigger a build. The assumption here is that you only want to only trigger on a change to a specific branch rather than a change on any branch which would include your working branch for development.'

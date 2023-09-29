@@ -175,11 +175,16 @@ stages:
     # Conditionally create a pull request to the solution branch for the new branch
     - pwsh: |
         . "$env:POWERSHELLPATH/pipeline-functions.ps1"
-        $sourceBranch = "${{parameters.Branch}}"
+        $sourceBranch = "${{parameters.BranchToCreate}}"
+        $targetBranch = "${{parameters.Branch}}"
+
+        if("${{parameters.CreateSolutionBranch}}" -eq "true") {
+          $targetBranch = "${{parameters.SolutionName}}"
+        }
+
         if("${{parameters.BranchToCreate}}" -ne "Commit to existing branch specified in Branch parameter") {
           $sourceBranch = "${{parameters.BranchToCreate}}"
         }
-        $targetBranch = "${{parameters.SolutionName}}"
         if("${{parameters.PRTargetBranch}}" -ne "NA" -and "${{parameters.PRTargetBranch}}" -ne "") {
           $targetBranch = "${{parameters.PRTargetBranch}}"
         }
