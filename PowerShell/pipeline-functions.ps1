@@ -27,19 +27,6 @@ function Invoke-Pre-Deployment-Status-Update{
 <#
 Creates a new Pull Request based on the source and target branches and conditionally auto completes it.
 #>
-function Remove-Unicode-Characters
-{
-    param (
-        [Parameter(Mandatory)] [String] [AllowEmptyString()]$text
-    )
-    $chars = $text.Normalize([System.Text.NormalizationForm]::FormD).GetEnumerator().Where{ 
-        [System.Char]::GetUnicodeCategory($_) -ne [System.Globalization.UnicodeCategory]::NonSpacingMark
-    }
-    (-join $chars).Normalize([System.Text.NormalizationForm]::FormC)
-}
-<#
-Creates a new Pull Request based on the source and target branches and conditionally auto completes it.
-#>
 function New-Pull-Request {
     param (
         [Parameter(Mandatory)] [String]$solutionName,

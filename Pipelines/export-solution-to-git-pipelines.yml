@@ -190,6 +190,7 @@ stages:
         }
 
         $encodedCommitMessage = "${{parameters.CommitMessage}}".replace("`n",", ").replace("`r",", ")
+        $encodedCommitMessage = $encodedCommitMessage -creplace '\P{IsBasicLatin}'
         New-Pull-Request -solutionName "${{parameters.SolutionName}}" -org "$(System.TeamFoundationCollectionUri)" -project "${{parameters.Project}}" -repo "${{parameters.Repo}}" -branch "${{parameters.Branch}}" -sourceBranch "refs/heads/$sourceBranch" -targetBranch "refs/heads/$targetBranch" -encodedCommitMessage "$encodedCommitMessage" -autocompletePR "${{parameters.AutoCompletePR}}" -accessToken "$env:SYSTEM_ACCESSTOKEN"
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
