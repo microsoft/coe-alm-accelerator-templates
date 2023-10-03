@@ -311,7 +311,7 @@ function Set-DeploymentSettingsConfiguration
                     Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
                 }
             } elseif($null -ne $configurationDataEnvironment.DeploymentSettings) {
-                Update-Deployment-Settings-Slugs $configurationDataEnvironment.DeploymentSettings $newBuildDefinitionVariables $reservedVariables $environmentVariables $connectionReferences $flowActivationUsers $customConnectorSharings $flowOwnerships $flowSharings $canvasApps $groupTeams $webHookUrls $sdkMessages
+                Update-Deployment-Settings-Slugs $configurationDataEnvironment.DeploymentSettings $usePlaceholders $newBuildDefinitionVariables $reservedVariables ([ref]$environmentVariables) ([ref]$connectionReferences) ([ref]$flowActivationUsers) ([ref]$customConnectorSharings) ([ref]$flowOwnerships) ([ref]$flowSharings) ([ref]$canvasApps) ([ref]$groupTeams) ([ref]$webHookUrls) ([ref]$sdkMessages)
             }
 
             if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\") {
@@ -378,23 +378,24 @@ This function updates deployment settings that contains plain text values with p
 function Update-Deployment-Settings-Slugs
 {
     param(
-        [Parameter(Mandatory)] [String][AllowEmptyString()] $deploymentSettingsJson,
+        [Parameter(Mandatory)] [PSCustomObject][AllowNull()] $deploymentSettings,
+        [Parameter(Mandatory)] [String]$usePlaceholders,
         [Parameter()] [PSCustomObject]$newBuildDefinitionVariables,
         [Parameter(Mandatory)] [System.Object]$reservedVariables,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $environmentVariables,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $connectionReferences,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $flowActivationUsers,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $customConnectorSharings,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $flowOwnerships,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $flowSharings,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $canvasApps,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $groupTeams,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $webHookUrls,
-        [Parameter(Mandatory)] [System.Collections.ArrayList][AllowEmptyCollection()] $sdkMessages
+        [Parameter(Mandatory)] [ref] $environmentVariables,
+        [Parameter(Mandatory)] [ref] $connectionReferences,
+        [Parameter(Mandatory)] [ref] $flowActivationUsers,
+        [Parameter(Mandatory)] [ref] $customConnectorSharings,
+        [Parameter(Mandatory)] [ref] $flowOwnerships,
+        [Parameter(Mandatory)] [ref] $flowSharings,
+        [Parameter(Mandatory)] [ref] $canvasApps,
+        [Parameter(Mandatory)] [ref] $groupTeams,
+        [Parameter(Mandatory)] [ref] $webHookUrls,
+        [Parameter(Mandatory)] [ref] $sdkMessages
     )
-    if($null -ne $deploymentSettingsJson -and $deploymentSettingsJson -ne "") {
-        $deploymentSettings = $deploymentSettingsJson | ConvertFrom-Json
+    if($null -ne $deploymentSettings) {
 
+        Write-Host "Updating Deployment Settings Slugs"
         if($null -ne $deploymentSettings.EnvironmentVariables) {
             if($usePlaceholders.ToLower() -ne 'false') {
                 foreach($environmentVariable in $deploymentSettings.EnvironmentVariables) {
@@ -404,18 +405,18 @@ function Update-Deployment-Settings-Slugs
                     $environmentVariable.Value = "#{$configurationVariableName}#"
                 }
             }
-            $environmentVariables = $deploymentSettings.EnvironmentVariables
+            $environmentVariables.Value = $deploymentSettings.EnvironmentVariables
         }
-        if($null -ne $deploymentSettings.ConnnectionReferences) {
+        if($null -ne $deploymentSettings.ConnectionReferences) {
             if($usePlaceholders.ToLower() -ne 'false') {
-                foreach($connectionReference in $deploymentSettings.ConnnectionReferences) {
+                foreach($connectionReference in $deploymentSettings.ConnectionReferences) {
                     $configurationVariableName = "connectionreference.$($connectionReference.LogicalName)"
                     $configurationVariableValue = $connectionReference.ConnectionId
                     Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
                     $connectionReference.ConnectionId = "#{$configurationVariableName}#"
                 }
             }
-            $connectionReferences = $deploymentSettings.ConnnectionReferences
+            $connectionReferences.Value = $deploymentSettings.ConnectionReferences
         } 
         if($null -ne $deploymentSettings.ActivateFlowConfiguration) {
             if($usePlaceholders.ToLower() -ne 'false') {
@@ -427,7 +428,7 @@ function Update-Deployment-Settings-Slugs
                     $activateFlowConfiguration.solutionComponentUniqueName = "#{$configurationVariableName}#"
                 }
             }
-            $flowActivationUsers = $deploymentSettings.ActivateFlowConfiguration
+            $flowActivationUsers.Value = $deploymentSettings.ActivateFlowConfiguration
         } 
         if($null -ne $deploymentSettings.ConnectorShareWithGroupTeamConfiguration) {
             if($usePlaceholders.ToLower() -ne 'false') {
@@ -444,7 +445,7 @@ function Update-Deployment-Settings-Slugs
                     $connectorSharing.solutionComponentUniqueName = "#{$configurationVariableName}#"
                 }
             }
-            $customConnectorSharings = $deploymentSettings.ConnectorShareWithGroupTeamConfiguration
+            $customConnectorSharings.Value = $deploymentSettings.ConnectorShareWithGroupTeamConfiguration
         } 
         if($null -ne $deploymentSettings.SolutionComponentOwnershipConfiguration) {
             if($usePlaceholders.ToLower() -ne 'false') {
@@ -461,7 +462,7 @@ function Update-Deployment-Settings-Slugs
                     $componentOwnership.ownerEmail = "#{$configurationVariableName}#"
                 }
             }
-            $flowOwnerships = $deploymentSettings.SolutionComponentOwnershipConfiguration
+            $flowOwnerships.Value = $deploymentSettings.SolutionComponentOwnershipConfiguration
         } 
         if($null -ne $deploymentSettings.FlowShareWithGroupTeamConfiguration) {
             if($usePlaceholders.ToLower() -ne 'false') {
@@ -478,7 +479,7 @@ function Update-Deployment-Settings-Slugs
                     $flowSharing.aadGroupTeamName = "#{$configurationVariableName}#"
                 }
             }
-            $flowSharings = $deploymentSettings.FlowShareWithGroupTeamConfiguration
+            $flowSharings.Value = $deploymentSettings.FlowShareWithGroupTeamConfiguration
         } 
         if($null -ne $deploymentSettings.AadGroupCanvasConfiguration) {
             if($usePlaceholders.ToLower() -ne 'false') {
@@ -490,7 +491,7 @@ function Update-Deployment-Settings-Slugs
                     $canvasConfig.aadGroupId = "#{$configurationVariableName}#"
                 }
             }
-            $canvasApps = $deploymentSettings.AadGroupCanvasConfiguration
+            $canvasApps.Value = $deploymentSettings.AadGroupCanvasConfiguration
         }
         if($null -ne $deploymentSettings.AadGroupTeamConfiguration) {
             if($usePlaceholders.ToLower() -ne 'false') {
@@ -518,7 +519,7 @@ function Update-Deployment-Settings-Slugs
                     $aadGroupTeam.aadGroupTeamBusinessUnitId = "#{$configurationVariableName}#"
                 }
             }
-            $groupTeams = $deploymentSettings.AadGroupTeamConfiguration
+            $groupTeams.Value = $deploymentSettings.AadGroupTeamConfiguration
         } 
         if($null -ne $deploymentSettings.WebhookUrls) {
             if($usePlaceholders.ToLower() -ne 'false') {
@@ -530,7 +531,7 @@ function Update-Deployment-Settings-Slugs
                     $webHook.Value = "#{$configurationVariableName}#"
                 }
             }
-            $webHookUrls = $deploymentSettings.WebhookUrls
+            $webHookUrls.Value = $deploymentSettings.WebhookUrls
         } 
         if($null -ne $deploymentSettings.SDKMessages) {
             if($usePlaceholders.ToLower() -ne 'false') {
@@ -546,7 +547,7 @@ function Update-Deployment-Settings-Slugs
                     }
                 }
             }
-            $sdkMessages = $deploymentSettings.SDKMessages
+            $sdkMessages.Value = $deploymentSettings.SDKMessages
         }
     }
 }

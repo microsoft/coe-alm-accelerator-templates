@@ -175,19 +175,20 @@ stages:
     # Conditionally create a pull request to the solution branch for the new branch
     - pwsh: |
         . "$env:POWERSHELLPATH/pipeline-functions.ps1"
-        $sourceBranch = "${{parameters.BranchToCreate}}"
-        $targetBranch = "${{parameters.Branch}}"
 
-        if("${{parameters.CreateSolutionBranch}}" -eq "true") {
-          $targetBranch = "${{parameters.SolutionName}}"
-        }
-
+        $sourceBranch = "${{parameters.Branch}}"
         if("${{parameters.BranchToCreate}}" -ne "Commit to existing branch specified in Branch parameter") {
           $sourceBranch = "${{parameters.BranchToCreate}}"
         }
+
+        $targetBranch = "${{parameters.Branch}}"
         if("${{parameters.PRTargetBranch}}" -ne "NA" -and "${{parameters.PRTargetBranch}}" -ne "") {
           $targetBranch = "${{parameters.PRTargetBranch}}"
         }
+        elseif("${{parameters.CreateSolutionBranch}}" -eq "true") {
+          $targetBranch = "${{parameters.SolutionName}}"
+        }
+
         $encodedCommitMessage = "${{parameters.CommitMessage}}".replace("`n",", ").replace("`r",", ")
         New-Pull-Request -solutionName "${{parameters.SolutionName}}" -org "$(System.TeamFoundationCollectionUri)" -project "${{parameters.Project}}" -repo "${{parameters.Repo}}" -branch "${{parameters.Branch}}" -sourceBranch "refs/heads/$sourceBranch" -targetBranch "refs/heads/$targetBranch" -encodedCommitMessage "$encodedCommitMessage" -autocompletePR "${{parameters.AutoCompletePR}}" -accessToken "$env:SYSTEM_ACCESSTOKEN"
       env:
