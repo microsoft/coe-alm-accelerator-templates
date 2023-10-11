@@ -498,12 +498,33 @@ function Get-Repository-Build-Definitions {
     param (
         [Parameter(Mandatory)] [String]$orgUrl,
         [Parameter(Mandatory)] [String]$buildProjectName,
+        [Parameter(Mandatory)] [String]$buildName,
         [Parameter(Mandatory)] [string]$azdoAuthType,
         [Parameter(Mandatory)] [string]$solutionRepoId
     )
 
+    #Retrieve the build by name
     $buildDefinitionResponse = $null
-    $uriBuildDefinition = "$orgUrl$buildProjectName/_apis/build/definitions?repositoryId=$solutionRepoId&repositoryType=TfsGit&api-version=6.0"
+    $uriBuildDefinition = "$orgUrl$buildProjectName/_apis/build/definitions?name=$buildName&api-version=6.0"
+    Write-Host "UriBuildDefinition - $uriBuildDefinition"
+    try {
+        $buildDefinitionResponse = Invoke-RestMethod $uriBuildDefinition -Method Get -Headers @{
+            Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
+        }
+    }
+    catch {
+        Write-Error $_.Exception.Message
+        return
+    }
+
+    #If only one result is returned then return the result
+    if($buildDefinitionResponse.value.length -eq 1){
+        Write-Host "Build Definition Response - $buildDefinitionResponse"
+        return $buildDefinitionResponse
+    }
+
+    #If more than one result is returned then filter by repository
+    $uriBuildDefinition = "$orgUrl$buildProjectName/_apis/build/definitions?name=$buildName&repositoryId=$solutionRepoId&repositoryType=TfsGit&api-version=6.0"
 
     Write-Host "UriBuildDefinition - $uriBuildDefinition"
     try {
