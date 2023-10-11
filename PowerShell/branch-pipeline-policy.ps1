@@ -302,13 +302,10 @@ function Update-Build-for-Branch{
             $environmentNames = "validation|test|prod"
         }
 
-        Write-Host "Fetching Build Definitions under Repository"
-        $definitions = Get-Repository-Build-Definitions "$orgUrl" "$solutionProjectName" "$azdoAuthType" "$solutionRepoId"
-
         # Get 'pipelines' content for all environments
         $collEnvironmentNames = $environmentNames.Split('|')
         foreach ($environmentName in $collEnvironmentNames) {
-            Invoke-Clone-Build-Settings "$orgUrl" "$solutionProjectName" "$settings" $definitions "$environmentName" "$solutionName" $repo "$azdoAuthType" $defaultAgentQueue "$solutionProjectName" "$buildRepoName" "$buildDirectory" "$currentBranch" "$pipelineStageRunId"
+            Invoke-Clone-Build-Settings "$orgUrl" "$solutionProjectName" "$settings" "$environmentName" "$solutionName" $repo "$azdoAuthType" $defaultAgentQueue "$solutionProjectName" "$buildRepoName" "$buildDirectory" "$currentBranch" "$pipelineStageRunId"
         }
     }else{
         Write-Host "'$agentPool' queue Not Found. You will need to set the default queue manually. Please verify the permissions for the user executing this command include access to queues."
@@ -324,7 +321,6 @@ function Invoke-Clone-Build-Settings {
         [Parameter(Mandatory)] [String]$orgUrl,
         [Parameter(Mandatory)] [String]$buildProjectName,
         [Parameter(Mandatory)] [string]$settings,
-        [Parameter(Mandatory)] [object]$pipelines,
         [Parameter(Mandatory)] [string]$environmentName,
         [Parameter(Mandatory)] [string]$solutionName,
         [Parameter(Mandatory)] [object]$repo,
@@ -340,9 +336,8 @@ function Invoke-Clone-Build-Settings {
     $destinationBuildName = "deploy-$environmentName".ToLower()
     $destinationBuildName = "$destinationBuildName-$solutionName"
     Write-Host "Looking for DestinationBuildName - $destinationBuildName from the build definitions"
-
+    $pipelines = Get-Repository-Build-Definitions "$orgUrl" "$solutionProjectName" "$destinationBuildName" "$azdoAuthType" "$solutionRepoId"
     $destinationBuild = $pipelines.value | Where-Object {$_.name -eq "$destinationBuildName"}
-
     # Backward compatibility logic. Check if there other pipleines available with matching pattern. If yes, fetch the Path
     $matchedSolutionBuilds = $pipelines.value | Where-Object {$_.name -like "deploy-*-$solutionName"}
     Write-Host "Number of matched solution builds - " $matchedSolutionBuilds.Count
@@ -664,7 +659,7 @@ function Set-Branch-Policy{
         }
 
         Write-Host "Creating a new Policy."
-        $builds = Get-Repository-Build-Definitions "$orgUrl" "$solutionProjectName" "$azdoAuthType" "$solutionRepoId"
+        $builds = Get-Repository-Build-Definitions "$orgUrl" "$solutionProjectName" "deploy-validation-$solutionName" "$azdoAuthType" "$solutionRepoId"
 
         $destinationBuild = $builds.value | Where-Object {$_.name -eq "deploy-validation-$solutionName"}
 
