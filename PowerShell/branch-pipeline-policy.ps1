@@ -345,7 +345,7 @@ function Invoke-Clone-Build-Settings {
 
     # Backward compatibility logic. Check if there other pipleines available with matching pattern. If yes, fetch the Path
     $matchedSolutionBuilds = $pipelines.value | Where-Object {$_.name -like "deploy-*-$solutionName"}
-    #Write-Host "Number of matched solution builds - " $matchedSolutionBuilds.Count
+    Write-Host "Number of matched solution builds - " $matchedSolutionBuilds.Count
     # If no matched builds available create a new folder with convention \\Repo - SolutionName
     # If matched builds available, take the $pathofMatchedBuild
     $pathofMatchedBuild = $null
@@ -354,6 +354,7 @@ function Invoke-Clone-Build-Settings {
     }else{
         $pathofMatchedBuild = "/$($repo.name) - $solutionName"
     }
+    Write-Host "Path of matched build - $pathofMatchedBuild"
 
     if($destinationBuild){
         Write-Host "Pipeline already configured for $destinationBuildName. No action needed. Returning"
