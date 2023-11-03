@@ -300,7 +300,7 @@ function Invoke-Clone-Or-Sync-Solution{
     {
         # Trigger Auth
         Invoke-Expression -Command "$pacexepath auth create --url $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
-        $unpackfolderpath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
+        $unpackfolderpath = "\\?\$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
 
         # Trigger Clone or Sync
         $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName.cdsproj"
