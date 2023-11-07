@@ -120,6 +120,7 @@ steps:
 # Configure email/name and checkout git branch
 - pwsh: |
    Write-Host "(Build.SourcesDirectory) - "$(Build.SourcesDirectory)
+   git fetch --all
    git config user.email "${{parameters.email}}"
    git config user.name "${{parameters.userName}}"
    Write-Host "branch - "${{parameters.branch}} 
