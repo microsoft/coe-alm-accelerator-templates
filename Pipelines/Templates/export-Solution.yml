@@ -119,8 +119,10 @@ steps:
 
 # Configure email/name and checkout git branch
 - pwsh: |
+   Write-Host "(Build.SourcesDirectory) - "$(Build.SourcesDirectory)
    git config user.email "${{parameters.email}}"
    git config user.name "${{parameters.userName}}"
+   Write-Host "branch - "${{parameters.branch}} 
    git checkout origin/${{parameters.branch}} --track
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Initialize Git'
