@@ -33,7 +33,12 @@ parameters:
   default: "|"
 - name: prepareAppSourcePackage
   type: boolean
-  default: false  
+  default: false
+- name: preparePackageDeployerPackage
+  type: boolean
+  default: false
+- name: projectName
+  type: string
 
 steps:
 # Checkout Tools Repo
@@ -162,11 +167,13 @@ steps:
 # Child pipeline to package the build artifacts to 'App Source' package using 'pac deploy' commands.
 - template: prepare-appsource-release.yml
   parameters:
+    projectName: '${{parameters.projectName}}'
     solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
     packageFileName: '${{parameters.solutionName}}Package.zip'
     appSourceFolderName: 'Microsoft_${{parameters.solutionName}}Package'
     parAppSourcePackageProjectPath: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
     generateAppSourcePackage: '${{parameters.prepareAppSourcePackage}}'  
+    generatePackageDeployerPackage: '${{parameters.preparePackageDeployerPackage}}'  
 
 - task: GitHubRelease@1
   inputs:
