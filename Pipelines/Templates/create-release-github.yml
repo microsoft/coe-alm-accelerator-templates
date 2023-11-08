@@ -74,6 +74,17 @@ steps:
             Write-Host "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
             $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
+            #Set the tag and title for the release
+            $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}'
+            $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
+            if(${{parameters.HotfixReleaseNumber}} -ne 0) {
+                $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}-HF${{parameters.HotfixReleaseNumber}}'
+                $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }} - Hotfix ${{parameters.HotfixReleaseNumber}}'
+            }
+
+            Write-Host "##vso[task.setvariable variable=Tag]$tag"
+            Write-Host "##vso[task.setvariable variable=Title]$title"
+
             $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
             $headers.Add("Accept", "application/vnd.github.groot-preview+json")
             $headers.Add("Authorization", "Bearer $(GitHubPAT)")
@@ -94,16 +105,7 @@ steps:
                     break
                 }
             }
-            #Set the tag and title for the release
-            $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}'
-            $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }}'
-            if(${{parameters.HotfixReleaseNumber}} -ne 0) {
-                $tag = '${{ parameters.solutionName }}-$(ReleaseMonthName)${{ parameters.releaseYear }}-HF${{parameters.HotfixReleaseNumber}}'
-                $title = '${{ parameters.solutionDisplayName }} $(ReleaseMonthName) ${{ parameters.releaseYear }} - Hotfix ${{parameters.HotfixReleaseNumber}}'
-            }
-
-            Write-Host "##vso[task.setvariable variable=Tag]$tag"
-            Write-Host "##vso[task.setvariable variable=Title]$title"
+            
 
             Write-Host "CurrentMilestone - $currentMilestone"
             #Build the release notes
