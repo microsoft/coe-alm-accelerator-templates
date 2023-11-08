@@ -1,4 +1,4 @@
-﻿<#
+<#
 This function adds the managed solutions to deployment packager file (i.e.,PD Package project).
 This step is needed to for App Source Packaging.
 #>
@@ -7,7 +7,8 @@ function Invoke-Add-Solution-References-To-Package-Project{
         [Parameter(Mandatory)] [String]$pacPath,
         [Parameter(Mandatory)] [String]$appSourcePackageProjectPath,
         [Parameter(Mandatory)] [String]$solutionsFolderPath,
-        [Parameter(Mandatory)] [String]$appSourceInputFilePath
+        [Parameter(Mandatory)] [String]$appSourceInputFilePath,
+        [Parameter(Mandatory)] [String]$projectName
      )
 
      if(Test-Path $solutionsFolderPath){
@@ -21,24 +22,30 @@ function Invoke-Add-Solution-References-To-Package-Project{
                 Foreach-Object {
                     $solutionName = $_.Name
                     $solutionPath = $_.FullName
-                    Write-Host "Fetching import order of Solution - " $solutionName
-                    $importOrder = Get-Solution-Import-Order "$appSourceInputFilePath" "$solutionName"
-                    $pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
-                    Write-Host "Pac Command - $pacCommand"
-                    if($importOrder -ne 0){
-                        Write-Host "Pointing to $appSourcePackageProjectPath path" 
-                        Set-Location -Path $appSourcePackageProjectPath
-                        Invoke-Expression -Command "$pacexepath $pacCommand"
-                    }
-                    else{
-                        Write-Host "Invalid import order for Solution - $solutionName"
-                    }
+                    Write-Host "Fetch the solution $solutionName configuration"
+                    #$importOrder = Get-Solution-Import-Order "$projectName" "$appSourceInputFilePath" "$solutionName"
+                    $matchingSolution = Get-SolutionNodeByName "$projectName" "$appSourceInputFilePath" "$solutionName"
+                    if($matchingSolution -ne $null)
+                    {
+                        $importOrder = $($matchingSolution.Importorder)
+                        Write-Host "ImportOrder - $importOrder"
+                        $pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
+                        Write-Host "Pac Command - $pacCommand"
+                        if($importOrder -ne 0){
+                            Write-Host "Pointing to $appSourcePackageProjectPath path" 
+                            Set-Location -Path $appSourcePackageProjectPath
+                            Invoke-Expression -Command "$pacexepath $pacCommand"
+                        }
+                        else{
+                            Write-Host "Invalid import order for Solution - $solutionName"
+                        }
 
-					# Solution Anchor Name in input.xml file can be Solution Name with Import order 1
-                    if($importOrder -eq 1){
-						Write-Host "Setting Solution Anchor Name to $solutionName"
-                        Write-Host "##vso[task.setVariable variable=SolutionAnchorName]$solutionName"
-                    }					
+					    # Solution Anchor Name in input.xml file can be Solution Name with Import order 1
+                        if($importOrder -eq 1){
+						    Write-Host "Setting Solution Anchor Name to $solutionName"
+                            Write-Host "##vso[task.setVariable variable=SolutionAnchorName]$solutionName"
+                        }
+                    }
                 }
             }
             else{
@@ -60,6 +67,7 @@ Matches the solution name and returns the 'import order'
 #>
 function Get-Solution-Import-Order{
     param(
+        [Parameter(Mandatory)] [String]$projectName,
         [Parameter(Mandatory)] [String]$appSourceInputFilePath,
         [Parameter(Mandatory)] [String]$solutionName       
     )
@@ -84,6 +92,37 @@ function Get-Solution-Import-Order{
 
     Write-Host "importOrder - $importOrder"
     return $importOrder;
+}
+
+function Get-SolutionNodeByName {
+    param(
+        [Parameter(Mandatory)] [String]$projectName,
+        [Parameter(Mandatory)] [String]$appSourceInputFilePath,
+        [Parameter(Mandatory)] [String]$solutionName       
+    )
+
+    if(Test-Path "$appSourceInputFilePath"){
+        $appSourceInputData = Get-Content "$appSourceInputFilePath" | ConvertFrom-Json
+        $matchingProjects = $appSourceInputData.Projects | Where-Object { $_.Name -eq $projectName }
+
+        if ($matchingProjects) {
+            $matchingProject = $matchingProjects[0]  # Assuming there's only one matching project
+
+            $matchingSolution = $matchingProject.Configdatastorage.Solutions | Where-Object { $_.Name -eq $solutionName }
+
+            if ($matchingSolution) {
+                return $matchingSolution[0]  # Assuming there's only one matching solution
+            }
+        }
+        else{
+            Write-Host "No matching projects found with name - $projectName"
+        }
+    }
+    else{
+        Write-Host "appSourceInputPath is unavailble at {$appSourceInputFilePath}"
+    }
+
+    return $null  # Return null if no matching project or solution is found
 }
 
 function Invoke-Trigger-Dotnet-Publish{
