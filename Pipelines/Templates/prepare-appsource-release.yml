@@ -1,5 +1,7 @@
 # This template read solutions from 'releaseassets' and generate a AppSourcePackage
 parameters:
+- name: projectName
+  type: string
 - name: solutionsFolderPath
   type: string
 - name: parAppSourcePackageProjectPath
@@ -10,7 +12,10 @@ parameters:
   type: string
 - name: generateAppSourcePackage
   type: boolean
-  default: false 
+  default: false
+- name: generatePackageDeployerPackage
+  type: boolean
+  default: false
 
 steps:
 - pwsh: |
@@ -87,7 +92,7 @@ steps:
     $appSourceInputFilePath = "$appSourcePackageProjectPath\appsource_input.json"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Invoke-Add-Solution-References-To-Package-Project "$(pacPath)" "$appSourcePackageProjectPath" "$solutionsFolderPath" "$appSourceInputFilePath"
+    Invoke-Add-Solution-References-To-Package-Project "$(pacPath)" "$appSourcePackageProjectPath" "$solutionsFolderPath" "$appSourceInputFilePath" "${{parameters.projectName}}"
   displayName: "Add solution references to package project"
   condition: and(succeeded(), eq(variables['RunAppSourceTasks'], 'true'))
 
