@@ -82,7 +82,7 @@ steps:
             $milestoneRequest = "https://api.github.com/repos/${{ parameters.gitHubApiUrl }}/milestones?sort=due_on&direction=desc"
             Write-Host "MilestoneRequest - $milestoneRequest"
             Write-Host "Calling using curl"
-            $response = Invoke-Expression "curl -i $milestoneRequest"
+            $response = Invoke-Expression "curl -i https://api.github.com/repos/microsoft/powercat-business-approvals-kit/milestones"
             Write-Host "Curl response - "$response
 
             $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
