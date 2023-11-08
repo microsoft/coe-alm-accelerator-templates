@@ -81,6 +81,10 @@ steps:
             #Find the milestone for this release e.g. 'CoE Starter Kit - July 2021
             $milestoneRequest = "https://api.github.com/repos/${{ parameters.gitHubApiUrl }}/milestones?sort=due_on&direction=desc"
             Write-Host "MilestoneRequest - $milestoneRequest"
+            Write-Host "Calling using curl"
+            $response = Invoke-Expression "curl -i $milestoneRequest"
+            Write-Host "Curl response - "$response
+
             $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
             $currentMilestone = $null
             $milestoneName = '${{ parameters.solutionDisplayName }} - ' + $releaseMonthName + ' ' + ${{ parameters.releaseYear }}
