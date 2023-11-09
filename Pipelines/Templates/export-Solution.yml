@@ -119,12 +119,8 @@ steps:
 
 # Configure email/name and checkout git branch
 - pwsh: |
-   Write-Host "(Build.SourcesDirectory) - "$(Build.SourcesDirectory)
-   git config user.name
-   git fetch --all
    git config user.email "${{parameters.email}}"
    git config user.name "${{parameters.userName}}"
-   Write-Host "branch - "${{parameters.branch}} 
    git checkout origin/${{parameters.branch}} --track
   workingDirectory: $(Build.SourcesDirectory)\${{parameters.repo}}
   displayName: 'Initialize Git'
@@ -342,6 +338,19 @@ steps:
     commitScope: '${{parameters.commitScope}}'
     configurationData: '${{parameters.configurationData}}' 
     buildSourceDirectory: '$(Build.SourcesDirectory)'
+
+# TEMPORARY until Solution export supports not exporting custom connector configurations
+# We need to clear out the contents of any *_connectionparameters.json file.  This is to ensure those valuse
+# are not overwritten when the Solution is imported to a downstream environment.
+- powershell: |  
+   If(${{parameters.solutionName}} -eq "BusinessApprovalKit"){
+       Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}" -Recurse -Filter *_connectionparameters.json |
+       ForEach-Object {
+          Clear-Content $_.FullName
+       }
+   }
+  displayName: 'Clear contents of *_connectionparameters.json files'
+  enabled: true
 
 - template: Hooks\export-power-page-post-hook.yml
 
