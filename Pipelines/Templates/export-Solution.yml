@@ -343,7 +343,7 @@ steps:
 # We need to clear out the contents of any *_connectionparameters.json file.  This is to ensure those valuse
 # are not overwritten when the Solution is imported to a downstream environment.
 - powershell: |  
-   If(${{parameters.solutionName}} -eq "BusinessApprovalKit"){
+   If("${{parameters.solutionName}}" -eq "BusinessApprovalKit"){
        Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}" -Recurse -Filter *_connectionparameters.json |
        ForEach-Object {
           Clear-Content $_.FullName
