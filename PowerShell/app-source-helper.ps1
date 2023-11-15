@@ -5,26 +5,24 @@ This step is needed to for App Source Packaging.
 function Invoke-Add-Solution-References-To-Package-Project{
      param (
         [Parameter(Mandatory)] [String]$pacPath,
-        [Parameter(Mandatory)] [String]$appSourcePackageProjectPath,
+        [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
         [Parameter(Mandatory)] [String]$solutionsFolderPath,
-        [Parameter(Mandatory)] [String]$appSourceInputFilePath,
+        [Parameter(Mandatory)] [String]$packageDeployerConfigSettingsPath,
         [Parameter(Mandatory)] [String]$projectName
      )
 
      if(Test-Path $solutionsFolderPath){
-         if(Test-Path $appSourcePackageProjectPath)
+         if(Test-Path $packageDeployerProjectPath)
          {
             $pacexepath = "$pacPath\pac.exe"
             if(Test-Path "$pacexepath")
             {
                 Get-ChildItem "$solutionsFolderPath" | Where-Object {$_.Name -match '_managed.zip'} |
-                #Get-ChildItem "$solutionsFolderPath" -Filter *.managed.zip | 
                 Foreach-Object {
                     $solutionName = $_.Name
                     $solutionPath = $_.FullName
-                    Write-Host "Fetch the solution $solutionName configuration"
-                    #$importOrder = Get-Solution-Import-Order "$projectName" "$appSourceInputFilePath" "$solutionName"
-                    $matchingSolution = Get-SolutionNodeByName "$projectName" "$appSourceInputFilePath" "$solutionName"
+                    Write-Host "Fetching the solution $solutionName setting from configuration"
+                    $matchingSolution = Get-Solution-By-Name "$packageDeployerConfigSettingsPath" "$projectName" "$solutionName"
                     if($matchingSolution -ne $null)
                     {
                         $importOrder = $($matchingSolution.Importorder)
@@ -32,8 +30,8 @@ function Invoke-Add-Solution-References-To-Package-Project{
                         $pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
                         Write-Host "Pac Command - $pacCommand"
                         if($importOrder -ne 0){
-                            Write-Host "Pointing to $appSourcePackageProjectPath path" 
-                            Set-Location -Path $appSourcePackageProjectPath
+                            Write-Host "Pointing to $packageDeployerProjectPath path" 
+                            Set-Location -Path $packageDeployerProjectPath
                             Invoke-Expression -Command "$pacexepath $pacCommand"
                         }
                         else{
@@ -53,7 +51,7 @@ function Invoke-Add-Solution-References-To-Package-Project{
             }
          }
          else{
-              Write-Host "Invalid app source folder path - $appSourcePackageProjectPath"
+              Write-Host "Invalid PackageDeployerProjectPath - $packageDeployerProjectPath"
          }
      }
     else{
@@ -61,89 +59,62 @@ function Invoke-Add-Solution-References-To-Package-Project{
     }
 }
 
-<#
-This is a child function of Invoke-Add-Solution-References-To-Package-Project function.
-Matches the solution name and returns the 'import order'
-#>
-function Get-Solution-Import-Order{
-    param(
+# Function to get Solution by Project Name and Solution Name
+function Get-Solution-By-Name {
+    param (
+        [Parameter(Mandatory)] [String]$projectConfigSettingsFilePath,
         [Parameter(Mandatory)] [String]$projectName,
-        [Parameter(Mandatory)] [String]$appSourceInputFilePath,
-        [Parameter(Mandatory)] [String]$solutionName       
+        [Parameter(Mandatory)] [String]$solutionName
     )
 
-    $importOrder = 0
-    if(Test-Path "$appSourceInputFilePath"){
-        $appSourceInputData = Get-Content "$appSourceInputFilePath" | ConvertFrom-Json        
-        foreach($solution in $appSourceInputData.Configdatastorage.Solutions){
-          if("$solutionName" -match $solution.Name){
-              $importOrder = $solution.Importorder
-              Write-Host "Given Solution - $solutionName MACTHED with appSource Solution - "$solution.Name
-              break;
-          }
-          else{
-             #Write-Host "Given Solution - $solutionName not matched with appSource Solution - "$solution.Name
-          }
+    # Check if the file exists
+    if (-not (Test-Path $projectConfigSettingsFilePath)) {
+        Write-Host "File '$projectConfigSettingsFilePath' not found."
+        return $null
+    }
+
+    # Read the JSON content from the file
+    $jsonString = Get-Content -Path $projectConfigSettingsFilePath -Raw
+
+    # Convert the JSON string to a PowerShell object
+    $jsonObject = $jsonString | ConvertFrom-Json
+
+    $project = $jsonObject.Projects | Where-Object { $_.Name -eq $projectName }
+
+    if ($project -ne $null) {
+        $solution = $project.Configdatastorage.Solutions | Where-Object { $_.Name -eq $solutionName }
+
+        if ($solution -ne $null) {
+            return $solution
+        } else {
+            Write-Host "Solution '$solutionName' not found for project '$projectName'."
+            return $null
         }
+    } else {
+        Write-Host "Project '$projectName' not found."
+        return $null
     }
-    else{
-        Write-Host "appSourceInputPath is unavailble at {$appSourceInputFilePath}"
-    }
-
-    Write-Host "importOrder - $importOrder"
-    return $importOrder;
-}
-
-function Get-SolutionNodeByName {
-    param(
-        [Parameter(Mandatory)] [String]$projectName,
-        [Parameter(Mandatory)] [String]$appSourceInputFilePath,
-        [Parameter(Mandatory)] [String]$solutionName       
-    )
-
-    if(Test-Path "$appSourceInputFilePath"){
-        $appSourceInputData = Get-Content "$appSourceInputFilePath" | ConvertFrom-Json
-        $matchingProjects = $appSourceInputData.Projects | Where-Object { $_.Name -eq $projectName }
-
-        if ($matchingProjects) {
-            $matchingProject = $matchingProjects[0]  # Assuming there's only one matching project
-
-            $matchingSolution = $matchingProject.Configdatastorage.Solutions | Where-Object { $_.Name -eq $solutionName }
-
-            if ($matchingSolution) {
-                return $matchingSolution[0]  # Assuming there's only one matching solution
-            }
-        }
-        else{
-            Write-Host "No matching projects found with name - $projectName"
-        }
-    }
-    else{
-        Write-Host "appSourceInputPath is unavailble at {$appSourceInputFilePath}"
-    }
-
-    return $null  # Return null if no matching project or solution is found
 }
 
 function Invoke-Trigger-Dotnet-Publish{
     param(
-        [Parameter(Mandatory)] [String]$appSourcePackageProjectPath
+        [Parameter(Mandatory)] [String]$packageDeployerProjectPath
     )
 
-    Write-Host "Pointing to package project folder path - " $appSourcePackageProjectPath
-    if(Test-Path $appSourcePackageProjectPath){
-        Set-Location -Path $appSourcePackageProjectPath
+    Write-Host "Pointing to package project folder path - " $packageDeployerProjectPath
+    if(Test-Path $packageDeployerProjectPath){
+        Set-Location -Path $packageDeployerProjectPath
         dotnet publish
     }
     else{
-        Write-Host "Path unavailble; $appSourcePackageProjectPath"
+        Write-Host "Path unavailble; $packageDeployerProjectPath"
     }
 }
 
 # Copy the .zip folder generated in either bin\debug or bin\release and move it to "AppSourcePackageProject\AppSourceAssets"
 function Copy-Published-Assets-To-AppSourceAssets{
     param(
-        [Parameter(Mandatory)] [String]$appSourcePackageProjectPath,
+        [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
         [Parameter(Mandatory)] [String]$appSourceAssetsPath,
         [Parameter(Mandatory)] [String]$packageFileName,
         [Parameter(Mandatory)] [String]$releaseAssetsDirectory
@@ -152,29 +123,29 @@ function Copy-Published-Assets-To-AppSourceAssets{
     $pdpkgFileCount = 0
     $appSourcePackageFound = $false
 
-    if(Test-Path "$appSourcePackageProjectPath\bin\Release"){
+    if(Test-Path "$packageDeployerProjectPath\bin\Release"){
 		$binPath = "bin\Release"
-        $pdpkgFileCount = (Get-ChildItem "$appSourcePackageProjectPath\$binPath" -Filter *pdpkg.zip | Measure-Object).Count
-        Write-Host "Count of .pdpkg.zip from $appSourcePackageProjectPath\$binPath - "$pdpkgFileCount
+        $pdpkgFileCount = (Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Measure-Object).Count
+        Write-Host "Count of .pdpkg.zip from $packageDeployerProjectPath\$binPath - "$pdpkgFileCount
         if($pdpkgFileCount -gt 0){
-            Copy-Pdpkg-File "$appSourcePackageProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath"           
+            Copy-Pdpkg-File "$packageDeployerProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath"           
             $appSourcePackageFound = $true
         }
         else{
-            Write-Host "pdpkg.zip not found under $appSourcePackageProjectPath\$binPath"
+            Write-Host "pdpkg.zip not found under $packageDeployerProjectPath\$binPath"
         }
     }
 
-    if(($pdpkgFileCount -eq 0) -and (Test-Path "$appSourcePackageProjectPath\bin\Debug")){
+    if(($pdpkgFileCount -eq 0) -and (Test-Path "$packageDeployerProjectPath\bin\Debug")){
 		$binPath = "bin\Debug"
-        $pdpkgFileCount = (Get-ChildItem "$appSourcePackageProjectPath\$binPath" -Filter *pdpkg.zip | Measure-Object).Count
-        Write-Host "Count of .pdpkg.zip from $appSourcePackageProjectPath\$binPath - "$pdpkgFileCount
+        $pdpkgFileCount = (Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Measure-Object).Count
+        Write-Host "Count of .pdpkg.zip from $packageDeployerProjectPath\$binPath - "$pdpkgFileCount
         if($pdpkgFileCount -gt 0){
-            Copy-Pdpkg-File "$appSourcePackageProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath"           
+            Copy-Pdpkg-File "$packageDeployerProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath"           
             $appSourcePackageFound = $true
         }
         else{
-            Write-Host "pdpkg.zip not found under $appSourcePackageProjectPath\$binPath"
+            Write-Host "pdpkg.zip not found under $packageDeployerProjectPath\$binPath"
         }
     }
 
@@ -273,20 +244,20 @@ Moves the file to ReleaseAssets folder.
 #>
 function Copy-Pdpkg-File{
     param (
-        [Parameter(Mandatory)] [String]$appSourcePackageProjectPath,
+        [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
         [Parameter(Mandatory)] [String]$packageFileName,
         [Parameter(Mandatory)] [String]$appSourceAssetsPath,
         [Parameter(Mandatory)] [String]$binPath
     )
 
-    Write-Host "pdpkg file found under $appSourcePackageProjectPath\$binPath"
+    Write-Host "pdpkg file found under $packageDeployerProjectPath\$binPath"
     Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath\$packageFileName"
             
-    Get-ChildItem "$appSourcePackageProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
+    Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
     # Copy pdpkg.zip file to ReleaseAssets folder
     if(Test-Path "$releaseAssetsDirectory"){
         Write-Host "Copying pdpkg file to Release Assets Directory"
-        Get-ChildItem "$appSourcePackageProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$releaseAssetsDirectory" -Force -PassThru
+        Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$releaseAssetsDirectory" -Force -PassThru
     }
     else{
         Write-Host "Release Assets Directory is unavailable to copy pdpkg file; Path - $releaseAssetsDirectory"
