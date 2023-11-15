@@ -93,7 +93,6 @@ steps:
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
-    Write-Host "packageDeployerProjectPath - $(PDProjectPath)"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
     $packageDeployerConfigSettingsPath = "$(PDProjectPath)\ConfigSettings.json"
 
@@ -106,7 +105,6 @@ steps:
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
-    Write-Host "packageDeployerProjectPath - $(PDProjectPath)"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
     $packageDeployerConfigSettingsPath = "$(PDProjectPath)\ConfigSettings.json"
 
