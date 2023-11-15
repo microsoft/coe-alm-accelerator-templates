@@ -171,20 +171,20 @@ steps:
     solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
     packageFileName: '${{parameters.solutionName}}Package.zip'
     appSourceFolderName: 'Microsoft_${{parameters.solutionName}}Package'
-    parAppSourcePackageProjectPath: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
+    packageDeployerProjectName: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
     generateAppSourcePackage: '${{parameters.prepareAppSourcePackage}}'  
     generatePackageDeployerPackage: '${{parameters.preparePackageDeployerPackage}}'  
 
-- task: GitHubRelease@1
-  inputs:
-    gitHubConnection: ${{ parameters.connectionName }}
-    tagSource: 'userSpecifiedTag'
-    tag: $(Tag)
-    title: $(Title)
-    releaseNotesFilePath: '$(ReleaseNotesPath)'
-    addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
-    isDraft: ${{ parameters.isDraft }}
-    isPreRelease: ${{ parameters.isPreRelease }}
-    assets: |
-      $(Pipeline.Workspace)/releaseassets/*.*
-  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
+#- task: GitHubRelease@1
+#  inputs:
+#    gitHubConnection: ${{ parameters.connectionName }}
+#    tagSource: 'userSpecifiedTag'
+#    tag: $(Tag)
+#    title: $(Title)
+#    releaseNotesFilePath: '$(ReleaseNotesPath)'
+#    addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
+#    isDraft: ${{ parameters.isDraft }}
+#    isPreRelease: ${{ parameters.isPreRelease }}
+#    assets: |
+#      $(Pipeline.Workspace)/releaseassets/*.*
+#  displayName: 'Create ${{ parameters.solutionDisplayName }} Release'
