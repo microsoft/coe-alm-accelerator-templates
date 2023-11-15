@@ -292,3 +292,58 @@ function Copy-Pdpkg-File{
         Write-Host "Release Assets Directory is unavailable to copy pdpkg file; Path - $releaseAssetsDirectory"
     }
 }
+
+# Function to get PreImportSettings by project name
+function Get-PreImport-Settings-of-Project {
+    param (
+        [Parameter(Mandatory)] [String]$projectConfigSettingsFilePath,
+        [Parameter(Mandatory)] [String]$projectName
+    )
+
+    # Check if the file exists
+    if (-not (Test-Path $projectConfigSettingsFilePath)) {
+        Write-Host "ProjectConfigSettingsFilePath $projectConfigSettingsFilePath not found."
+        return $null
+    }
+
+    # Read the JSON content from the file
+    $jsonString = Get-Content -Path $projectConfigSettingsFilePath -Raw
+
+    # Convert the JSON string to a PowerShell object
+    $jsonObject = $jsonString | ConvertFrom-Json
+
+    $project = $jsonObject.Projects | Where-Object { $_.Name -eq $projectName }
+
+    if ($project -ne $null) {
+        return $project.PreImportSettings
+    } else {
+        Write-Host "Project '$projectName' not found."
+        return $null
+    }
+}
+
+function Execute-PreImport-Settings-of-Project{
+     param (
+        [Parameter(Mandatory)] [String]$pacPath,
+        [Parameter(Mandatory)] [String]$projectConfigSettingsFilePath,
+        [Parameter(Mandatory)] [String]$projectName
+     )
+
+     $pacexepath = "$pacPath\pac.exe"
+
+     $preImportSettings = Get-PreImport-Settings-of-Project $projectConfigSettingsFilePath $projectName
+
+     if ($preImportSettings -ne $null) {
+        Write-Host "PreImportSettings for $projectName"
+    
+        foreach ($setting in $preImportSettings) {
+            Write-Host "Name: $($setting.name), Value: $($setting.value)"
+
+            $pacCommand = "org update-settings --name "$($setting.name)" --value $($setting.value)"
+            Write-Host "Pac Command - $pacCommand"
+            Invoke-Expression -Command "$pacexepath $pacCommand"
+        }
+    }else{
+        Write-Host "PreImportSettings are not configured for $projectName"
+    }
+}
