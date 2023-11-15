@@ -10,6 +10,8 @@ parameters:
   type: string
 - name: appSourceFolderName
   type: string
+- name: pdProjectPath
+  type: string
 - name: generateAppSourcePackage
   type: boolean
   default: false
@@ -26,11 +28,6 @@ steps:
     Write-Host "appSourceFolderName - $appSourceFolderName"
     Write-Host "generateAppSourcePackage - $generateAppSourcePackage"
     Write-Host "##vso[task.setVariable variable=RunAppSourceTasks]$generateAppSourcePackage"
-    # Set PD Project Path
-    $pdProjectPath = "$(Build.SourcesDirectory)\${{parameters.projectName}}\${{parameters.packageDeployerProjectName}}"
-    Write-Host "pdProjectPath - $pdProjectPath"
-    Write-Host "##vso[task.setvariable variable=PDProjectPath;isOutput=true]$pdProjectPath"
-    Write-Host "PDProjectPath - $($env:PDProjectPath)"
   displayName: 'Print and Set Params'  
   
 - pwsh: |
@@ -94,10 +91,10 @@ steps:
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
-    $packageDeployerConfigSettingsPath = "$(PDProjectPath)\ConfigSettings.json"
+    $packageDeployerConfigSettingsPath = "${{parameters.pdProjectPath}}\ConfigSettings.json"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Invoke-Add-Solution-References-To-Package-Project "$(pacPath)" "$(PDProjectPath)" "$solutionsFolderPath" "$packageDeployerConfigSettingsPath" "${{parameters.projectName}}"
+    Invoke-Add-Solution-References-To-Package-Project "$(pacPath)" "${{parameters.pdProjectPath}}" "$solutionsFolderPath" "$packageDeployerConfigSettingsPath" "${{parameters.projectName}}"
   displayName: "Add solution references to package project"
   condition: and(succeeded(), eq(variables['RunAppSourceTasks'], 'true'))
 
@@ -106,7 +103,7 @@ steps:
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
-    $packageDeployerConfigSettingsPath = "$(PDProjectPath)\ConfigSettings.json"
+    $packageDeployerConfigSettingsPath = "${{parameters.pdProjectPath}}\ConfigSettings.json"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
     Execute-PreImport-Settings-of-Project "$(pacPath)" "$packageDeployerConfigSettingsPath" "${{parameters.projectName}}"
@@ -119,7 +116,7 @@ steps:
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Invoke-Trigger-Dotnet-Publish "$(PDProjectPath)"
+    Invoke-Trigger-Dotnet-Publish "${{parameters.pdProjectPath}}"
   displayName: "Trigger dotnet publish"
   condition: and(succeeded(), eq(variables['RunAppSourceTasks'], 'true'))
 
@@ -138,18 +135,18 @@ steps:
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-    $appSourceAssetsPath = "$(PDProjectPath)\AppSourceAssets"
+    $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
     $releaseAssetsDirectory = "$(Pipeline.Workspace)\releaseassets"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Copy-Published-Assets-To-AppSourceAssets "$(PDProjectPath)" "$appSourceAssetsPath" "${{parameters.packageFileName}}" "$(Pipeline.Workspace)\releaseassets"
+    Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$appSourceAssetsPath" "${{parameters.packageFileName}}" "$(Pipeline.Workspace)\releaseassets"
   displayName: "Move built pdpkg to AppSourceAssets"
   condition: and(succeeded(), eq(variables['RunAppSourceTasks'], 'true'))
 
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-    $appSourceAssetsPath = "$(PDProjectPath)\AppSourceAssets"
+    $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
     $inputFilePath = "$appSourceAssetsPath\Input.xml"
     
     if(Test-Path "$inputFilePath"){
@@ -165,7 +162,7 @@ steps:
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-    $appSourceAssetsPath = "$(PDProjectPath)\AppSourceAssets"
+    $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
     if(Test-Path "$appSourceAssetsPath"){
         Get-ChildItem "$appSourceAssetsPath" -Recurse
     }
@@ -178,7 +175,7 @@ steps:
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-    $appSourceAssetsPath = "$(PDProjectPath)\AppSourceAssets"
+    $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
     $appSourcePackagePath = "$(Agent.BuildDirectory)"
     $appSourcePackageFolderName = "AppsourcePackage"
     
