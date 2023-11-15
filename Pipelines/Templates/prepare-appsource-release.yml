@@ -30,7 +30,7 @@ steps:
     $pdProjectPath = "$(Build.SourcesDirectory)\${{parameters.projectName}}\${{parameters.packageDeployerProjectName}}"
     Write-Host "pdProjectPath - $pdProjectPath"
     Write-Host "##vso[task.setVariable variable=PDProjectPath]$pdProjectPath"
-    Write-Host "PDProjectPath - $(PDProjectPath)"
+    Write-Host "PDProjectPath - "$(PDProjectPath)
   displayName: 'Print and Set Params'  
   
 - pwsh: |
