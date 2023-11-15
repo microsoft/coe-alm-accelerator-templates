@@ -172,8 +172,9 @@ steps:
     packageFileName: '${{parameters.solutionName}}Package.zip'
     appSourceFolderName: 'Microsoft_${{parameters.solutionName}}Package'
     packageDeployerProjectName: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
+    pdProjectPath: '$(Build.SourcesDirectory)\${{parameters.projectName}}\PackageDeployerProject\PowerCAT.PackageDeployer.Package'
     generateAppSourcePackage: '${{parameters.prepareAppSourcePackage}}'  
-    generatePackageDeployerPackage: '${{parameters.preparePackageDeployerPackage}}'  
+    generatePackageDeployerPackage: '${{parameters.preparePackageDeployerPackage}}'
 
 #- task: GitHubRelease@1
 #  inputs:
