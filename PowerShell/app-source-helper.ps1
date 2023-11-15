@@ -339,7 +339,7 @@ function Execute-PreImport-Settings-of-Project{
         foreach ($setting in $preImportSettings) {
             Write-Host "Name: $($setting.name), Value: $($setting.value)"
 
-            $pacCommand = "org update-settings --name "$($setting.name)" --value $($setting.value)"
+            $pacCommand = "org update-settings --name $($setting.name) --value $($setting.value)"
             Write-Host "Pac Command - $pacCommand"
             Invoke-Expression -Command "$pacexepath $pacCommand"
         }
