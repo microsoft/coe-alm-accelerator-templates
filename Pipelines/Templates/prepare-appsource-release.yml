@@ -85,7 +85,8 @@ steps:
   
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    $packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
+    #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
+    $packageDeployerProjectPath = "$(Build.SourcesDirectory)\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
     Write-Host "packageDeployerProjectPath - $packageDeployerProjectPath"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
@@ -98,7 +99,8 @@ steps:
 
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    $packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
+    #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
+    $packageDeployerProjectPath = "$(Build.SourcesDirectory)\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
     Write-Host "packageDeployerProjectPath - $packageDeployerProjectPath"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
