@@ -242,6 +242,13 @@ steps:
 
 - template: set-deployment-variable.yml
   parameters:
+    variableName: 'outOrgSettings'
+    deploymentSettingsPath: $(CustomDeploymentSettingsPath)
+    deploymentSettingsNode: 'OrgSettings'
+    displayName: 'Retrieve OrgSettings Config for Deploy'
+
+- template: set-deployment-variable.yml
+  parameters:
     variableName: 'outSDKMessages'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'SDKMessages'
@@ -292,6 +299,11 @@ steps:
   parameters:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'
     webHookConfiguration: '$(outWebHookUrls)'
+
+- template: update-org-settings.yml
+  parameters:
+    serviceConnection: '${{parameters.serviceConnectionUrl}}'
+    orgSettingsConfiguration: '$(outOrgSettings)'
 
 - template: update-sdk-messages.yml
   parameters:

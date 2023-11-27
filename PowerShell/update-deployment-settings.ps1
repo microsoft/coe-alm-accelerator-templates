@@ -29,7 +29,7 @@ function Set-DeploymentSettingsConfiguration
         [Parameter()] [String]$pat = "" # Azure DevOps Personal Access Token only required for running local tests
     )
     $configurationData = $env:DEPLOYMENT_SETTINGS | ConvertFrom-Json
-    $reservedVariables = @("TriggerSolutionUpgrade","BypassAppConsent")
+    $reservedVariables = @("TriggerSolutionUpgrade","BypassAppConsent","ApplyOrgSetting")
     Write-Host (ConvertTo-Json -Depth 10 $configurationData)
 
     #Generate Deployment Settings
@@ -60,6 +60,7 @@ function Set-DeploymentSettingsConfiguration
         $connectionReferences = [System.Collections.ArrayList]@()
         $environmentVariables = [System.Collections.ArrayList]@()
         $webHookUrls = [System.Collections.ArrayList]@()
+        $orgSettings = [System.Collections.ArrayList]@()
         $sdkMessages = [System.Collections.ArrayList]@()
         $canvasApps = [System.Collections.ArrayList]@()
         $customConnectorSharings = [System.Collections.ArrayList]@()
@@ -176,6 +177,21 @@ function Set-DeploymentSettingsConfiguration
                           }
                           else{
                               Write-Host "Service Endpoint variable $configurationVariableName is Null or Empty for $environmentName"
+                          }
+                      }
+                      elseif($configurationVariableName.StartsWith("orgsetting.", "CurrentCultureIgnoreCase")) {
+                          #Set Organization Settings
+                          if(-not [string]::IsNullOrWhiteSpace($configurationVariableValue))
+                          {
+                              $schemaName = $configurationVariableName -replace "orgsetting.", ""
+                                $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="#{$configurationVariableName}#"}
+                                if($usePlaceholders.ToLower() -eq 'false') {
+                                    $envVar = [PSCustomObject]@{"SchemaName"="$schemaName"; "Value"="$configurationVariableValue"}
+                                }
+                                $orgSettings.Add($envVar)                                
+                          }
+                          else{
+                              Write-Host "OrgSetting $configurationVariableName is Null or Empty for $environmentName"
                           }
                       }
                       elseif($configurationVariableName.StartsWith("sdkstep.", "CurrentCultureIgnoreCase")) {
@@ -323,7 +339,7 @@ function Set-DeploymentSettingsConfiguration
                     Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
                 }
             } elseif($null -ne $configurationDataEnvironment.DeploymentSettings) {
-                Update-Deployment-Settings-Slugs $configurationDataEnvironment.DeploymentSettings $usePlaceholders $newBuildDefinitionVariables $reservedVariables ([ref]$environmentVariables) ([ref]$connectionReferences) ([ref]$flowActivationUsers) ([ref]$customConnectorSharings) ([ref]$componentOwnerships) ([ref]$flowSharings) ([ref]$canvasApps) ([ref]$groupTeams) ([ref]$webHookUrls) ([ref]$sdkMessages)
+                Update-Deployment-Settings-Slugs $configurationDataEnvironment.DeploymentSettings $usePlaceholders $newBuildDefinitionVariables $reservedVariables ([ref]$environmentVariables) ([ref]$connectionReferences) ([ref]$flowActivationUsers) ([ref]$customConnectorSharings) ([ref]$componentOwnerships) ([ref]$flowSharings) ([ref]$canvasApps) ([ref]$groupTeams) ([ref]$webHookUrls) ([ref]$sdkMessages) ([ref]$orgSettings)
             }
 
             if(Test-Path "$buildSourceDirectory\$repo\$solutionName\config\$environmentName\") {
@@ -363,6 +379,7 @@ function Set-DeploymentSettingsConfiguration
             $newCustomConfiguration | Add-Member -MemberType NoteProperty -Name 'AadGroupCanvasConfiguration' -Value $canvasApps
             $newCustomConfiguration | Add-Member -MemberType NoteProperty -Name 'AadGroupTeamConfiguration' -Value $groupTeams
             $newCustomConfiguration | Add-Member -MemberType NoteProperty -Name 'WebhookUrls' -Value $webHookUrls
+            $newCustomConfiguration | Add-Member -MemberType NoteProperty -Name 'OrgSettings' -Value $orgSettings
             $newCustomConfiguration | Add-Member -MemberType NoteProperty -Name 'SDKMessages' -Value $sdkMessages            
 
             #Convert the updated configuration to json and store in customDeploymentSettings.json
@@ -403,7 +420,8 @@ function Update-Deployment-Settings-Slugs
         [Parameter(Mandatory)] [ref] $canvasApps,
         [Parameter(Mandatory)] [ref] $groupTeams,
         [Parameter(Mandatory)] [ref] $webHookUrls,
-        [Parameter(Mandatory)] [ref] $sdkMessages
+        [Parameter(Mandatory)] [ref] $sdkMessages,
+        [Parameter(Mandatory)] [ref] $orgSettings
     )
     if($null -ne $deploymentSettings) {
 
@@ -548,11 +566,11 @@ function Update-Deployment-Settings-Slugs
         if($null -ne $deploymentSettings.SDKMessages) {
             if($usePlaceholders.ToLower() -ne 'false') {
                 foreach($sdkMessage in $deploymentSettings.SDKMessages) {
-                    #Webhook Url
+                    #SDK Message
                     $split = $sdkMessage.Config.Split(".")
                     if($split.length -eq 2) {
                         $sdkMessage.Config = $split[1]
-                        $configurationVariableName = "sdkstep.$split[0].$($webHook.SchemaName)"
+                        $configurationVariableName = "sdkstep.$split[0].$($sdkMessage.SchemaName)"
                         $configurationVariableValue = $webHook.Value
                         Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
                         $sdkMessage.Value = "#{$configurationVariableName}#"
@@ -561,6 +579,17 @@ function Update-Deployment-Settings-Slugs
             }
             $sdkMessages.Value = $deploymentSettings.SDKMessages
         }
+        if($null -ne $deploymentSettings.OrgSettings) {
+            if($usePlaceholders.ToLower() -ne 'false') {
+                foreach($orgSetting in $deploymentSettings.OrgSettings) {
+                    $configurationVariableName = "orgsetting.$($orgSetting.SchemaName)"
+                    $configurationVariableValue = $orgSetting.Value
+                    Add-Pipeline-Variable $configurationVariableName $configurationVariableValue $newBuildDefinitionVariables $reservedVariables
+                    $orgSetting.Value = "#{$configurationVariableName}#"
+                }
+            }
+            $orgSettings.Value = $deploymentSettings.OrgSettings
+        } 
     }
 }
 <#
