@@ -1,0 +1,23 @@
+parameters:
+- name: serviceConnection
+  type: string
+- name: orgSettingsConfiguration
+  type: string
+
+steps:
+- powershell: |
+    # load PowerShell files into memory
+    . "$env:POWERSHELLPATH/orgsettings-helper.ps1"
+    try {
+        Update-Org-Settings "${{parameters.serviceConnection}}" "$(connectionVariables.BuildTools.ApplicationId)" "$(connectionVariables.BuildTools.ClientSecret)" "$(connectionVariables.BuildTools.TenantId)" "$(pacPath)" '${{parameters.orgSettingsConfiguration}}'
+
+    } catch {
+        Write-Host "##vso[task.logissue type=warning]Errors occurred while updating organization settings. Please review the log for specific errors and verify your deployment configuration settings."
+        Write-Host $_
+        exit 1;
+    }
+  displayName: 'Update Organization Settings'
+  #condition: succeeded()
+  condition: and(succeeded(), eq(variables['ApplyOrgSetting'], 'true'))
+  env:
+   MAPPED_SPN_Token: $(SpnToken)
