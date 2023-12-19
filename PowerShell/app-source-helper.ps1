@@ -151,6 +151,7 @@ function Copy-Published-Assets-To-AppSourceAssets{
 
     if($pdpkgFileCount -eq 0){
         Write-Host "pdpkg.zip not found; Exiting"
+        return
     }
 
     Write-Host "##vso[task.setVariable variable=AppSourcePackageFound]$appSourcePackageFound"
