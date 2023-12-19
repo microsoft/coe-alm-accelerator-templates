@@ -28,11 +28,11 @@ steps:
     $pdProjectPath = "${{parameters.pdProjectPath}}"
     Write-Host "packageFileName - $packageFileName"
     Write-Host "appSourceFolderName - $appSourceFolderName"
-    Write-Host "$pdProjectPath - $pdProjectPath"
+    Write-Host "pdProjectPath - $pdProjectPath"
     Write-Host "generateAppSourcePackage - $generateAppSourcePackage"
     Write-Host "generatePackageDeployerPackage - $generatePackageDeployerPackage"
     Write-Host "##vso[task.setVariable variable=RunAppSourceTasks]$generateAppSourcePackage"
-    Write-Host "##vso[task.setVariable variable=PDProjectPath]$pdProjectPath"
+    Write-Host "##vso[task.setVariable variable=RunPackageDeployerTasks]$generatePackageDeployerPackage"
   displayName: 'Print and Set Params'  
   
 - pwsh: |
