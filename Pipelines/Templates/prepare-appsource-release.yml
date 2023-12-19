@@ -18,6 +18,8 @@ parameters:
 - name: generatePackageDeployerPackage
   type: boolean
   default: false
+- name: packageConfigFilePath
+  type: string
 
 steps:
 - pwsh: |
@@ -96,7 +98,7 @@ steps:
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
-    $packageDeployerConfigSettingsPath = "${{parameters.pdProjectPath}}\PowerCAT.Package.Settings.json"
+    $packageDeployerConfigSettingsPath = "${{parameters.packageConfigFilePath}}"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
     Invoke-Add-Solution-References-To-Package-Project "$(pacPath)" "${{parameters.pdProjectPath}}" "$solutionsFolderPath" "$packageDeployerConfigSettingsPath" "${{parameters.projectName}}"
@@ -111,7 +113,7 @@ steps:
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
     Invoke-Trigger-Dotnet-Publish "${{parameters.pdProjectPath}}"
   displayName: "Trigger dotnet publish"
-  condition: and(succeeded(), eq(variables['RunAppSourceTasks'], 'true'))
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
 
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"

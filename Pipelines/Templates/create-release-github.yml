@@ -39,6 +39,9 @@ parameters:
   default: false
 - name: projectName
   type: string
+- name: packageConfigurationFilePath
+  type: string
+  default: ''
 
 steps:
 # Checkout Tools Repo
@@ -175,6 +178,7 @@ steps:
     pdProjectPath: '$(Build.SourcesDirectory)\${{parameters.projectName}}\PowerCAT.PackageDeployer.Package'
     generateAppSourcePackage: '${{parameters.prepareAppSourcePackage}}'  
     generatePackageDeployerPackage: '${{parameters.preparePackageDeployerPackage}}'
+    packageConfigFilePath: '${{parameters.packageConfigurationFilePath}}'
 
 # - task: GitHubRelease@1
 #   inputs:
