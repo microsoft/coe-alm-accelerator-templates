@@ -25,7 +25,7 @@ function Invoke-Add-Solution-References-To-Package-Project{
                     $matchingSolution = Get-Solution-By-Name "$packageDeployerConfigSettingsPath" "$projectName" "$solutionName"
                     if($matchingSolution -ne $null)
                     {
-                        $importOrder = $($matchingSolution.Importorder)
+                        $importOrder = $($matchingSolution.importorder)
                         Write-Host "ImportOrder - $importOrder"
                         $pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
                         Write-Host "Pac Command - $pacCommand"
@@ -69,7 +69,7 @@ function Get-Solution-By-Name {
 
     # Check if the file exists
     if (-not (Test-Path $projectConfigSettingsFilePath)) {
-        Write-Host "File '$projectConfigSettingsFilePath' not found."
+        Write-Host "Config file '$projectConfigSettingsFilePath' not found."
         return $null
     }
 
@@ -78,11 +78,12 @@ function Get-Solution-By-Name {
 
     # Convert the JSON string to a PowerShell object
     $jsonObject = $jsonString | ConvertFrom-Json
-
-    $project = $jsonObject.Projects | Where-Object { $_.Name -eq $projectName }
+    $projects = $jsonObject | ConvertFrom-Json | Select-Object -ExpandProperty Project
+    # Find the project node by name
+    $project = $projects | Where-Object { $_.name -eq $projectName }	
 
     if ($project -ne $null) {
-        $solution = $project.Configdatastorage.Solutions | Where-Object { $_.Name -eq $solutionName }
+        $solution = $project.solutions | Where-Object { $_.Name -eq $solutionName }
 
         if ($solution -ne $null) {
             return $solution

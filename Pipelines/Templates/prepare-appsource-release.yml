@@ -25,12 +25,14 @@ steps:
     $appSourceFolderName = "${{parameters.appSourceFolderName}}"
     $generateAppSourcePackage = "${{parameters.generateAppSourcePackage}}"
     $generatePackageDeployerPackage = "${{parameters.generatePackageDeployerPackage}}"
+    $pdProjectPath = "${{parameters.pdProjectPath}}"
     Write-Host "packageFileName - $packageFileName"
     Write-Host "appSourceFolderName - $appSourceFolderName"
+    Write-Host "$pdProjectPath - $pdProjectPath"
     Write-Host "generateAppSourcePackage - $generateAppSourcePackage"
     Write-Host "generatePackageDeployerPackage - $generatePackageDeployerPackage"
     Write-Host "##vso[task.setVariable variable=RunAppSourceTasks]$generateAppSourcePackage"
-    Write-Host "##vso[task.setVariable variable=RunPackageDeployerTasks]$generatePackageDeployerPackage"
+    Write-Host "##vso[task.setVariable variable=PDProjectPath]$pdProjectPath"
   displayName: 'Print and Set Params'  
   
 - pwsh: |
@@ -94,7 +96,7 @@ steps:
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
     Write-Host "solutionsFolderPath - $solutionsFolderPath"
-    $packageDeployerConfigSettingsPath = "${{parameters.pdProjectPath}}\ConfigSettings.json"
+    $packageDeployerConfigSettingsPath = "${{parameters.pdProjectPath}}\PowerCAT.Package.Settings.json"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
     Invoke-Add-Solution-References-To-Package-Project "$(pacPath)" "${{parameters.pdProjectPath}}" "$solutionsFolderPath" "$packageDeployerConfigSettingsPath" "${{parameters.projectName}}"
