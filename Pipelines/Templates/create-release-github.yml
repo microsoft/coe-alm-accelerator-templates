@@ -171,7 +171,7 @@ steps:
     solutionsFolderPath: '$(Pipeline.Workspace)\releaseassets'
     packageFileName: '${{parameters.solutionName}}Package.zip'
     appSourceFolderName: 'Microsoft_${{parameters.solutionName}}Package'
-    packageDeployerProjectName: 'PackageDeployerProject\PowerCAT.PackageDeployer.Package'
+    packageDeployerProjectName: 'PowerCAT.PackageDeployer.Package'
     pdProjectPath: '$(Build.SourcesDirectory)\${{parameters.projectName}}\PackageDeployerProject\PowerCAT.PackageDeployer.Package'
     generateAppSourcePackage: '${{parameters.prepareAppSourcePackage}}'  
     generatePackageDeployerPackage: '${{parameters.preparePackageDeployerPackage}}'
