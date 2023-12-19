@@ -24,6 +24,7 @@ steps:
     $packageFileName = "${{parameters.packageFileName}}"
     $appSourceFolderName = "${{parameters.appSourceFolderName}}"
     $generateAppSourcePackage = "${{parameters.generateAppSourcePackage}}"
+    $generatePackageDeployerPackage = "${{parameters.generatePackageDeployerPackage}}"
     Write-Host "packageFileName - $packageFileName"
     Write-Host "appSourceFolderName - $appSourceFolderName"
     Write-Host "generateAppSourcePackage - $generateAppSourcePackage"
@@ -41,7 +42,7 @@ steps:
         Write-Host "Invalid assets path - " $assetsPath
     }
   displayName: 'Print initial releaseassets'
-  condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
 
 - pwsh: |
     $releaseZipname = "${{parameters.appSourceFolderName}}"
@@ -57,7 +58,7 @@ steps:
     Write-Host "releaseZipname - $releaseZipname"
     Write-Host "##vso[task.setVariable variable=appSourceReleasePackageName]$releaseZipname"
   displayName: 'Set appSourceReleasePackageName'
-  condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
 
 - pwsh: |
     $assetsPath = '$(Build.SourcesDirectory)'
@@ -68,7 +69,7 @@ steps:
         Write-Host "Invalid assets path - " $assetsPath
     }
   displayName: 'Print (Build.SourcesDirectory)'
-  condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
   
 - pwsh: |
     $assetsPath = '$(Pipeline.Workspace)/PipelineUtils'
@@ -79,13 +80,13 @@ steps:
         Write-Host "Invalid assets path - " $assetsPath
     }
   displayName: 'Print PipelineUtils'
-  condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
   
 - pwsh: |
       . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
       Install-Pac-Cli ""
   displayName: 'Install and set pac tools path'
-  condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
   
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
@@ -98,7 +99,7 @@ steps:
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
     Invoke-Add-Solution-References-To-Package-Project "$(pacPath)" "${{parameters.pdProjectPath}}" "$solutionsFolderPath" "$packageDeployerConfigSettingsPath" "${{parameters.projectName}}"
   displayName: "Add solution references to package project"
-  condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
 
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
@@ -120,7 +121,7 @@ steps:
         Write-Host "appSourcePackageProject bin unavailable at - $appSourcePackageProjectBinPath"
     }
   displayName: 'Print AppsourcePackageProject bin post publish'
-  condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
   
 # - pwsh: |
 #     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
@@ -131,7 +132,7 @@ steps:
 #     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
 #     Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$appSourceAssetsPath" "${{parameters.packageFileName}}" "$(Pipeline.Workspace)\releaseassets"
 #   displayName: "Copy Package Deployer (i.e.,pdpkg) to Release Assets"
-#   condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))
+#   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
 #   #condition: and(succeeded(), eq(variables['RunPackageDeployerTasks'], 'true'))  
 
 - pwsh: |
@@ -143,7 +144,7 @@ steps:
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
     Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$appSourceAssetsPath" "${{parameters.packageFileName}}" "$(Pipeline.Workspace)\releaseassets"
   displayName: "Move built Package Deployer (i.e.,pdpkg) to Releaseassets and AppSourceAssets"
-  condition: or(and(succeeded(), eq(variables['RunAppSourceTasks'], 'true')), eq(variables['RunPackageDeployerTasks'], 'true'))   
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))   
   
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
