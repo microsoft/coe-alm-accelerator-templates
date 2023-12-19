@@ -107,8 +107,6 @@ steps:
 
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-    #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
     Invoke-Trigger-Dotnet-Publish "${{parameters.pdProjectPath}}"
@@ -117,7 +115,8 @@ steps:
 
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    $appSourcePackageProjectBinPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName\bin"    
+    #$appSourcePackageProjectBinPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName\bin"    
+    $appSourcePackageProjectBinPath = "$(Build.SourcesDirectory)\$packageDeployerProjectName\bin"    
     if(Test-Path "$appSourcePackageProjectBinPath"){
         Get-ChildItem "$appSourcePackageProjectBinPath" -Recurse
     }
@@ -127,21 +126,8 @@ steps:
   displayName: 'Print AppsourcePackageProject bin post publish'
   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
   
-# - pwsh: |
-#     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-#     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-#     $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
-#     $releaseAssetsDirectory = "$(Pipeline.Workspace)\releaseassets"
-
-#     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-#     Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$appSourceAssetsPath" "${{parameters.packageFileName}}" "$(Pipeline.Workspace)\releaseassets"
-#   displayName: "Copy Package Deployer (i.e.,pdpkg) to Release Assets"
-#   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
-#   #condition: and(succeeded(), eq(variables['RunPackageDeployerTasks'], 'true'))  
-
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
     $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
     $releaseAssetsDirectory = "$(Pipeline.Workspace)\releaseassets"
 

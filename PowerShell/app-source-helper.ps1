@@ -121,12 +121,13 @@ function Copy-Published-Assets-To-AppSourceAssets{
     $pdpkgFileCount = 0
     $appSourcePackageFound = $false
 
+	# Checking bin\Release folder
     if(Test-Path "$packageDeployerProjectPath\bin\Release"){
 		$binPath = "bin\Release"
         $pdpkgFileCount = (Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Measure-Object).Count
         Write-Host "Count of .pdpkg.zip from $packageDeployerProjectPath\$binPath - "$pdpkgFileCount
         if($pdpkgFileCount -gt 0){
-            Copy-Pdpkg-File "$packageDeployerProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath"           
+            Copy-Pdpkg-File "$packageDeployerProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath" "$releaseAssetsDirectory"          
             $appSourcePackageFound = $true
         }
         else{
@@ -134,12 +135,13 @@ function Copy-Published-Assets-To-AppSourceAssets{
         }
     }
 
+	# Checking bin\Debug folder
     if(($pdpkgFileCount -eq 0) -and (Test-Path "$packageDeployerProjectPath\bin\Debug")){
 		$binPath = "bin\Debug"
         $pdpkgFileCount = (Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Measure-Object).Count
         Write-Host "Count of .pdpkg.zip from $packageDeployerProjectPath\$binPath - "$pdpkgFileCount
         if($pdpkgFileCount -gt 0){
-            Copy-Pdpkg-File "$packageDeployerProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath"           
+            Copy-Pdpkg-File "$packageDeployerProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath" "$releaseAssetsDirectory"          
             $appSourcePackageFound = $true
         }
         else{
@@ -149,7 +151,6 @@ function Copy-Published-Assets-To-AppSourceAssets{
 
     if($pdpkgFileCount -eq 0){
         Write-Host "pdpkg.zip not found; Exiting"
-        return
     }
 
     Write-Host "##vso[task.setVariable variable=AppSourcePackageFound]$appSourcePackageFound"
@@ -246,14 +247,14 @@ function Copy-Pdpkg-File{
         [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
         [Parameter(Mandatory)] [String]$packageFileName,
         [Parameter(Mandatory)] [String]$appSourceAssetsPath,
-        [Parameter(Mandatory)] [String]$binPath
+        [Parameter(Mandatory)] [String]$binPath,
+        [Parameter(Mandatory)] [String]$releaseAssetsDirectory
     )
 
     Write-Host "pdpkg file found under $packageDeployerProjectPath\$binPath"
-    Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath\$packageFileName"
-            
-    Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
-    # Copy pdpkg.zip file to ReleaseAssets folder
+    Write-Host "Copying pdpkg.zip file to release assets $releaseAssetsDirectory"
+	
+	# Copy pdpkg.zip file to ReleaseAssets folder
     if(Test-Path "$releaseAssetsDirectory"){
         Write-Host "Copying pdpkg file to Release Assets Directory"
         Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$releaseAssetsDirectory" -Force -PassThru
@@ -261,6 +262,10 @@ function Copy-Pdpkg-File{
     else{
         Write-Host "Release Assets Directory is unavailable to copy pdpkg file; Path - $releaseAssetsDirectory"
     }
+            
+    Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath"
+    #Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
+	Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
 }
 
 <#
