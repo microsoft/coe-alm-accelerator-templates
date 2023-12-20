@@ -322,11 +322,11 @@ function Match-SolutionName {
     $match = $SolutionNameToMatch -match $regex
 
     if ($match) {
-        Write-Host "Match!"
+        #Write-Host "Match!"
         $commonPart = $matches[1]
         return $commonPart
     } else {
-        Write-Host "No Match!"
+        #Write-Host "No Match!"
         return $null
     }
 }
