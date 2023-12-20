@@ -25,9 +25,50 @@ function Invoke-Add-Solution-References-To-Package-Project{
                     $matchingSolution = Get-Solution-By-Name "$packageDeployerConfigSettingsPath" "$projectName" "$solutionName"
                     if($matchingSolution -ne $null)
                     {
-                        $importOrder = $($matchingSolution.importorder)
-                        Write-Host "ImportOrder - $importOrder"
-                        $pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
+						$pacCommand = "package add-solution --path $solutionPath"
+						
+                        # Validate and access parameters of the matching solution
+                        if ($matchingSolution.'publishworkflows-activate-plugins' -ne $null -and $matchingSolution.'publishworkflows-activate-plugins' -ne "") {
+                            $publishWorkflowsActivatePlugins = $matchingSolution.'publishworkflows-activate-plugins'
+                            Write-Host "publishworkflows-activate-plugins: $publishWorkflowsActivatePlugins"
+							$pacCommand += " --publish-workflows-activate-plugins $publishWorkflowsActivatePlugins"
+                        } else {
+                            Write-Host "publishworkflows-activate-plugins is missing or blank/null."
+                        }
+
+                        if ($matchingSolution.'overwrite-unmanaged-customizations' -ne $null -and $matchingSolution.'overwrite-unmanaged-customizations' -ne "") {
+                            $overwriteUnmanagedCustomizations = $matchingSolution.'overwrite-unmanaged-customizations'
+                            Write-Host "overwrite-unmanaged-customizations: $overwriteUnmanagedCustomizations"
+							$pacCommand += " --overwrite-unmanaged-customizations $overwriteUnmanagedCustomizations"
+                        } else {
+                            Write-Host "overwrite-unmanaged-customizations is missing or blank/null."
+                        }
+
+                        if ($matchingSolution.'missing-dependency-behavior' -ne $null -and $matchingSolution.'missing-dependency-behavior' -ne "") {
+                            $missingDependencyBehavior = $matchingSolution.'missing-dependency-behavior'
+                            Write-Host "missing-dependency-behavior: $missingDependencyBehavior"
+							$pacCommand += " --missing-dependency-behavior $missingDependencyBehavior"
+                        } else {
+                            Write-Host "missing-dependency-behavior is missing or blank/null."
+                        }
+
+                        if ($matchingSolution.'import-mode' -ne $null -and $matchingSolution.'import-mode' -ne "") {
+                            $importMode = $matchingSolution.'import-mode'
+                            Write-Host "import-mode: $importMode"
+							$pacCommand += " --import-mode $importMode"
+                        } else {
+                            Write-Host "import-mode is missing or blank/null."
+                        }
+						
+						if ($matchingSolution.'importorder' -ne $null -and $matchingSolution.'importorder' -ne "") {
+                            $importOrder = $matchingSolution.'importorder'
+                            Write-Host "importOrder: $importOrder"
+							$pacCommand += " --import-order $importOrder"
+                        } else {
+                            Write-Host "importOrder is missing or blank/null."
+                        }
+					
+                        #$pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
                         Write-Host "Pac Command - $pacCommand"
                         if($importOrder -ne 0){
                             Write-Host "Pointing to $packageDeployerProjectPath path" 

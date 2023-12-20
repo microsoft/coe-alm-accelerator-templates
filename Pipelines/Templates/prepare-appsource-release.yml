@@ -75,16 +75,16 @@ steps:
   displayName: 'Print (Build.SourcesDirectory)'
   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
   
-- pwsh: |
-    $assetsPath = '$(Pipeline.Workspace)/PipelineUtils'
-    if(Test-Path "$assetsPath"){
-        Get-ChildItem "$assetsPath" -Recurse
-    }
-    else{
-        Write-Host "Invalid assets path - " $assetsPath
-    }
-  displayName: 'Print PipelineUtils'
-  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
+# - pwsh: |
+#     $assetsPath = '$(Pipeline.Workspace)/PipelineUtils'
+#     if(Test-Path "$assetsPath"){
+#         Get-ChildItem "$assetsPath" -Recurse
+#     }
+#     else{
+#         Write-Host "Invalid assets path - " $assetsPath
+#     }
+#   displayName: 'Print PipelineUtils'
+#   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
   
 - pwsh: |
       . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
