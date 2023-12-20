@@ -94,10 +94,8 @@ steps:
   
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-    #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\"${{parameters.projectName}}"\$packageDeployerProjectName"
     $solutionsFolderPath = "${{parameters.solutionsFolderPath}}"
-    Write-Host "solutionsFolderPath - $solutionsFolderPath"
+    Write-Host "Solutions FolderPath - $solutionsFolderPath"
     $packageDeployerConfigSettingsPath = "${{parameters.packageConfigFilePath}}"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
@@ -115,7 +113,6 @@ steps:
 
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    #$appSourcePackageProjectBinPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName\bin"    
     $appSourcePackageProjectBinPath = "$(Build.SourcesDirectory)\$packageDeployerProjectName\bin"    
     if(Test-Path "$appSourcePackageProjectBinPath"){
         Get-ChildItem "$appSourcePackageProjectBinPath" -Recurse
@@ -132,7 +129,7 @@ steps:
     $releaseAssetsDirectory = "$(Pipeline.Workspace)\releaseassets"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$appSourceAssetsPath" "${{parameters.packageFileName}}" "$(Pipeline.Workspace)\releaseassets"
+    Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$appSourceAssetsPath" "$(Pipeline.Workspace)\releaseassets"
   displayName: "Move built Package Deployer (i.e.,pdpkg) to Releaseassets and AppSourceAssets"
   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))   
   

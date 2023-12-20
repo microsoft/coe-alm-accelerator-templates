@@ -17,6 +17,9 @@ function Invoke-Add-Solution-References-To-Package-Project{
             $pacexepath = "$pacPath\pac.exe"
             if(Test-Path "$pacexepath")
             {
+				# Initialize an array to store pac commands
+                $pacCommands = @()
+				
                 Get-ChildItem "$solutionsFolderPath" | Where-Object {$_.Name -match '_managed.zip'} |
                 Foreach-Object {
                     $solutionName = $_.Name
@@ -64,28 +67,29 @@ function Invoke-Add-Solution-References-To-Package-Project{
                             $importOrder = $matchingSolution.'importorder'
                             Write-Host "importOrder: $importOrder"
 							$pacCommand += " --import-order $importOrder"
+                            # Solution Anchor Name in input.xml file can be Solution Name with Import order 1
+                            if($importOrder -eq 1){
+						        Write-Host "Setting Solution Anchor Name to $solutionName"
+                                Write-Host "##vso[task.setVariable variable=SolutionAnchorName]$solutionName"
+                            }							
                         } else {
                             Write-Host "importOrder is missing or blank/null."
                         }
 					
-                        #$pacCommand = "package add-solution --path $solutionPath --import-order $importOrder --import-mode async"
-                        Write-Host "Pac Command - $pacCommand"
-                        if($importOrder -ne 0){
-                            Write-Host "Pointing to $packageDeployerProjectPath path" 
-                            Set-Location -Path $packageDeployerProjectPath
-                            Invoke-Expression -Command "$pacexepath $pacCommand"
-                        }
-                        else{
-                            Write-Host "Invalid import order for Solution - $solutionName"
-                        }
-
-					    # Solution Anchor Name in input.xml file can be Solution Name with Import order 1
-                        if($importOrder -eq 1){
-						    Write-Host "Setting Solution Anchor Name to $solutionName"
-                            Write-Host "##vso[task.setVariable variable=SolutionAnchorName]$solutionName"
-                        }
+                        Write-Host "Adding Pac Command - $pacCommand to array"
+                        # Add the pac command to the array
+                        $pacCommands += $pacCommand                        
                     }
                 }
+
+				if ($pacCommands.Count -gt 0) {
+                    Set-Location -Path $packageDeployerProjectPath
+				    foreach ($command in $pacCommands) {
+                        Write-Host "Invoking Pac Command: $command"
+                        # Perform actions with $command as needed
+						Invoke-Expression -Command "$pacexepath $command"
+                    }
+				}
             }
             else{
                 Write-Host "Invalid pac exe path $pacexepath"
@@ -151,46 +155,35 @@ function Invoke-Trigger-Dotnet-Publish{
 }
 
 # Copy the .zip folder generated in either bin\debug or bin\release and move it to "AppSourcePackageProject\AppSourceAssets"
-function Copy-Published-Assets-To-AppSourceAssets{
+function Copy-Published-Assets-To-AppSourceAssets {
     param(
         [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
         [Parameter(Mandatory)] [String]$appSourceAssetsPath,
-        [Parameter(Mandatory)] [String]$packageFileName,
         [Parameter(Mandatory)] [String]$releaseAssetsDirectory
     )
 
-    $pdpkgFileCount = 0
+    $binPaths = @("bin\Release", "bin\Debug")
     $appSourcePackageFound = $false
 
-	# Checking bin\Release folder
-    if(Test-Path "$packageDeployerProjectPath\bin\Release"){
-		$binPath = "bin\Release"
-        $pdpkgFileCount = (Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Measure-Object).Count
-        Write-Host "Count of .pdpkg.zip from $packageDeployerProjectPath\$binPath - "$pdpkgFileCount
-        if($pdpkgFileCount -gt 0){
-            Copy-Pdpkg-File "$packageDeployerProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath" "$releaseAssetsDirectory"          
-            $appSourcePackageFound = $true
-        }
-        else{
-            Write-Host "pdpkg.zip not found under $packageDeployerProjectPath\$binPath"
+    foreach ($binPath in $binPaths) {
+        $binFullPath = Join-Path $packageDeployerProjectPath $binPath
+
+        if (Test-Path $binFullPath) {
+            $pdpkgFileCount = (Get-ChildItem "$binFullPath" -Filter *pdpkg.zip | Measure-Object).Count
+            Write-Host "Count of .pdpkg.zip from $binFullPath - $pdpkgFileCount"
+
+            if ($pdpkgFileCount -gt 0) {
+                Write-Host "pdpkg.zip found under $binFullPath"
+                Copy-Pdpkg-File $packageDeployerProjectPath $appSourceAssetsPath $binPath $releaseAssetsDirectory
+                $appSourcePackageFound = $true
+                break  # Exit the loop once a valid package is found
+            } else {
+                Write-Host "pdpkg.zip not found under $binFullPath"
+            }
         }
     }
 
-	# Checking bin\Debug folder
-    if(($pdpkgFileCount -eq 0) -and (Test-Path "$packageDeployerProjectPath\bin\Debug")){
-		$binPath = "bin\Debug"
-        $pdpkgFileCount = (Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Measure-Object).Count
-        Write-Host "Count of .pdpkg.zip from $packageDeployerProjectPath\$binPath - "$pdpkgFileCount
-        if($pdpkgFileCount -gt 0){
-            Copy-Pdpkg-File "$packageDeployerProjectPath" "$packageFileName" "$appSourceAssetsPath" "$binPath" "$releaseAssetsDirectory"          
-            $appSourcePackageFound = $true
-        }
-        else{
-            Write-Host "pdpkg.zip not found under $packageDeployerProjectPath\$binPath"
-        }
-    }
-
-    if($pdpkgFileCount -eq 0){
+    if ($pdpkgFileCount -eq 0) {
         Write-Host "pdpkg.zip not found; Exiting"
     }
 
@@ -281,12 +274,11 @@ function Install-Pac-Cli{
 
 <#
 This function copies the generated package deployer file (i.e., pdpkg.zip).
-Moves the file to ReleaseAssets folder.
+Moves the file to ReleaseAssets folder and AppSourceAssets folder
 #>
 function Copy-Pdpkg-File{
     param (
         [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
-        [Parameter(Mandatory)] [String]$packageFileName,
         [Parameter(Mandatory)] [String]$appSourceAssetsPath,
         [Parameter(Mandatory)] [String]$binPath,
         [Parameter(Mandatory)] [String]$releaseAssetsDirectory
@@ -305,8 +297,12 @@ function Copy-Pdpkg-File{
     }
             
     Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath"
-    #Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath\$packageFileName" -Force -PassThru
-	Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+	if(Test-Path "$appSourceAssetsPath"){
+        Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+	}
+	else{
+        Write-Host "App Souurce Assets Directory is unavailable to copy pdpkg file; Path - $appSourceAssetsPath"
+    }
 }
 
 <#
