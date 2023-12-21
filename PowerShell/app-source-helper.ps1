@@ -158,7 +158,7 @@ function Invoke-Trigger-Dotnet-Publish{
 function Copy-Published-Assets-To-AppSourceAssets {
     param(
         [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
-        [Parameter(Mandatory)] [String]$appSourceAssetsPath,
+        [Parameter(Mandatory)] [String]$releaseArtifactsPath,
         [Parameter(Mandatory)] [String]$releaseAssetsDirectory
     )
 
@@ -174,7 +174,7 @@ function Copy-Published-Assets-To-AppSourceAssets {
 
             if ($pdpkgFileCount -gt 0) {
                 Write-Host "pdpkg.zip found under $binFullPath"
-                Copy-Pdpkg-File $packageDeployerProjectPath $appSourceAssetsPath $binPath $releaseAssetsDirectory
+                Copy-Pdpkg-File $packageDeployerProjectPath $releaseArtifactsPath $binPath $releaseAssetsDirectory
                 $appSourcePackageFound = $true
                 break  # Exit the loop once a valid package is found
             } else {
@@ -194,33 +194,31 @@ function Copy-Published-Assets-To-AppSourceAssets {
 This function creates a new App Source folder.
 Compresses package deployer assets and moves them to newly created folder.
 #>
-function Invoke-Pack-And-Move-Assets-To-AppSourcePackage{
+function Move-AppSourcePackage-to-Release-Path{
     param(
-        [Parameter(Mandatory)] [String]$appSourceAssetsPath,
-        [Parameter(Mandatory)] [String]$appSourcePackagePath,
-        [Parameter(Mandatory)] [String]$releaseZipName,
-        [Parameter(Mandatory)] [String]$appSourcePackageFolderName
+        [Parameter(Mandatory)] [String]$releaseArtifactsPath,
+        [Parameter(Mandatory)] [String]$pdProjectAssetsFolderPath,
+        [Parameter(Mandatory)] [String]$releaseZipName
     )
 
-    # Create a new folder in Destination
-    if(!(Test-Path "$appSourcePackagePath\$appSourcePackageFolderName")){
-        Write-Host "Creating a new folder $appSourcePackageFolderName under $appSourcePackagePath"
-        New-Item -Path "$appSourcePackagePath" -Name "$appSourcePackageFolderName" -ItemType "directory"
-    }
+	# print the params
+	Write-Host "ReleaseArtifactsPath - $releaseArtifactsPath"
+	Write-Host "PDProjectAssetsFolderPath - $pdProjectAssetsFolderPath"
+	Write-Host "ReleaseZipName - $releaseZipName"
 
-    $destinationPath = "$appSourcePackagePath\$appSourcePackageFolderName\$releaseZipName"
-    if(Test-Path "$appSourceAssetsPath")
+	$destinationPath = "$releaseArtifactsPath\$releaseZipName"
+    if(Test-Path "$releaseArtifactsPath")
     {
-        if(Test-Path "$appSourcePackagePath\$appSourcePackageFolderName"){
-            Write-Host "Packaging assets from $appSourceAssetsPath and creating $destinationPath"
-            Compress-Archive -Path "$appSourceAssetsPath\*" -CompressionLevel Optimal -DestinationPath "$destinationPath" -Force
+        if(Test-Path "$pdProjectAssetsFolderPath"){
+            Write-Host "Packaging assets from $pdProjectAssetsFolderPath and creating $destinationPath"
+            Compress-Archive -Path "$pdProjectAssetsFolderPath\*" -CompressionLevel Optimal -DestinationPath "$destinationPath" -Force
         }
         else{
-            Write-Host "Invalid appSourcePackagePath path - $appSourcePackagePath\$appSourcePackageFolderName"
+            Write-Host "Invalid pdProjectAssetsFolderPath\appSourcePackageFolderName path - $pdProjectAssetsFolderPath"
         }
     }
     else{
-        Write-Host "Invalid appSourceAssetsPath path - $appSourceAssetsPath" 
+        Write-Host "Invalid ReleaseArtifactsPath path - $releaseArtifactsPath" 
     }
 }
 
@@ -279,7 +277,7 @@ Moves the file to ReleaseAssets folder and AppSourceAssets folder
 function Copy-Pdpkg-File{
     param (
         [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
-        [Parameter(Mandatory)] [String]$appSourceAssetsPath,
+        [Parameter(Mandatory)] [String]$releaseArtifactsPath,
         [Parameter(Mandatory)] [String]$binPath,
         [Parameter(Mandatory)] [String]$releaseAssetsDirectory
     )
@@ -296,12 +294,12 @@ function Copy-Pdpkg-File{
         Write-Host "Release Assets Directory is unavailable to copy pdpkg file; Path - $releaseAssetsDirectory"
     }
             
-    Write-Host "Copying pdpkg.zip file to $appSourceAssetsPath"
-	if(Test-Path "$appSourceAssetsPath"){
-        Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$appSourceAssetsPath" -Force -PassThru
+    Write-Host "Copying pdpkg.zip file to $releaseArtifactsPath"
+	if(Test-Path "$releaseArtifactsPath"){
+        Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$releaseArtifactsPath" -Force -PassThru
 	}
 	else{
-        Write-Host "App Souurce Assets Directory is unavailable to copy pdpkg file; Path - $appSourceAssetsPath"
+        Write-Host "App Souurce Assets Directory is unavailable to copy pdpkg file; Path - $releaseArtifactsPath"
     }
 }
 

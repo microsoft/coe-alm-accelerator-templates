@@ -124,19 +124,19 @@ steps:
   
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
+    $pdProjectAssetsFolderPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
     $releaseAssetsDirectory = "$(Pipeline.Workspace)\releaseassets"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$appSourceAssetsPath" "$(Pipeline.Workspace)\releaseassets"
+    Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$pdProjectAssetsFolderPath" "$(Pipeline.Workspace)\releaseassets"
   displayName: "Move built Package Deployer (i.e.,pdpkg) to Releaseassets and AppSourceAssets"
   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))   
   
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-    $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
-    $inputFilePath = "$appSourceAssetsPath\Input.xml"
+    $pdProjectAssetsFolderPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
+    $inputFilePath = "$pdProjectAssetsFolderPath\Input.xml"
     
     if(Test-Path "$inputFilePath"){
         . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
@@ -151,24 +151,23 @@ steps:
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
     #$packageDeployerProjectPath = "$(Build.SourcesDirectory)\$(Build.Repository.Name)\$packageDeployerProjectName"
-    $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
-    if(Test-Path "$appSourceAssetsPath"){
-        Get-ChildItem "$appSourceAssetsPath" -Recurse
+    $pdProjectAssetsFolderPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
+    if(Test-Path "$pdProjectAssetsFolderPath"){
+        Get-ChildItem "$pdProjectAssetsFolderPath" -Recurse
     }
     else{
-        Write-Host "appSourceAssetsPath unavailable at - $appSourceAssetsPath"
+        Write-Host "appSourceAssetsPath unavailable at - $pdProjectAssetsFolderPath"
     }
   displayName: 'Print AppSourceAssets folder'  
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'), eq(variables['RunAppSourceTasks'], 'true'))
 
 - pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
-    $appSourceAssetsPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
-    $releaseAssetsAppSourcePackagePath = "$(Pipeline.Workspace)\releaseassets"
-    $appSourcePackageFolderName = "AppsourcePackage"
+    $pdProjectAssetsFolderPath = "${{parameters.pdProjectPath}}\AppSourceAssets"
+    $releaseArtifactsPath = "$(Pipeline.Workspace)\releaseassets"
     
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Invoke-Pack-And-Move-Assets-To-AppSourcePackage "$appSourceAssetsPath" "$releaseAssetsAppSourcePackagePath" "$(appSourceReleasePackageName)" "$appSourcePackageFolderName"
+    Move-AppSourcePackage-to-Release-Path "$pdProjectAssetsFolderPath" "$releaseArtifactsPath" "$(appSourceReleasePackageName)"
   displayName: "Move AppSourceAssets to Release Assets and compress"
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'), eq(variables['RunAppSourceTasks'], 'true'))
 
