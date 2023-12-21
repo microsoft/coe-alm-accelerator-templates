@@ -196,8 +196,8 @@ Compresses package deployer assets and moves them to newly created folder.
 #>
 function Move-AppSourcePackage-to-Release-Path{
     param(
-        [Parameter(Mandatory)] [String]$releaseArtifactsPath,
         [Parameter(Mandatory)] [String]$pdProjectAssetsFolderPath,
+        [Parameter(Mandatory)] [String]$releaseArtifactsPath,
         [Parameter(Mandatory)] [String]$releaseZipName
     )
 
@@ -206,12 +206,12 @@ function Move-AppSourcePackage-to-Release-Path{
 	Write-Host "PDProjectAssetsFolderPath - $pdProjectAssetsFolderPath"
 	Write-Host "ReleaseZipName - $releaseZipName"
 
-	$destinationPath = "$releaseArtifactsPath\$releaseZipName"
+	$releaseAppSourceFolderPath = "$releaseArtifactsPath\$releaseZipName"
     if(Test-Path "$releaseArtifactsPath")
     {
         if(Test-Path "$pdProjectAssetsFolderPath"){
-            Write-Host "Packaging assets from $pdProjectAssetsFolderPath and creating $destinationPath"
-            Compress-Archive -Path "$pdProjectAssetsFolderPath\*" -CompressionLevel Optimal -DestinationPath "$destinationPath" -Force
+            Write-Host "Packaging assets from $pdProjectAssetsFolderPath and creating $releaseAppSourceFolderPath"
+            Compress-Archive -Path "$pdProjectAssetsFolderPath\*" -CompressionLevel Optimal -DestinationPath "$releaseAppSourceFolderPath" -Force
         }
         else{
             Write-Host "Invalid pdProjectAssetsFolderPath\appSourcePackageFolderName path - $pdProjectAssetsFolderPath"
