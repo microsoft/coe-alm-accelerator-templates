@@ -167,7 +167,7 @@ steps:
     $releaseArtifactsPath = "$(Pipeline.Workspace)\releaseassets"
     
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Move-AppSourcePackage-to-Release-Path "$pdProjectAssetsFolderPath" "$releaseArtifactsPath" "$(appSourceReleasePackageName)"
+    Move-PDProjectAppSourceAssets-to-Release-Path "$pdProjectAssetsFolderPath" "$releaseArtifactsPath" "$(appSourceReleasePackageName)"
   displayName: "Move AppSourceAssets to Release Assets and compress"
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'), eq(variables['RunAppSourceTasks'], 'true'))
 
