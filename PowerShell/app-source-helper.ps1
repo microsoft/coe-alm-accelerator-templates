@@ -206,7 +206,7 @@ function Move-PDProjectAppSourceAssets-to-Release-Path{
 	Write-Host "PDProjectAssetsFolderPath - $pdProjectAssetsFolderPath"
 	Write-Host "ReleaseZipName - $releaseZipName"
 
-	if(!Test-Path "$pdProjectAssetsFolderPath"){
+	if(!(Test-Path "$pdProjectAssetsFolderPath")){
 		Write-Host "Invalid PDProjectAssetsFolderPath - $pdProjectAssetsFolderPath. Exiting."
 		return;
     }
