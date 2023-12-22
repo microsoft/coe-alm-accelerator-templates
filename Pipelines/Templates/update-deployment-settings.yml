@@ -75,9 +75,6 @@ steps:
       if(-not ('${{parameters.branchToCreate}}' -match 'Commit to existing branch specified in Branch parameter')) {
         $currentBranch = '${{parameters.branchToCreate}}'
       }
-
-      Write-Host "Parameters.useDeploymentSettingsPlaceholders - ${{parameters.useDeploymentSettingsPlaceholders}}"
-
       #Call the deployment settings powershell
       Set-DeploymentSettingsConfiguration '$(Build.SourcesDirectory)' '$(Agent.BuildDirectory)\PipelineUtils' "$pipelineProject" "$pipelineRepo" '$(connectionVariables.BuildTools.DataverseConnectionString)' '$(XrmDataPowerShellVersion)' '$(CoETools_Microsoft_Xrm_Data_PowerShell)' '${{parameters.orgUrl}}' '${{parameters.projectName}}' '${{parameters.repo}}' 'Bearer' '${{parameters.serviceConnection}}' '${{parameters.solutionName}}' $currentBranch '${{parameters.createSolutionBranch}}' '${{parameters.pipelineServiceConnectionName}}' '${{parameters.pipelineServiceConnectionUrl}}' '${{parameters.pipelineStageRunId}}' '${{parameters.agentPool}}' '$(Agent.OS)' '${{parameters.useDeploymentSettingsPlaceholders}}'
   env:
