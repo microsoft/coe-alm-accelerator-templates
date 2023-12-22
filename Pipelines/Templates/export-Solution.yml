@@ -273,7 +273,7 @@ steps:
     serviceConnection: '${{parameters.serviceConnectionUrl}}'
     solutionName: '${{parameters.solutionName}}'
     configurationData: '${{parameters.configurationData}}'
-    useDeploymentSettingsPlaceholders: $(UseDeploymentSettingsPlaceholders)
+    useDeploymentSettingsPlaceholders: '$(UseDeploymentSettingsPlaceholders)'
     commitScope: '${{parameters.commitScope}}'
     currentBranch: '${{ parameters.branch }}'
     branchToCreate: '${{ parameters.branchToCreate }}'
