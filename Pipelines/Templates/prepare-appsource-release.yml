@@ -75,17 +75,6 @@ steps:
   displayName: 'Print (Build.SourcesDirectory)'
   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
   
-# - pwsh: |
-#     $assetsPath = '$(Pipeline.Workspace)/PipelineUtils'
-#     if(Test-Path "$assetsPath"){
-#         Get-ChildItem "$assetsPath" -Recurse
-#     }
-#     else{
-#         Write-Host "Invalid assets path - " $assetsPath
-#     }
-#   displayName: 'Print PipelineUtils'
-#   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
-  
 - pwsh: |
       . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
       Install-Pac-Cli ""
@@ -180,19 +169,6 @@ steps:
     }
   displayName: 'Print AppsourcePackage from release assets folder'
   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'), eq(variables['RunAppSourceTasks'], 'true'))
- 
-# - pwsh: |
-#     Write-Host "AppSourceReleasePackageName - " $(appSourceReleasePackageName)
-#     $sourceDirectory  = "$(Agent.BuildDirectory)\AppsourcePackage\$(appSourceReleasePackageName)"
-#     $destinationDirectory = "$(Pipeline.Workspace)\releaseassets"
-#     If(Test-Path "$sourceDirectory"){
-#         Copy-item -Force -Recurse -Verbose "$sourceDirectory" -Destination $destinationDirectory
-#     }
-#     else{
-#         Write-Host "AppsourcePackage Folder unavailable - $sourceDirectory"
-#     }
-#   displayName: 'Copy AppsourcePackage to Releaseassets'
-#   condition: and(succeeded(), eq(variables['AppSourcePackageFound'], 'true'), eq(variables['RunAppSourceTasks'], 'true'))
   
 - pwsh: |
     $assetsPath = "$(Pipeline.Workspace)\releaseassets"
