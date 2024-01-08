@@ -93,6 +93,12 @@ steps:
   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))
 
 - pwsh: |
+    . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
+    Update-Package-Name "${{parameters.pdProjectPath}}" "${{parameters.packageDeployerProjectName}}"
+  displayName: "Update Package Name of PD Project"
+  condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))  
+
+- pwsh: |
     $packageDeployerProjectName = "${{parameters.packageDeployerProjectName}}"
     
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"

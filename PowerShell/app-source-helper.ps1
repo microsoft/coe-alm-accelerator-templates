@@ -340,3 +340,28 @@ function Match-SolutionName {
         return $null
     }
 }
+
+<#
+ Replaces the 'PowerCATPackage' with current project name.
+#>
+function Update-Package-Name {
+    param (
+        [string]$filePath,
+        [string]$replacementText
+    )
+
+    # Check if the file exists
+    if (Test-Path $filePath -PathType Leaf) {
+        # Read the content of the file
+        $fileContent = Get-Content -Path $filePath -Raw
+
+        # Replace "PowerCATPackage" with the specified replacement text
+        $modifiedContent = $fileContent -replace "PowerCATPackage", $replacementText
+
+        # Save the modified content back to the file
+        $modifiedContent | Set-Content -Path $filePath
+        Write-Host "PD project file '$filePath' successfully modified."
+    } else {
+        Write-Host "PD project file '$filePath' not found."
+    }
+}
