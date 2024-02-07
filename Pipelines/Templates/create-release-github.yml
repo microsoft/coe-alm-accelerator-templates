@@ -78,6 +78,7 @@ steps:
 
     #Find the milestone for this release e.g. 'CoE Starter Kit - July 2021
     $milestoneRequest = "https://api.github.com/repos/${{ parameters.gitHubApiUrl }}/milestones?sort=due_on&direction=desc"
+    Write-Host "milestoneRequest - $milestoneRequest"
     $milestoneResponse = Invoke-RestMethod $milestoneRequest -Method 'GET' -Headers $headers
     $currentMilestone = $null
     $milestoneName = '${{ parameters.solutionDisplayName }} - ' + $releaseMonthName + ' ' + ${{ parameters.releaseYear }}
@@ -107,7 +108,7 @@ steps:
             if(-not [string]::IsNullOrWhiteSpace($queryHeadings[$i])) {
                 $issuesRequestUrl = $issuesRequestUrl + " " + $queryHeadings[$i]
             }
-            Write-Host $issuesRequestUrl
+            Write-Host "issuesRequestUrl - $issuesRequestUrl"
             $issueResponse = Invoke-RestMethod $issuesRequestUrl -Method 'GET' -Headers $headers
 
             if($issueResponse.items.Length -gt 0 -and -not [string]::IsNullOrWhiteSpace($queryHeadings[$i + 1])) {
@@ -121,6 +122,7 @@ steps:
                         $commentRequestUrl = "https://api.github.com/repos/${{ parameters.gitHubApiUrl }}/issues/" + $issue.number + "/comments"
                         $commentFormatted = "@" + $issue.user.login + " ${{ parameters.issueClosingComment }}"
                         $commentBody = "{`"body`": `"$commentFormatted`"}"
+                        Write-Host "commentRequestUrl - $commentRequestUrl"
                         Invoke-RestMethod $commentRequestUrl -Method 'POST' -Headers $headers -Body $commentBody
                     }
 
@@ -129,6 +131,7 @@ steps:
                         #/repos/{owner}/{repo}/issues/{issue_number}
                         $issueRequestClosingUrl = "https://api.github.com/repos/${{ parameters.gitHubApiUrl }}/issues/" + $issue.number
                         $closeRequestBody = "{`"state`": `"closed`"}"
+                        Write-Host "issueRequestClosingUrl - $issueRequestClosingUrl"
                         Invoke-RestMethod $issueRequestClosingUrl -Method 'PATCH' -Headers $headers -Body $closeRequestBody
                     }
                 }
