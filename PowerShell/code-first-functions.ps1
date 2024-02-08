@@ -210,7 +210,7 @@ function Invoke-Check-Code-First-Components{
 }
 
 <#
-This function sets the pac tools path.
+This function sets the pac tools path based on the build tools installation path.
 #>
 function Set-Pac-Tools-Path{
     param (
