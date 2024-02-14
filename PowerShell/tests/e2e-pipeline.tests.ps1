@@ -61,11 +61,10 @@ class Helper {
         $body = ConvertTo-Json -Depth 100 $body -Compress
         Write-Host $body
         $body = [System.Text.Encoding]::UTF8.GetBytes($body)
-        $requestUrl = "https://dev.azure.com/cattools/ALM Accelerator PR Loop/_apis/pipelines/$pipelineId/runs$apiVersion"
+        $requestUrl = "$org/$project/_apis/pipelines/$pipelineId/runs$apiVersion"
         Write-Host $requestUrl
-        Write-Host $token.EndsWith("=")
-        Write-Host $token.Length
-        $response = Invoke-RestMethod $requestUrl -Method 'POST' -Headers $headers -Body $body
+        $response = Invoke-RestMethod $requestUrl -Method 'GET' -Headers $headers -Body $body
+        Write-Host $response
         $response | ConvertTo-Json -Depth 100
 
         $id = $response.id
