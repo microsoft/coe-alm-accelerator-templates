@@ -150,7 +150,6 @@ Describe 'E2E-Pipeline-Test' {
                 Branch                = $SourceBranch
                 BranchToCreate        = $BranchToCreate
                 CommitMessage         = $CommitMessage
-               #Data                  = $modifiedData
                 Email                 = $Email
                 Project               = $Project
                 Repo                  = $Repo
