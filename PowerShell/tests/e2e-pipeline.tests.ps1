@@ -13,7 +13,7 @@
 
 param(
     $Org, $Project, $BranchToTest, $SourceBranch, $BranchToCreate, $ExportPipelineName, $CommitMessage, $Data, 
-    $Email, $Repo, $ServiceConnection, $SolutionName, $UserName, $PortalSiteName, $PublishCustomizations, $CommitScope
+    $Email, $Repo, $ServiceConnection, $SolutionName, $UserName, $PortalSiteName, $PublishCustomizations, $CommitScope, $BasicAccessToken
 )
 
 class Helper {
@@ -40,7 +40,7 @@ class Helper {
     static [bool]QueueExportToGit($org, $project, $solutionName, $exportPipelineName, $body) {        
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
         $token = [Helper]::AccessToken
-        $headers.Add("Authorization", "Bearer $token")
+        $headers.Add("Authorization", "Basic $token")
         $headers.Add("Content-Type", "application/json")
 
         $apiVersion = "?api-version=7.0"
@@ -72,7 +72,7 @@ class Helper {
 }
 
 BeforeAll { 
-    [Helper]::AccessToken = (az account get-access-token | ConvertFrom-Json -Depth 100).accessToken    
+    [Helper]::AccessToken = $BasicAccessToken
 }
 
 Describe 'E2E-Pipeline-Test' {
@@ -113,7 +113,7 @@ Describe 'E2E-Pipeline-Test' {
         #Delete the existing pipelines to validate the creation of new pipelines during export.
         $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
         $token = [Helper]::AccessToken
-        $headers.Add("Authorization", "Bearer $token")
+        $headers.Add("Authorization", "Basic $token")
         $headers.Add("Content-Type", "application/json")
 
         $apiVersion = "?api-version=6.0-preview.2"
