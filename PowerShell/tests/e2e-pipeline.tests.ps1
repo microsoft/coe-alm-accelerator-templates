@@ -63,8 +63,7 @@ class Helper {
         $body = [System.Text.Encoding]::UTF8.GetBytes($body)
         $requestUrl = "$org/$project/_apis/pipelines/$pipelineId/runs$apiVersion"
         Write-Host $requestUrl
-        $response = Invoke-RestMethod $requestUrl -Method 'GET' -Headers $headers -Body $body
-        Write-Host $response
+        $response = Invoke-RestMethod $requestUrl -Method 'POST' -Headers $headers -Body $body
         $response | ConvertTo-Json -Depth 100
 
         $id = $response.id
@@ -151,7 +150,7 @@ Describe 'E2E-Pipeline-Test' {
                 Branch                = $SourceBranch
                 BranchToCreate        = $BranchToCreate
                 CommitMessage         = $CommitMessage
-                Data                  = $modifiedData
+               #Data                  = $modifiedData
                 Email                 = $Email
                 Project               = $Project
                 Repo                  = $Repo
