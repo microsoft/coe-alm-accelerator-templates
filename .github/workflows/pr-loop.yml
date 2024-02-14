@@ -23,7 +23,7 @@ jobs:
           PR_LOOP_USERNAME: ${{ secrets.PR_LOOP_USERNAME }}
         run: |
           . ./.github/workflows/pr-loop.ps1
-          $pair = ":$env:AZURE_DEVOPS_EXT_PAT"
+          $pair = ":$($env:AZURE_DEVOPS_EXT_PAT)"
           $encodedCreds = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair))
       
           $data = @{
