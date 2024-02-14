@@ -146,6 +146,23 @@ Describe 'E2E-Pipeline-Test' {
                     }
                 }
             }
+            templateParameters = @{
+                Branch                = $SourceBranch
+                BranchToCreate        = $BranchToCreate
+                CommitMessage         = $CommitMessage
+                Data                  = $modifiedData
+                Email                 = $Email
+                Project               = $Project
+                Repo                  = $Repo
+                ServiceConnectionName = $ServiceConnection
+                ServiceConnectionUrl  = $ServiceConnection
+                SolutionName          = $SolutionName
+                UserName              = $UserName
+                PipelineId            = 0
+                PublishCustomizations = $PublishCustomizations
+                PortalSiteName        = $PortalSiteName
+                CommitScope           = $CommitScope
+            }
         }
         [Helper]::ExportToGitNewBranchSucceeded = [Helper]::QueueExportToGit($Org, $Project, $SolutionName, $ExportPipelineName, $body)
         [Helper]::ExportToGitNewBranchSucceeded | Should -BeTrue
