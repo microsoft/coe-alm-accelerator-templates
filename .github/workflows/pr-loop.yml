@@ -15,7 +15,7 @@ jobs:
           AZDO_ORG: ${{ secrets.AZDO_ORG }}
           AZDO_PROJECT: ${{ secrets.AZDO_PROJECT }}
           AZDO_REPO: ${{ secrets.AZDO_PROJECT }}
-          AZDO_PAT: ${{ secrets.AZDO_PAT }}
+          AZURE_DEVOPS_EXT_PAT: ${{ secrets.AZDO_PAT }}
           PR_LOOP_DATA: ${{ secrets.PR_LOOP_DATA }}
           AZDO_SVC_CONN_NAME: ${{ secrets.AZDO_SVC_CONN_NAME }}
           AZDO_SVC_CONN_URL: ${{ secrets.AZDO_SVC_CONN_NAME }}
@@ -23,7 +23,7 @@ jobs:
           PR_LOOP_USERNAME: ${{ secrets.PR_LOOP_USERNAME }}
         run: |
           . ./.github/workflows/pr-loop.ps1
-          $pair = ":$env:AZDO_PAT"
+          $pair = ":$env:AZURE_DEVOPS_EXT_PAT"
           $encodedCreds = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair))
       
           $data = @{
