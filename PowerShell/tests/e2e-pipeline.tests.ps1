@@ -84,25 +84,25 @@ Describe 'E2E-Pipeline-Test' {
         # hacky/brittle
         # and depends on the fact that the service connection name is the environment url
         # and that the environment name is the same as the first part of the environment url
-        #$environmentName = $ServiceConnection.Replace('https://', '').Replace('.crm.dynamics.com/', '')
+        $environmentName = $ServiceConnection.Replace('https://', '').Replace('.crm.dynamics.com/', '')
 
-        #$result = az pipelines run --org $Org --project $Project --branch $BranchToTest `
-        #    --name 'import-unmanaged-to-dev-environment' `
-        #    --parameters `
-        #    Branch=$SolutionName `
-        #    CommitMessage='NA' `
-        #    Email=$Email `
-        #    Project=$Project `
-        #    Repo=$Repo `
-        #    ServiceConnectionName=$ServiceConnection `
-        #    ServiceConnectionUrl=$ServiceConnection `
-        #    SolutionName=$SolutionName `
-        #    UserName=$UserName `
-        #    ImportUnmanaged='true' `
-        #    EnvironmentName=$environmentName
-        #$result = $result | ConvertFrom-Json -Depth 100
-        #$id = $result.id
-        #[Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
+        $result = az pipelines run --org $Org --project $Project --branch $BranchToTest `
+            --name 'import-unmanaged-to-dev-environment' `
+            --parameters `
+            Branch=$SolutionName `
+            CommitMessage='NA' `
+            Email=$Email `
+            Project=$Project `
+            Repo=$Repo `
+            ServiceConnectionName=$ServiceConnection `
+            ServiceConnectionUrl=$ServiceConnection `
+            SolutionName=$SolutionName `
+            UserName=$UserName `
+            ImportUnmanaged='true' `
+            EnvironmentName=$environmentName
+        $result = $result | ConvertFrom-Json -Depth 100
+        $id = $result.id
+        [Helper]::WaitForPipelineToComplete($Org, $Project, $id) | Should -BeTrue
     }
 
     # Hard coding test name intentionally.  Pester doesn't like it when it's a variable.
