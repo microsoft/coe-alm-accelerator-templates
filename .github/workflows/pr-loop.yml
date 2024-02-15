@@ -15,6 +15,7 @@ jobs:
           AZDO_ORG: ${{ secrets.AZDO_ORG }}
           AZDO_PROJECT: ${{ secrets.AZDO_PROJECT }}
           AZDO_REPO: ${{ secrets.AZDO_PROJECT }}
+          AZURE_DEVOPS_EXT_PAT: ${{ secrets.AZDO_PAT }}
           PR_LOOP_DATA: ${{ secrets.PR_LOOP_DATA }}
           AZDO_SVC_CONN_NAME: ${{ secrets.AZDO_SVC_CONN_NAME }}
           AZDO_SVC_CONN_URL: ${{ secrets.AZDO_SVC_CONN_NAME }}
@@ -22,6 +23,9 @@ jobs:
           PR_LOOP_USERNAME: ${{ secrets.PR_LOOP_USERNAME }}
         run: |
           . ./.github/workflows/pr-loop.ps1
+          $pair = ":$($env:AZURE_DEVOPS_EXT_PAT)"
+          $encodedCreds = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair))
+      
           $data = @{
               Org                   = $env:AZDO_ORG
               Project               = $env:AZDO_PROJECT
@@ -39,6 +43,7 @@ jobs:
               PortalSiteName        = 'ALM Accelerator Sample - almacceleratorsample'
               PublishCustomizations = 'false'
               CommitScope           = '1'
+              BasicAccessToken      = $encodedCreds
           }
-          Invoke-EndToEndPipelineTest -User ${{ secrets.AZDO_USER }} -Password ${{ secrets.AZDO_PASSWORD }} -Data $data
+          Invoke-EndToEndPipelineTest -Data $data
         shell: pwsh
