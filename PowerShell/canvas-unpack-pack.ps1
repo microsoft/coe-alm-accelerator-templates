@@ -75,7 +75,8 @@ function Invoke-Share-Canvas-App-with-AAD-Group
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter()] [String]$aadGroupCanvasConfiguration,
         [Parameter(Mandatory)] [String]$environmentId,
-        [Parameter(Mandatory)] [String]$dataverseConnectionString
+        [Parameter(Mandatory)] [String]$dataverseConnectionString,
+        [Parameter(Mandatory)] [Bool]$skipShareError = $true
     )
 	if($aadGroupCanvasConfiguration -ne '') {
         #$microsoftPowerAppsAdministrationPowerShellModule = '$(CoETools_Microsoft_PowerApps_Administration_PowerShell)'
@@ -135,25 +136,33 @@ function Invoke-Share-Canvas-App-with-AAD-Group
                         } else {
                             Write-Host "ShareResponse does not contain a 'Code' property."
                             Write-Host "Error while sharing the App - $appId with the Group - $aadGroupId. Response Code: Unknown"
-                            exit 1
+                            if ($skipShareError -eq $false) {
+                                exit 1
+                            }
                         }
 
                         if (-not [string]::IsNullOrWhiteSpace($responseCode)) {
                             # Share was unsuccessful
                             Write-Host "Error while sharing the App - $appId with the Group - $aadGroupId. Response Code: $responseCode"
-                            exit 1
+                            if ($skipShareError -eq $false) {
+                                exit 1
+                            }
                         } else {
                             # Share was successful
                             Write-Host "App - $appId shared with the Group - $aadGroupId"
                         }
                     } else {
                         Write-Host "Error while sharing the App - $appId with the Group - $aadGroupId. 'ShareResponse' is null."
-                        exit 1
+                        if ($skipShareError -eq $false) {
+                            exit 1
+                        }
                     }
                 }
                 else {
                     Write-Host "##vso[task.logissue type=warning]A specified canvas app was not found in the target environment. Verify your deployment configuration and try again."
-                    exit 1;
+                    if ($skipShareError -eq $false) {
+                        exit 1
+                    }
                 }
             }
         }
