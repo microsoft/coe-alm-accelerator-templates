@@ -28,6 +28,7 @@ steps:
     $generateAppSourcePackage = "${{parameters.generateAppSourcePackage}}"
     $generatePackageDeployerPackage = "${{parameters.generatePackageDeployerPackage}}"
     $pdProjectPath = "${{parameters.pdProjectPath}}"
+    Write-Host "packageConfigFilePath - ${{parameters.packageConfigFilePath}}"
     Write-Host "packageFileName - $packageFileName"
     Write-Host "appSourceFolderName - $appSourceFolderName"
     Write-Host "pdProjectPath - $pdProjectPath"
