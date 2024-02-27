@@ -1,0 +1,26 @@
+parameters:
+- name: solutionName
+  type: string
+#- name: activateFlowsOnTheSolutionImport
+#  type: string
+#- name: skipSolutionImport
+#  type: string
+#- name: isUnmanaged
+#  type: string
+#- name: solutionExists
+#  type: string
+
+steps:
+- powershell: |    
+   . "$env:POWERSHELLPATH/activate-flows.ps1"
+
+    $microsoftPowerAppsAdministrationPowerShellModule = '$(CoETools_Microsoft_PowerApps_Administration_PowerShell)'
+    Import-Module $microsoftPowerAppsAdministrationPowerShellModule -Force -RequiredVersion $(PowerAppsAdminModuleVersion) -ArgumentList @{ NonInteractive = $true }
+    Add-PowerAppsAccount -TenantID $(connectionVariables.BuildTools.TenantId) -ApplicationId $(connectionVariables.BuildTools.ApplicationId) -ClientSecret $(connectionVariables.BuildTools.ClientSecret)
+    $microsoftXrmDataPowerShellModule = '$(CoETools_Microsoft_Xrm_Data_PowerShell)'
+    Import-Module $microsoftXrmDataPowerShellModule -Force -RequiredVersion $(XrmDataPowerShellVersion) -ArgumentList @{ NonInteractive = $true }
+    $conn = Get-CrmConnection -ConnectionString "$(connectionVariables.BuildTools.DataverseConnectionString)"
+
+    Deactivate-FlowsFromSolution $conn "${{parameters.solutionName}}"
+  displayName: 'Disable flows'
+  condition: and(succeeded(),eq(variables['ActivateFlowsOnTheSolutionImport'],'false'),ne(variables['SkipSolutionImport'],'true'),ne(variables['IsUnmanaged'], 'true'),eq(variables['SolutionExists'], 'true'))

@@ -160,6 +160,10 @@ steps:
   displayName: 'Get managed solution zip path'
   condition: and(succeeded(),ne(variables['SkipSolutionImport'],'true'), ne(variables['IsUnmanaged'], 'true'))
 
+- template: disable-flows.yml
+  parameters:
+    solutionName: '${{parameters.solutionName}}'
+
 # If the TriggerSolutionUpgrade variable is false, then import the solution as an Update
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
   displayName: 'Import Managed Solution as Update and no activate-plugins'
