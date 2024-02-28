@@ -75,7 +75,8 @@ function Invoke-Share-Canvas-App-with-AAD-Group
         [Parameter(Mandatory)] [String]$serviceConnection,
         [Parameter()] [String]$aadGroupCanvasConfiguration,
         [Parameter(Mandatory)] [String]$environmentId,
-        [Parameter(Mandatory)] [String]$dataverseConnectionString
+        [Parameter(Mandatory)] [String]$dataverseConnectionString,
+        [Parameter(Mandatory)] [Bool]$skipShareError = $true
     )
 	if($aadGroupCanvasConfiguration -ne '') {
         #$microsoftPowerAppsAdministrationPowerShellModule = '$(CoETools_Microsoft_PowerApps_Administration_PowerShell)'
@@ -115,17 +116,53 @@ function Invoke-Share-Canvas-App-with-AAD-Group
                     if($roleName -eq "CanViewWithShare"){
                         $roleName = "CanView"
                     }
+
+                    $shareResponse = $null
                     if($null -ne $uniqueCanvasAppId) {
-                        Write-Host "Command Unique Id- Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $uniqueCanvasAppId -EnvironmentName $environmentId"
-                        Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $uniqueCanvasAppId -EnvironmentName $environmentId
+                        Write-Host "Command with Unique Id- Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $uniqueCanvasAppId -EnvironmentName $environmentId"
+                        $shareResponse = Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $uniqueCanvasAppId -EnvironmentName $environmentId
                     }
                     else {
-                        Write-Host "Command App Id- Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $appId -EnvironmentName $environmentId"
-                        Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $appId -EnvironmentName $environmentId
+                        Write-Host "Command with App Id- Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $appId -EnvironmentName $environmentId"
+                        $shareResponse = Set-AdminPowerAppRoleAssignment -PrincipalType Group -PrincipalObjectId $aadGroupId -RoleName $roleName -AppName $appId -EnvironmentName $environmentId
+                    }
+
+                    if ($shareResponse -ne $null) {
+                        Write-Host "ShareResponse - $shareResponse"
+    
+                        if ($shareResponse.PSObject.Properties['Code']) {
+                            $responseCode = $shareResponse.Code
+                            Write-Host "ShareResponse Code: $responseCode"
+                        } else {
+                            Write-Host "ShareResponse does not contain a 'Code' property."
+                            Write-Host "Error while sharing the App - $appId with the Group - $aadGroupId. Response Code: Unknown"
+                            if ($skipShareError -eq $false) {
+                                exit 1
+                            }
+                        }
+
+                        if (-not [string]::IsNullOrWhiteSpace($responseCode)) {
+                            # Share was unsuccessful
+                            Write-Host "Error while sharing the App - $appId with the Group - $aadGroupId. Response Code: $responseCode"
+                            if ($skipShareError -eq $false) {
+                                exit 1
+                            }
+                        } else {
+                            # Share was successful
+                            Write-Host "App - $appId shared with the Group - $aadGroupId"
+                        }
+                    } else {
+                        Write-Host "Error while sharing the App - $appId with the Group - $aadGroupId. 'ShareResponse' is null."
+                        if ($skipShareError -eq $false) {
+                            exit 1
+                        }
                     }
                 }
                 else {
                     Write-Host "##vso[task.logissue type=warning]A specified canvas app was not found in the target environment. Verify your deployment configuration and try again."
+                    if ($skipShareError -eq $false) {
+                        exit 1
+                    }
                 }
             }
         }
