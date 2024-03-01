@@ -287,7 +287,7 @@ This function copies the generated package deployer file (i.e., pdpkg.zip).
 Moves the file to ReleaseAssets folder and AppSourceAssets folder.
 Rename the .pdpkg file in the AppSourceAssets folder to match with the Input.xml file.
 #>
-function Copy-Pdpkg-File_ {
+function Copy-Pdpkg-File {
     param (
         [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
         [Parameter(Mandatory)] [String]$releaseArtifactsPath,
