@@ -159,7 +159,8 @@ function Copy-Published-Assets-To-AppSourceAssets {
     param(
         [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
         [Parameter(Mandatory)] [String]$releaseArtifactsPath,
-        [Parameter(Mandatory)] [String]$pdProjectAssetsFolderPath
+        [Parameter(Mandatory)] [String]$pdProjectAssetsFolderPath,
+        [Parameter(Mandatory)] [String]$pdPkgNewNameToMatchWithInputXMLFile		
     )
 
     $binPaths = @("bin\Release", "bin\Debug")
@@ -174,7 +175,7 @@ function Copy-Published-Assets-To-AppSourceAssets {
 
             if ($pdpkgFileCount -gt 0) {
                 Write-Host "pdpkg.zip found under $binFullPath"
-                Copy-Pdpkg-File $packageDeployerProjectPath $releaseArtifactsPath $binPath $pdProjectAssetsFolderPath
+                Copy-Pdpkg-File $packageDeployerProjectPath $releaseArtifactsPath $binPath $pdProjectAssetsFolderPath $pdPkgNewNameToMatchWithInputXMLFile
                 $appSourcePackageFound = $true
                 break  # Exit the loop once a valid package is found
             } else {
@@ -283,34 +284,42 @@ function Install-Pac-Cli{
 
 <#
 This function copies the generated package deployer file (i.e., pdpkg.zip).
-Moves the file to ReleaseAssets folder and AppSourceAssets folder
+Moves the file to ReleaseAssets folder and AppSourceAssets folder.
+Rename the .pdpkg file in the AppSourceAssets folder to match with the Input.xml file.
 #>
-function Copy-Pdpkg-File{
+function Copy-Pdpkg-File_ {
     param (
         [Parameter(Mandatory)] [String]$packageDeployerProjectPath,
         [Parameter(Mandatory)] [String]$releaseArtifactsPath,
         [Parameter(Mandatory)] [String]$binPath,
-        [Parameter(Mandatory)] [String]$pdProjectAssetsFolderPath
+        [Parameter(Mandatory)] [String]$pdProjectAssetsFolderPath,
+        [Parameter(Mandatory)] [String]$newPdPkgFolderName
     )
 
     Write-Host "pdpkg file found under $packageDeployerProjectPath\$binPath"
     Write-Host "Copying pdpkg.zip file to PDProjectAssetsFolderPath $pdProjectAssetsFolderPath"
 	
-	# Copy pdpkg.zip file to ReleaseAssets folder
-    if(Test-Path "$pdProjectAssetsFolderPath"){
+	# Copy pdpkg.zip file to PDProjectAssetsFolderPath folder
+    if (Test-Path "$pdProjectAssetsFolderPath") {
         Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$pdProjectAssetsFolderPath" -Force -PassThru
         Write-Host "Copied the pdpkg file to $pdProjectAssetsFolderPath"
-    }
-    else{
+    } else {
         Write-Host "PDProjectAssetsFolderPath $pdProjectAssetsFolderPath is unavailable to copy pdpkg file"
     }
-            
+
     Write-Host "Copying pdpkg.zip file to ReleaseArtifactsPath $releaseArtifactsPath"
-	if(Test-Path "$releaseArtifactsPath"){
-        Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$releaseArtifactsPath" -Force -PassThru
-        Write-Host "Copied the pdpkg file to $releaseArtifactsPath"
-	}
-	else{
+    if (Test-Path "$releaseArtifactsPath") {
+        $pdpkgFile = Get-ChildItem "$packageDeployerProjectPath\$binPath" -Filter *pdpkg.zip | Copy-Item -Destination "$releaseArtifactsPath" -Force -PassThru
+
+        if ($pdpkgFile) {
+            # Rename the pdpkg file to the $newPdPkgFolderName            
+            $newFilePath = Join-Path $releaseArtifactsPath $newPdPkgFolderName
+            Rename-Item -Path $pdpkgFile.FullName -NewName $newFileName -Force
+            Write-Host "Renamed the pdpkg file to $newPdPkgFolderName in $releaseArtifactsPath"
+        } else {
+            Write-Host "No pdpkg file found in $packageDeployerProjectPath\$binPath"
+        }
+    } else {
         Write-Host "ReleaseArtifactsPath $releaseArtifactsPath Directory is unavailable to copy the pdpkg file"
     }
 }

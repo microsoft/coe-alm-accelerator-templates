@@ -124,7 +124,7 @@ steps:
     $releaseAssetsDirectory = "$(Pipeline.Workspace)\releaseassets"
 
     . "$(Pipeline.Workspace)/PipelineUtils/PowerShell/app-source-helper.ps1"
-    Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$pdProjectAssetsFolderPath" "$(Pipeline.Workspace)\releaseassets"
+    Copy-Published-Assets-To-AppSourceAssets "${{parameters.pdProjectPath}}" "$pdProjectAssetsFolderPath" "$(Pipeline.Workspace)\releaseassets" "${{parameters.packageFileName}}"
   displayName: "Move built Package Deployer (i.e.,pdpkg) to Releaseassets and AppSourceAssets"
   condition: and(succeeded(), or(eq(variables['RunAppSourceTasks'], 'true'), eq(variables['RunPackageDeployerTasks'], 'true')))   
   
