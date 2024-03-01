@@ -314,7 +314,7 @@ function Copy-Pdpkg-File {
         if ($pdpkgFile) {
             # Rename the pdpkg file to the $newPdPkgFolderName            
             $newFilePath = Join-Path $releaseArtifactsPath $newPdPkgFolderName
-            Rename-Item -Path $pdpkgFile.FullName -NewName $newFileName -Force
+            Rename-Item -Path $pdpkgFile.FullName -NewName $newPdPkgFolderName -Force
             Write-Host "Renamed the pdpkg file to $newPdPkgFolderName in $releaseArtifactsPath"
         } else {
             Write-Host "No pdpkg file found in $packageDeployerProjectPath\$binPath"
