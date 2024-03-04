@@ -50,7 +50,7 @@ function Invoke-ActivateFlows {
     
     Write-Flows "Printing total active flows" $flowsToActivate
 
-    Write-Host "Activating flows..."
+    Write-Host "Activating/Deactivating flows..."
     #Activate any flows added to the collection based on sort order
     $flowsToActivate = $flowsToActivate | Sort-Object -Property sortOrder
     $flowsActivatedDeactivatedThisPass = $false
@@ -435,4 +435,40 @@ function Get-User-By-Email-or-DomainName{
     }
 
     return $matchedUser
+}
+
+<#
+This function reads the settings from customDeploymentSettings.json file  and updates the connection references.
+#>
+function Deactivate-FlowsFromSolution {
+    param (
+        [Parameter(Mandatory)] [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn,
+        [Parameter(Mandatory)] [String] [AllowEmptyString()]$solutionName
+    )
+	# Fetch the 'solution' using 'solutionComponentUniqueName' tag
+    $solutions = Get-CrmRecords -conn ([Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$conn) -EntityLogicalName solution -FilterAttribute "uniquename" -FilterOperator "eq" -FilterValue "$solutionName" -Fields solutionid
+    if ($solutions.Count -gt 0) {
+        $solutionId = $solutions.CrmRecords[0].solutionid
+        # Get the solution components
+        $result = Get-CrmRecords -conn $conn -EntityLogicalName solutioncomponent -FilterAttribute "solutionid" -FilterOperator "eq" -FilterValue $solutionId -Fields objectid, componenttype
+        $solutionComponents = $result.CrmRecords
+
+        foreach ($solutionComponent in $solutionComponents) {
+            if ($solutionComponent.componenttype -eq "Workflow") {
+                $workflow = Get-CrmRecord -conn $conn -EntityLogicalName workflow -Id $solutionComponent.objectid -Fields clientdata, category, statecode, statuscode, name
+                Write-Host "Workflow - $workflow"
+                if($workflow -ne $null){
+                    # If workflow not already deactivated go ahead and deactivate
+                    if($workflow.statecode -ne 0 -and $workflow.StatusCode -ne 1 ){
+                        Write-Host "Deactivating Flow: " $workflow.name
+                        Set-CrmRecordState -conn $conn -EntityLogicalName workflow -Id $solutionComponent.objectid -StateCode 0 -StatusCode 1
+                    }else{
+                        Write-Host "Flow already deactivated at the target: " $solutionComponent.name
+                    }
+                }else{
+                    Write-Host "workflow is null"
+                }
+            }
+        }
+    }
 }

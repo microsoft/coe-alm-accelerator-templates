@@ -125,16 +125,29 @@ steps:
 
 # If called from import-unmanaged-to-dev-environment.yml, this task will run to deploy an unmanaged solution
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
+  displayName: 'Import Unmanaged Solution and no activate-plugins'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
+    SolutionInputFile: '$(UnmanagedSolutionPath)'
+    ActivatePlugins: false
+    UseDeploymentSettingsFile: $(UseDeploymentSettings)
+    DeploymentSettingsFile: $(DeploymentSettingsPath)
+    MaxAsyncWaitTime: 120
+  condition: and(succeeded(),eq(variables['ActivateFlowsOnTheSolutionImport'],'false'), ne(variables['SkipSolutionImport'],'true'), eq(variables['IsUnmanaged'], 'true'))
+
+  # If called from import-unmanaged-to-dev-environment.yml, this task will run to deploy an unmanaged solution
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
   displayName: 'Import Unmanaged Solution'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
     SolutionInputFile: '$(UnmanagedSolutionPath)'
-    PublishWorkflows: true
+    ActivatePlugins: true
     UseDeploymentSettingsFile: $(UseDeploymentSettings)
     DeploymentSettingsFile: $(DeploymentSettingsPath)
     MaxAsyncWaitTime: 120
-  condition: and(succeeded(), ne(variables['SkipSolutionImport'],'true'), eq(variables['IsUnmanaged'], 'true'))
+  condition: and(succeeded(), ne(variables['ActivateFlowsOnTheSolutionImport'],'false'), ne(variables['SkipSolutionImport'],'true'), eq(variables['IsUnmanaged'], 'true'))
 
 - pwsh: |
    . "$env:POWERSHELLPATH/build-deploy-solution-functions.ps1"
@@ -147,6 +160,24 @@ steps:
   displayName: 'Get managed solution zip path'
   condition: and(succeeded(),ne(variables['SkipSolutionImport'],'true'), ne(variables['IsUnmanaged'], 'true'))
 
+- template: disable-flows.yml
+  parameters:
+    solutionName: '${{parameters.solutionName}}'
+
+# If the TriggerSolutionUpgrade variable is false, then import the solution as an Update
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
+  displayName: 'Import Managed Solution as Update and no activate-plugins'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
+    SolutionInputFile: $(ManagedSolutionPath)
+    ActivatePlugins: false    
+    OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
+    UseDeploymentSettingsFile: $(UseDeploymentSettings)
+    DeploymentSettingsFile: $(DeploymentSettingsPath)
+    MaxAsyncWaitTime: 120
+  condition: and(succeeded(),eq(variables['ActivateFlowsOnTheSolutionImport'],'false'),ne(variables['SkipSolutionImport'],'true'), ne(variables['IsUnmanaged'], 'true'), or(eq(variables['TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'false')))
+
 # If the TriggerSolutionUpgrade variable is false, then import the solution as an Update
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
   displayName: 'Import Managed Solution as Update'
@@ -154,40 +185,44 @@ steps:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
     SolutionInputFile: $(ManagedSolutionPath)
-    PublishWorkflows: true
+    ActivatePlugins: true    
     OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
     UseDeploymentSettingsFile: $(UseDeploymentSettings)
     DeploymentSettingsFile: $(DeploymentSettingsPath)
     MaxAsyncWaitTime: 120
-  condition: and(succeeded(),ne(variables['SkipSolutionImport'],'true'), ne(variables['IsUnmanaged'], 'true'), or(eq(variables['TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'false')))
+  condition: and(succeeded(), ne(variables['ActivateFlowsOnTheSolutionImport'],'false'), ne(variables['SkipSolutionImport'],'true'), ne(variables['IsUnmanaged'], 'true'), or(eq(variables['TriggerSolutionUpgrade'], 'false'), eq(variables['SolutionExists'], 'false')))
 
-# If the TriggerSolutionUpgrade variable is true, then import the solution as an Upgrade, staging it as a holding solution, so we can apply a solution Upgrade.
+# If the TriggerSolutionUpgrade variable is true, then import the solution as an Upgrade, along with 'StageAndUpgrade' upgrade happens immediately after the import.
+# Doing this will ensure that items removed from the solution in development are also removed from the solution in the target environment after the Upgrade is applied.
+- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
+  displayName: 'Import Managed Solution as Upgrade and no activate-plugins'
+  inputs:
+    authenticationType: PowerPlatformSPN
+    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
+    SolutionInputFile: $(ManagedSolutionPath)
+    OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
+    UseDeploymentSettingsFile: $(UseDeploymentSettings)
+    DeploymentSettingsFile: $(DeploymentSettingsPath)
+    ActivatePlugins: false
+    MaxAsyncWaitTime: 120
+    StageAndUpgrade: true
+  condition: and(succeeded(), eq(variables['ActivateFlowsOnTheSolutionImport'],'false'), ne(variables['SkipSolutionImport'],'true'), ne(variables['IsUnmanaged'], 'true'), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
+
+# If the TriggerSolutionUpgrade variable is true, then import the solution as an Upgrade, along with 'StageAndUpgrade' upgrade happens immediately after the import.
 # Doing this will ensure that items removed from the solution in development are also removed from the solution in the target environment after the Upgrade is applied.
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
   displayName: 'Import Managed Solution as Upgrade'
   inputs:
     authenticationType: PowerPlatformSPN
     PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
-    SolutionInputFile: $(ManagedSolutionPath)
-    HoldingSolution: true
+    SolutionInputFile: $(ManagedSolutionPath)    
     OverwriteUnmanagedCustomizations: ${{parameters.overwriteUnmanagedCustomizations}}
     UseDeploymentSettingsFile: $(UseDeploymentSettings)
     DeploymentSettingsFile: $(DeploymentSettingsPath)
+    ActivatePlugins: true
     MaxAsyncWaitTime: 120
-  condition: and(succeeded(),ne(variables['SkipSolutionImport'],'true'), ne(variables['IsUnmanaged'], 'true'), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
-
-# NOTE: Sometimes you need to perform intermediary steps between staging the upgrade and applying it.  
-# An example would be moving data from one entity to another before deleting the entity.
-# You would add steps to your pipeline here to accomplish this. 
-
-# If the TriggerSolutionUpgrade variable is true,then apply the solution Upgrade.
-- task: microsoft-IsvExpTools.PowerPlatform-BuildTools.apply-solution-upgrade.PowerPlatformApplySolutionUpgrade@2
-  inputs:
-    authenticationType: 'PowerPlatformSPN'
-    PowerPlatformSPN: '${{parameters.serviceConnectionName}}'
-    SolutionName: ${{parameters.solutionName}}
-    AsyncOperation: true
-  condition: and(succeeded(),ne(variables['SkipSolutionImport'],'true'), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
+    StageAndUpgrade: true
+  condition: and(succeeded(),ne(variables['ActivateFlowsOnTheSolutionImport'],'false'),ne(variables['SkipSolutionImport'],'true'), ne(variables['IsUnmanaged'], 'true'), eq(variables['TriggerSolutionUpgrade'], 'true'), eq(variables['SolutionExists'], 'true'))
 
 - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.publish-customizations.PowerPlatformPublishCustomizations@2
   displayName: 'Power Platform Publish Customizations '
