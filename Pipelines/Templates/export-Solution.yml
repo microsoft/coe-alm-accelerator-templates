@@ -339,6 +339,19 @@ steps:
     configurationData: '${{parameters.configurationData}}' 
     buildSourceDirectory: '$(Build.SourcesDirectory)'
 
+# TEMPORARY until Solution export supports not exporting custom connector configurations
+# We need to clear out the contents of any *_connectionparameters.json file.  This is to ensure those valuse
+# are not overwritten when the Solution is imported to a downstream environment.
+- powershell: |  
+   If("${{parameters.solutionName}}" -eq "BusinessApprovalKit"){
+       Get-ChildItem -Path "$(Build.SourcesDirectory)\${{parameters.repo}}\${{parameters.solutionName}}" -Recurse -Filter *_connectionparameters.json |
+       ForEach-Object {
+          Clear-Content $_.FullName
+       }
+   }
+  displayName: 'Clear contents of *_connectionparameters.json files'
+  enabled: true
+
 - template: Hooks\export-power-page-post-hook.yml
 
 - template: Hooks\export-solution-commit-pre-hook.yml
