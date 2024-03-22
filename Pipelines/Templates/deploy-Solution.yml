@@ -103,13 +103,13 @@ steps:
 
 # Third party task to replace tokens in files. The FileTransform above replaces JSON tokens based on their path as opposed to replacing text tokens in a file which can be more error prone in some cases.
 # If you aren't using this task it can be safely removed or disabled by setting enabled: false. Sample token: #{VariableNameToReplace}#
-- task: qetza.replacetokens.replacetokens-task.replacetokens@3
+- task: qetza.replacetokens.replacetokens-task.replacetokens@6
   displayName: 'Replace Tokens: deploymentSettings.json'
   inputs:
-    rootDirectory: '$(Pipeline.Workspace)'
-    targetFiles: '**\*deploymentSettings*.json'
-    actionOnMissing: 'silently continue'
-    writeBOM: false
+    root: '$(Pipeline.Workspace)'
+    sources: '**\*deploymentSettings*.json'
+    missingVarLog: 'off'
+    addBOM: false
     encoding: 'utf-8'
     defaultValue: ''
   condition: and(succeeded(), or(ne(variables['DeploymentSettingsPath'], ''), ne(variables['CustomDeploymentSettingsPath'], '')))
