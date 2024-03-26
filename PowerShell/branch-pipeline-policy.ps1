@@ -610,7 +610,7 @@ function Set-Branch-Policy{
     if($buildTypes){
         Write-Host "Policy Type by name 'Build' exists. Getting Policy configurations."
         # Get existing Policy configurations
-        $uriPolicyConfigs = "$orgUrl$solutionProjectName/_apis/policy/configurations?api-version=6.0"
+        $uriPolicyConfigs = "$orgUrl$solutionProjectName/_apis/policy/configurations?api-version=7.1-preview.1"
         Write-Host "UriPolicyConfigs - $uriPolicyConfigs"
         try {
             $policyConfigResponse = Invoke-RestMethod $uriPolicyConfigs -Method Get -Headers @{
