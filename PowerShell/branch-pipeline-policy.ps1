@@ -639,7 +639,7 @@ function Set-Branch-Policy{
         # Check if there are existing policies. If yes, delete the policy configuration.
         if($null -ne $existingPolices){
             Write-Host "Policy of branch $solutionName already exists. Deleting existing policy"
-            $uriDeleteConfig = "$orgUrl$solutionProjectName/_apis/policy/configurations/$($existingPolices.id)?api-version=6.0"
+            $uriDeleteConfig = "$orgUrl$solutionProjectName/_apis/policy/configurations/$($existingPolices.id)?api-version=7.1-preview.1"
             Write-Host "UriDeleteConfig - $uriDeleteConfig"
             $deletePolicyResponse = Invoke-RestMethod $uriDeleteConfig -Method Delete -Headers @{
                 Authorization = "$azdoAuthType  $env:SYSTEM_ACCESSTOKEN"
@@ -700,7 +700,7 @@ function Set-Branch-Policy{
             Write-Host "NewPolicyBody Updated - $newPolicyBodyUpdated"
 
             # API endpoint URL
-            $urlNewPolicy = "$orgUrl$solutionProjectName/_apis/policy/configurations?api-version=6.0"
+            $urlNewPolicy = "$orgUrl$solutionProjectName/_apis/policy/configurations?api-version=7.1-preview.1"
             Write-Host "UrlNewPolicy - $urlNewPolicy"
                
             try{
