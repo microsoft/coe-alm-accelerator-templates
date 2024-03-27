@@ -210,7 +210,7 @@ function Invoke-Check-Code-First-Components{
 }
 
 <#
-This function sets the pac tools path.
+This function sets the pac tools path based on the build tools installation path.
 #>
 function Set-Pac-Tools-Path{
     param (
@@ -300,7 +300,6 @@ function Invoke-Clone-Or-Sync-Solution{
     {
         # Trigger Auth
         Invoke-Expression -Command "$pacexepath auth create --url $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
-        $unpackfolderpath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
 
         # Trigger Clone or Sync
         $cdsProjPath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage\$solutionName.cdsproj"
@@ -312,17 +311,20 @@ function Invoke-Clone-Or-Sync-Solution{
             $cdsProjfolderPath = [System.IO.Path]::GetDirectoryName("$cdsProjPath")
             Write-Host "Pointing to cdsproj folder path - " $cdsProjfolderPath
             Set-Location -Path $cdsProjfolderPath
-            $syncCommand = "solution sync --processCanvasApps $processCanvasApps --packagetype Both --async"
+            $unpackfolderpath = "\\?\$cdsProjfolderPath\src"
+            # Trigger Sync
+            $syncCommand = "solution sync --processCanvasApps $processCanvasApps --packagetype Both --solution-folder ""$unpackfolderpath"" --async"
             Write-Host "Triggering Sync - $syncCommand"
             Invoke-Expression -Command "$pacexepath $syncCommand"
         }
         else {
             if(Test-Path "$legacyFolderPath"){ # Legacy folder structure
-				Write-Host "Deleting legcay folder path - $legacyFolderPath"
+				Write-Host "Deleting legacy folder path - $legacyFolderPath"
                 # Delete "SolutionPackage" folder
                 Remove-Item "$legacyFolderPath" -recurse -Force
             }
 
+            $unpackfolderpath = "\\?\$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
             # Trigger Clone
             $cloneCommand = "solution clone -n $solutionName --processCanvasApps $processCanvasApps --outputDirectory ""$unpackfolderpath"" --packagetype Both --async"
             Write-Host "Clone Command - $pacexepath $cloneCommand"
