@@ -4421,7 +4421,7 @@
                             "doNotSuggest": false,
                             "ignoreCase": "value",
                             "enum": [
-                                "replacetokens@3"
+                                "replacetokens@6"
                             ]
                         },
                         {
