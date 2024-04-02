@@ -21,7 +21,7 @@ steps:
     } catch {
         Write-Host "##vso[task.logissue type=warning]Errors occurred while activating flows. Please review the log for specific errors and verify your deployment configuration settings."
         Write-Host $_
-        exit 1;
+        # exit 1;
     }
   displayName: 'Activate Flows'
   condition: and(succeeded(), ne(variables['EnableFlows'], 'false'))
