@@ -38,10 +38,17 @@ function Set-EnableDisableSolutionFlows {
                     Write-Host "Retrieved " $activateFlowConfigs.Length " flow activation configurations"
                     foreach ($activateFlowConfig in $activateFlowConfigs) {
                         $filter = "*" + $activateFlowConfig.solutionComponentUniqueName + "*.xml"
-                        Get-ChildItem -Path "$workflowspath" -Recurse -Filter $filter | 
-                        ForEach-Object {
-                            if(Test-Path $_.FullName){
-                                $xml = [xml](Get-Content $_.FullName)
+                        $filteredItems = Get-ChildItem -Path "$workflowspath" -Recurse -Filter $filter
+
+                        if ($filteredItems.Count -eq 0) {
+                            Write-Host "No files matching filter '$filter' found."
+                            continue  # Skip to the next iteration of the loop
+                        }
+
+                        foreach ($item in $filteredItems) {
+							Write-Host "Item.FullName - " $item.FullName
+                            if(Test-Path $item.FullName){
+                                $xml = [xml](Get-Content $item.FullName)
                                 $workflowNode = $xml.SelectSingleNode("//Workflow")
                                 if ($activateFlowConfig.activate -eq 'false') {
                                     Write-Host "Disabling flow " $activateFlowConfig.solutionComponentName 
@@ -53,10 +60,10 @@ function Set-EnableDisableSolutionFlows {
                                     $workflowNode.StateCode = '1'
                                     $workflowNode.StatusCode = '2'
                                 }
-                                $xml.Save($_.FullName)
+                                $xml.Save($item.FullName)
                             }
                             else{
-                                Write-Host "Path unavailable - " $_.FullName
+                                Write-Host "Path unavailable - " $item.FullName
                             }
                         }
                     }
