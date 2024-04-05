@@ -152,7 +152,7 @@ steps:
     variableName: 'outActivateFlows'
     deploymentSettingsPath: $(CustomDeploymentSettingsPath)
     deploymentSettingsNode: 'ActivateFlowConfiguration'
-    displayName: 'Retrieve Flow Activation Config for Build'
+    # displayName: 'Retrieve Flow Activation Config for Build'
 
 # Enabled or Disable Flows in the Solution based on configuration
 - template: enable-disable-solution-flows.yml
@@ -162,7 +162,7 @@ steps:
     solutionName: '${{parameters.solutionName}}'
     disableAllFlows: 'false'
     activateFlowConfiguration: '$(outActivateFlows)'
-    displayName: 'Enable or disable solution flows'
+    # displayName: 'Enable or disable solution flows'
 
 - pwsh: |
     # Default to true when no variable is set on the pipeline
