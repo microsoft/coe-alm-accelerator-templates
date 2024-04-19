@@ -138,7 +138,7 @@ steps:
   displayName: 'Replace Tokens: deploymentSettings.json'
   inputs:
     root: $(Build.SourcesDirectory)\$(RepoName)\${{parameters.solutionName}}\config\
-    sources: '**\deploymentSettings*.json; **\customDeploymentSettings*.json'
+    sources: '**\*[dD]eploymentSettings*.json'
     missingVarLog: 'off'
     addBOM: false
     encoding: 'utf-8'

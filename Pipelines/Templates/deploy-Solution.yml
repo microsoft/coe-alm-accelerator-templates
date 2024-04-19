@@ -107,7 +107,7 @@ steps:
   displayName: 'Replace Tokens: deploymentSettings.json'
   inputs:
     root: '$(Pipeline.Workspace)'
-    sources: '**\deploymentSettings*.json; **\customDeploymentSettings*.json'
+    sources: '**\*[dD]eploymentSettings*.json'
     missingVarLog: 'off'
     addBOM: false
     encoding: 'utf-8'
