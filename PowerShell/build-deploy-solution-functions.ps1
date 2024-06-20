@@ -210,22 +210,29 @@ function Get-Does-Deployment-Settings-Exist
                 }
             }
         }
-
-        Write-Host "Deployment Settings Path: $deploymentSettingsPath"
+		if([string]::IsNullOrEmpty($deploymentSettingsPath))
+		{
+			Write-Host "Deployment Setting path is Empty"
+			throw "Deployment Setting path is Empty"
+		}
+		else
+		{
+			Write-Host "Deployment Settings Path: $deploymentSettingsPath"
         
-        if($settingFile -eq "deploymentSettings")
-        {
-            Write-Host "##vso[task.setVariable variable=DeploymentSettingsPath]$deploymentSettingsPath"
-            $useDeploymentSettings = 'false'
-            if($deploymentSettingsPath -ne '') {
-                $useDeploymentSettings = 'true'
-            }
-            Write-Host "##vso[task.setVariable variable=UseDeploymentSettings]$useDeploymentSettings"
-        }
-        else
-        {
-            Write-Host "##vso[task.setVariable variable=CustomDeploymentSettingsPath]$deploymentSettingsPath"
-        }
+			if($settingFile -eq "deploymentSettings")
+			{
+				Write-Host "##vso[task.setVariable variable=DeploymentSettingsPath]$deploymentSettingsPath"
+				$useDeploymentSettings = 'false'
+				if($deploymentSettingsPath -ne '') {
+					$useDeploymentSettings = 'true'
+				}
+				Write-Host "##vso[task.setVariable variable=UseDeploymentSettings]$useDeploymentSettings"
+			}
+			else
+			{
+				Write-Host "##vso[task.setVariable variable=CustomDeploymentSettingsPath]$deploymentSettingsPath"
+			}
+		}
     }
 }
 
