@@ -210,10 +210,11 @@ function ByPass-Canvas-App-Consents
             $componentType = $c.componenttype
             Write-Host "Componenttype - $componentType"
             if ($c.componenttype -eq "Canvas App" -and $c.objectid -ne ""){
-                Write-Host "Bypassing the canvas app $($c.objectid) consent. Environment - $environmentName"
+                $canvas = Get-CrmRecord -conn $conn -EntityLogicalName canvasapp -Id $c.objectid -Fields canvasappid,uniquecanvasappid,displayname
+                Write-Host "Bypassing the canvas app $($canvas.displayname) consent. Environment - $environmentName"
                 # Set-AdminPowerAppApisToBypassConsent -EnvironmentName [Guid] -AppName [Guid]
-                Write-Host "Command - Set-AdminPowerAppApisToBypassConsent –EnvironmentName $environmentName –AppName $($c.objectid)"
-                Set-AdminPowerAppApisToBypassConsent –EnvironmentName $environmentName –AppName $($c.objectid)
+                Write-Host "Command - Set-AdminPowerAppApisToBypassConsent –EnvironmentName $environmentName –AppName $($canvas.uniquecanvasappid)"
+                Set-AdminPowerAppApisToBypassConsent –EnvironmentName $environmentName –AppName $($canvas.uniquecanvasappid)
             }
         }
     }
