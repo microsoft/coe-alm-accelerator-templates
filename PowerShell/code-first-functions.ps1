@@ -242,7 +242,7 @@ function Invoke-Pac-Authenticate{
     if(Test-Path "$pacPath\pac.exe")
     {
         $pacexepath = "$pacPath\pac.exe"
-        Invoke-Expression -Command "$pacexepath auth create --url $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
+        Invoke-Expression -Command "$pacexepath auth create --environment $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
     }
     else
     {
@@ -299,7 +299,7 @@ function Invoke-Clone-Or-Sync-Solution{
     if(Test-Path "$pacexepath")
     {
         # Trigger Auth
-        Invoke-Expression -Command "$pacexepath auth create --url $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
+        Invoke-Expression -Command "$pacexepath auth create --environment $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
         $unpackfolderpath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
 
         # Trigger Clone or Sync
