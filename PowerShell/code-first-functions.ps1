@@ -312,7 +312,12 @@ function Invoke-Clone-Or-Sync-Solution{
             $cdsProjfolderPath = [System.IO.Path]::GetDirectoryName("$cdsProjPath")
             Write-Host "Pointing to cdsproj folder path - " $cdsProjfolderPath
             Set-Location -Path $cdsProjfolderPath
-            $syncCommand = "solution sync --processCanvasApps $processCanvasApps --packagetype Both --async"
+
+            $syncCommand = "solution sync --packagetype Both --async"
+            if ($processCanvasApps) {
+                $syncCommand += " --processCanvasApps $processCanvasApps"
+            }
+
             Write-Host "Triggering Sync - $syncCommand"
             Invoke-Expression -Command "$pacexepath $syncCommand"
         }
@@ -324,7 +329,10 @@ function Invoke-Clone-Or-Sync-Solution{
             }
 
             # Trigger Clone
-            $cloneCommand = "solution clone -n $solutionName --processCanvasApps $processCanvasApps --outputDirectory ""$unpackfolderpath"" --packagetype Both --async"
+            $cloneCommand = "solution clone -n $solutionName --outputDirectory ""$unpackfolderpath"" --packagetype Both --async"
+            if ($processCanvasApps) {
+                $cloneCommand += " --processCanvasApps $processCanvasApps"
+            }
             Write-Host "Clone Command - $pacexepath $cloneCommand"
             Invoke-Expression -Command "$pacexepath $cloneCommand"
         }
