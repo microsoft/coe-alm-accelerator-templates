@@ -53,7 +53,7 @@ function Process-and-Download-Websites
     if(Test-Path "$pacexepath")
     {
         # Trigger Auth
-        Invoke-Expression -Command "$pacexepath auth create --url $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
+        Invoke-Expression -Command "$pacexepath auth create --environment $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
 
         # Split the WebsiteName by Comma
         $collWebsiteNames = $websiteName -split ","
@@ -103,7 +103,7 @@ function Process-and-Upload-Websites
     if(Test-Path "$pacexepath")
     {
         # Trigger Auth
-        Invoke-Expression -Command "$pacexepath auth create --url $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
+        Invoke-Expression -Command "$pacexepath auth create --environment $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
 
         if(Test-Path "$powerPagesFolderPath")
         {
@@ -284,7 +284,7 @@ function Invoke-Portal-Upload-With-Profile{
     if(Test-Path "$pacexepath")
     {
         # Trigger Auth
-        Invoke-Expression -Command "$pacexepath auth create --url $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
+        Invoke-Expression -Command "$pacexepath auth create --environment $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
 
         $pacCommand = "paportal upload --path $websitePath --deploymentProfile $profileName"
         Write-Host "Triggering Sync - $pacCommand"
