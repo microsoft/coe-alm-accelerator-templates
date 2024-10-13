@@ -180,6 +180,45 @@ steps:
     generatePackageDeployerPackage: '${{parameters.preparePackageDeployerPackage}}'
     packageConfigFilePath: '${{parameters.packageConfigurationFilePath}}'
 
+- task: PowerShell@2
+  displayName: 'Validate Release Notes and Assets Paths'
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Validate Release Notes Path
+      $releaseNotesPath = '$(ReleaseNotesPath)'
+
+      if (-not (Test-Path $releaseNotesPath)) {
+        Write-Error "Release Notes Path '$releaseNotesPath' does not exist."
+        exit 1
+      }
+      else {
+        Write-Host "Release Notes Path '$releaseNotesPath' is valid."
+      }
+
+      # Validate Assets Path
+      $assetsPath = '$(Pipeline.Workspace)/releaseassets'
+
+      if (-not (Test-Path $assetsPath)) {
+        Write-Error "Assets Path '$assetsPath' does not exist or is empty."
+        exit 1
+      }
+      else {
+        # Check if files exist in the directory
+        $files = Get-ChildItem -Path "$assetsPath/*.*"
+        if ($files.Count -eq 0) {
+          Write-Error "No files found in Assets Path '$assetsPath'."
+          exit 1
+        }
+        else {
+          Write-Host "Assets Path '$assetsPath' is valid and contains the following files:"
+          # Print the file names
+          foreach ($file in $files) {
+            Write-Host $file.FullName
+          }
+        }
+      }
+
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
