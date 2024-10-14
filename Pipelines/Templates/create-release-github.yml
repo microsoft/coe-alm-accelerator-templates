@@ -250,22 +250,24 @@ steps:
         Write-Host "No .git folder found in the current directory."
       }
 
-# Step to check if the tag exists and create it if it doesn't
 - task: PowerShell@2
   displayName: 'Create Git Tag if not exists'
   inputs:
     targetType: 'inline'
     script: |
       $tag = '$(Tag)'
+      Write-Host "Checking if tag '$tag' exists..."
       $tagExists = git tag --list $tag
+      Write-Host "Tag found: $tagExists"
 
-      if (-not $tagExists) {
+      if ($tagExists -eq $null) {
         Write-Host "Tag '$tag' does not exist. Creating a new tag."
         git tag $tag
         git push origin $tag
       }
       else {
         Write-Host "Tag '$tag' already exists."
+      }
     workingDirectory: $(System.DefaultWorkingDirectory)
 
 # GitHub Release Task
