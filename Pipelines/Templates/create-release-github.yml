@@ -232,8 +232,8 @@ steps:
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
-    # tagSource: 'userSpecifiedTag'
-    # tag: $(Tag)
+    tagSource: 'userSpecifiedTag'
+    tag: $(Tag)
     title: $(Title)
     releaseNotesFilePath: '$(ReleaseNotesPath)'
     addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
