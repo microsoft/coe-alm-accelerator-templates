@@ -43,10 +43,17 @@ parameters:
   type: string
   default: ''
 
-variables:
-  system.debug: true  # Enable system diagnostics for detailed logging
-
 steps:
+# Enable system diagnostics for detailed logging
+- task: PowerShell@2
+  displayName: 'Enable system.debug'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Enabling system.debug"
+  env:
+    SYSTEM_DEBUG: true
+
 # Checkout Tools Repo
 - checkout: Self
 
