@@ -238,6 +238,20 @@ steps:
       Write-Host "Template Tag: $(TemplateTag)"
       Write-Host "Template Title: $(TemplateTitle)"
 
+# Check the current directory and repository
+- task: PowerShell@2
+  displayName: 'Check Current Directory and Repository'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Current Directory - $(System.DefaultWorkingDirectory)"
+      if (Test-Path "$(System.DefaultWorkingDirectory)/.git") {
+        Write-Host ".git folder found. Repository is checked out correctly."
+      }
+      else {
+        Write-Host "No .git folder found in the current directory."
+      }
+
 # Step to check if the tag exists and create it if it doesn't
 - task: PowerShell@2
   displayName: 'Create Git Tag if not exists'
@@ -246,7 +260,7 @@ steps:
     script: |
       $tag = '$(Tag)'
       $tagExists = git tag --list $tag
-      
+
       if (-not $tagExists) {
         Write-Host "Tag '$tag' does not exist. Creating a new tag."
         git tag $tag
@@ -254,7 +268,7 @@ steps:
       }
       else {
         Write-Host "Tag '$tag' already exists."
-      }
+    workingDirectory: $(System.DefaultWorkingDirectory)
 
 # GitHub Release Task
 - task: GitHubRelease@1
