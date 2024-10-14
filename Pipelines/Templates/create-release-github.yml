@@ -43,6 +43,9 @@ parameters:
   type: string
   default: ''
 
+variables:
+  system.debug: true  # Enable system diagnostics for detailed logging
+
 steps:
 # Checkout Tools Repo
 - checkout: Self
