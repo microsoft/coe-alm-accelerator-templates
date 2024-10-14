@@ -235,8 +235,6 @@ steps:
     targetType: 'inline'
     script: |
       Write-Host "Tag value: $(Tag)"
-      Write-Host "Template Tag: $(TemplateTag)"
-      Write-Host "Template Title: $(TemplateTitle)"
 
 # Check the current directory and repository
 - task: PowerShell@2
