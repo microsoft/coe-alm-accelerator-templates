@@ -238,10 +238,29 @@ steps:
       Write-Host "Template Tag: $(TemplateTag)"
       Write-Host "Template Title: $(TemplateTitle)"
 
+# Step to check if the tag exists and create it if it doesn't
+- task: PowerShell@2
+  displayName: 'Create Git Tag if not exists'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $tag = '$(Tag)'
+      $tagExists = git tag --list $tag
+      
+      if (-not $tagExists) {
+        Write-Host "Tag '$tag' does not exist. Creating a new tag."
+        git tag $tag
+        git push origin $tag
+      }
+      else {
+        Write-Host "Tag '$tag' already exists."
+      }
+
+# GitHub Release Task
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
-    tag: $(Tag)  # Ensure this matches an existing tag in the repo
+    tag: $(Tag)
     title: $(Title)
     releaseNotesFilePath: '$(ReleaseNotesPath)'
     addChangeLog: false
