@@ -235,6 +235,8 @@ steps:
     targetType: 'inline'
     script: |
       Write-Host "Tag value: $(Tag)"
+      Write-Host "Template Tag: $(TemplateTag)"
+      Write-Host "Template Title: $(TemplateTitle)"
 
 - task: GitHubRelease@1
   inputs:
