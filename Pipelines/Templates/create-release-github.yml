@@ -229,14 +229,20 @@ steps:
         }
       }
 
+- task: PowerShell@2
+  displayName: 'Log the Tag Value'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Tag value: $(Tag)"
+
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
-    tagSource: 'userSpecifiedTag'
-    tag: $(Tag)
+    tag: $(Tag)  # Ensure this matches an existing tag in the repo
     title: $(Title)
     releaseNotesFilePath: '$(ReleaseNotesPath)'
-    addChangeLog: false #The OOB changelog doesn't allow for filtering based on milestone so we created our own changelog above
+    addChangeLog: false
     isDraft: ${{ parameters.isDraft }}
     isPreRelease: ${{ parameters.isPreRelease }}
     assets: |
