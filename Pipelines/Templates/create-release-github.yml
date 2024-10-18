@@ -236,40 +236,6 @@ steps:
     script: |
       Write-Host "Tag value: $(Tag)"
 
-# # Check the current directory and repository
-# - task: PowerShell@2
-#   displayName: 'Check Current Directory and Repository'
-#   inputs:
-#     targetType: 'inline'
-#     script: |
-#       Write-Host "Current Directory - $(System.DefaultWorkingDirectory)"
-#       if (Test-Path "$(System.DefaultWorkingDirectory)/.git") {
-#         Write-Host ".git folder found. Repository is checked out correctly."
-#       }
-#       else {
-#         Write-Host "No .git folder found in the current directory."
-#       }
-
-# - task: PowerShell@2
-#   displayName: 'Create Git Tag if not exists'
-#   inputs:
-#     targetType: 'inline'
-#     script: |
-#       $tag = '$(Tag)'
-#       Write-Host "Checking if tag '$tag' exists..."
-#       $tagExists = git tag --list $tag
-#       Write-Host "Tag found: $tagExists"
-
-#       if ($tagExists -eq $null) {
-#         Write-Host "Tag '$tag' does not exist. Creating a new tag."
-#         git tag $tag
-#         git push origin $tag
-#       }
-#       else {
-#         Write-Host "Tag '$tag' already exists."
-#       }
-#     workingDirectory: $(System.DefaultWorkingDirectory)
-
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: ${{ parameters.connectionName }}
