@@ -89,6 +89,7 @@ steps:
                     New-Item $fullReleaseNotesPath
                 }
             }
+            Write-Host "fullReleaseNotesPath - $fullReleaseNotesPath"
             Write-Host "##vso[task.setvariable variable=ReleaseNotesPath]$fullReleaseNotesPath"
             $releaseNotes = $releaseNotes + [Environment]::NewLine + '## Change Log'
 
@@ -201,10 +202,11 @@ steps:
       Write-Host "Current Directory: $(Get-Location)"
       Write-Host "Pipeline.Workspace: '$(Pipeline.Workspace)'"
       Write-Host "====================================="
-      
-      # Validate Release Notes Path
-      Write-Host "DEBUG: ReleaseNotesPath variable is set to: '$(ReleaseNotesPath)'"
-      $releaseNotesPath = '$(ReleaseNotesPath)'
+
+      # Corrected: Use double quotes for variable expansion
+      $releaseNotesPath = "$(ReleaseNotesPath)"
+
+      Write-Host "DEBUG: ReleaseNotesPath variable is set to: '$releaseNotesPath'"
 
       if (-not $releaseNotesPath -or $releaseNotesPath -eq "") {
         Write-Error "ERROR: ReleaseNotesPath variable is empty or not set."
@@ -220,9 +222,9 @@ steps:
       }
 
       # Validate Assets Path
-      Write-Host "DEBUG: Pipeline.Workspace variable is set to: '$(Pipeline.Workspace)'"
-      $assetsPath = '$(Pipeline.Workspace)/releaseassets'
+      $assetsPath = "$(Pipeline.Workspace)/releaseassets"
 
+      Write-Host "DEBUG: Pipeline.Workspace variable is set to: '$assetsPath'"
       Write-Host "DEBUG: Checking Assets Path '$assetsPath'"
       
       if (-not (Test-Path $assetsPath)) {
