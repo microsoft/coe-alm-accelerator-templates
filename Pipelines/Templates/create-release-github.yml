@@ -195,40 +195,56 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
+      # Debug: Print the current environment and variable values
+      Write-Host "=== DEBUG: Environment Information ==="
+      Write-Host "Agent OS: $([System.Environment]::OSVersion)"
+      Write-Host "Current Directory: $(Get-Location)"
+      Write-Host "Pipeline.Workspace: '$(Pipeline.Workspace)'"
+      Write-Host "====================================="
+      
       # Validate Release Notes Path
+      Write-Host "DEBUG: ReleaseNotesPath variable is set to: '$(ReleaseNotesPath)'"
       $releaseNotesPath = '$(ReleaseNotesPath)'
 
+      if (-not $releaseNotesPath -or $releaseNotesPath -eq "") {
+        Write-Error "ERROR: ReleaseNotesPath variable is empty or not set."
+        exit 1
+      }
+
       if (-not (Test-Path $releaseNotesPath)) {
-        Write-Error "Release Notes Path '$releaseNotesPath' does not exist."
+        Write-Error "ERROR: Release Notes Path '$releaseNotesPath' does not exist."
         exit 1
       }
       else {
-        Write-Host "Release Notes Path '$releaseNotesPath' is valid."
+        Write-Host "SUCCESS: Release Notes Path '$releaseNotesPath' is valid."
       }
 
       # Validate Assets Path
+      Write-Host "DEBUG: Pipeline.Workspace variable is set to: '$(Pipeline.Workspace)'"
       $assetsPath = '$(Pipeline.Workspace)/releaseassets'
 
+      Write-Host "DEBUG: Checking Assets Path '$assetsPath'"
+      
       if (-not (Test-Path $assetsPath)) {
-        Write-Error "Assets Path '$assetsPath' does not exist or is empty."
+        Write-Error "ERROR: Assets Path '$assetsPath' does not exist or is empty."
         exit 1
       }
       else {
         # Check if files exist in the directory
-        $files = Get-ChildItem -Path "$assetsPath/*.*"
-        if ($files.Count -eq 0) {
-          Write-Error "No files found in Assets Path '$assetsPath'."
+        $files = Get-ChildItem -Path "$assetsPath/*.*" -ErrorAction SilentlyContinue
+        if ($null -eq $files -or $files.Count -eq 0) {
+          Write-Error "ERROR: No files found in Assets Path '$assetsPath'."
           exit 1
         }
         else {
-          Write-Host "Assets Path '$assetsPath' is valid and contains the following files:"
+          Write-Host "SUCCESS: Assets Path '$assetsPath' is valid and contains the following files:"
           # Print the file names
           foreach ($file in $files) {
-            Write-Host $file.FullName
+            Write-Host "File: $($file.FullName)"
           }
         }
       }
-
+      
 - task: PowerShell@2
   displayName: 'Log the Tag Value'
   inputs:
