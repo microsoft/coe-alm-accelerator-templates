@@ -63,7 +63,7 @@ function Invoke-Check-If-Configuration-Migration-Data-Exists
 {
     param (
         [Parameter()] [String]$path,
-        [Parameter()] [String]$workspace
+        [Parameter()] [String]$artifactDropPath
     )
 
    if(Test-Path "$path")
@@ -72,7 +72,7 @@ function Invoke-Check-If-Configuration-Migration-Data-Exists
    }
    else
    {
-        $path = "$workspace/drop/ConfigurationMigrationData.zip"
+        $path = "$artifactDropPath/ConfigurationMigrationData.zip"
         if(Test-Path "$path")
         {
             Write-Host "##vso[task.setvariable variable=ConfigurationMigrationFilePath]$path"
