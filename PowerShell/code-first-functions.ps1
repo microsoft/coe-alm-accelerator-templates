@@ -314,7 +314,7 @@ function Invoke-Clone-Or-Sync-Solution{
             Set-Location -Path $cdsProjfolderPath
 
             $syncCommand = "solution sync --packagetype Both --async"
-            if ($processCanvasApps) {
+            if ([System.Convert]::ToBoolean($processCanvasApps.Trim())) {
                 $syncCommand += " --processCanvasApps $processCanvasApps"
             }
 
@@ -330,7 +330,7 @@ function Invoke-Clone-Or-Sync-Solution{
 
             # Trigger Clone
             $cloneCommand = "solution clone -n $solutionName --outputDirectory ""$unpackfolderpath"" --packagetype Both --async"
-            if ($processCanvasApps) {
+            if ([System.Convert]::ToBoolean($processCanvasApps.Trim())) {
                 $cloneCommand += " --processCanvasApps $processCanvasApps"
             }
             Write-Host "Clone Command - $pacexepath $cloneCommand"
