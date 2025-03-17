@@ -93,7 +93,7 @@ steps:
     environmentName: '${{parameters.environmentName}}'
 
 # Update any deploymentSettings.json via FileTransform task. This task will replace values in a JSON file based on their path. See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/transforms-variable-substitution?view=azure-devops&tabs=Classic#jsonvarsubs
-- task: FileTransform@1
+- task: FileTransform@2
   displayName: 'File Transformation: deploymentSettings.json'
   inputs:
     folderPath: '$(Pipeline.Workspace)'
