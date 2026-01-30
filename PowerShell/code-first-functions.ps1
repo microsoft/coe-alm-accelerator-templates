@@ -270,7 +270,8 @@ function Invoke-Pac-Install-Latest{
     {
         Write-Host "Installing latest pac version"
         $pacexepath = "$pacPath\pac.exe"
-        & $pacexepath install latest
+        $installCommand = "install latest"
+        Invoke-Expression -Command "$pacexepath $installCommand"
     }
     else
     {
