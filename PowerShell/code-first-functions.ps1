@@ -261,7 +261,6 @@ function Invoke-Pac-Authenticate{
 <#
 This function installs the latest version of pac CLI.
 This ensures that the latest pac version is available for subsequent commands.
-It checks the current version first and only installs if an update is needed.
 #>
 function Invoke-Pac-Install-Latest{
     param (
@@ -269,33 +268,9 @@ function Invoke-Pac-Install-Latest{
     )
     if(Test-Path "$pacPath\pac.exe")
     {
+        Write-Host "Installing latest pac version"
         $pacexepath = "$pacPath\pac.exe"
-        
-        # Get current version
-        Write-Host "Checking current pac version..."
-        $currentVersionOutput = & $pacexepath --version 2>&1
-        Write-Host "Current pac version: $currentVersionOutput"
-        
-        # Attempt to install latest - pac CLI will skip if already at latest version
-        Write-Host "Checking for pac updates..."
-        $installOutput = & $pacexepath install latest 2>&1
-        
-        # Check if already at latest or if update occurred
-        if($installOutput -match "already|up to date|up-to-date" -or $installOutput -match "current version")
-        {
-            Write-Host "pac CLI is already at the latest version"
-        }
-        elseif($installOutput -match "successfully|installed|updated")
-        {
-            Write-Host "pac CLI has been updated to the latest version"
-            # Verify new version
-            $newVersionOutput = & $pacexepath --version 2>&1
-            Write-Host "New pac version: $newVersionOutput"
-        }
-        else
-        {
-            Write-Host "pac install latest output: $installOutput"
-        }
+        & $pacexepath install latest
     }
     else
     {
