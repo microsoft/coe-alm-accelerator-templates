@@ -266,17 +266,21 @@ function Invoke-Pac-Install-Latest{
     param (
         [Parameter(Mandatory)] [String]$pacPath
     )
-    if(Test-Path "$pacPath\pac.exe")
-    {
-        Write-Host "Installing latest pac version"
-        $pacexepath = "$pacPath\pac.exe"
-        $installCommand = "install latest"
-        Invoke-Expression -Command "$pacexepath $installCommand"
-    }
-    else
-    {
-        Write-Host "pac.exe NOT found at $pacPath"
-    }
+    # Commenting out pac install latest command as it's not a valid pac CLI command
+    # The pac CLI version should be managed by the pipeline's Power Platform Tool Installer task
+    # if(Test-Path "$pacPath\pac.exe")
+    # {
+    #     Write-Host "Installing latest pac version"
+    #     $pacexepath = "$pacPath\pac.exe"
+    #     $installCommand = "install latest"
+    #     Invoke-Expression -Command "$pacexepath $installCommand"
+    # }
+    # else
+    # {
+    #     Write-Host "pac.exe NOT found at $pacPath"
+    # }
+    
+    Write-Host "Pac version management is handled by the pipeline configuration"
 }
 
 <# 

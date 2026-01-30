@@ -107,6 +107,17 @@ steps:
 # Set pipeline vars for tools paths.
 - template: set-tools-paths.yml
 
+# Enable Windows long path support for all operations
+- pwsh: |
+    git config --system core.longpaths true
+    # Enable long paths for the current process and system
+    if ($env:AGENT_OS -eq "Windows_NT") {
+      Write-Host "Enabling Windows long path support"
+      reg add HKLM\SYSTEM\CurrentControlSet\Control\FileSystem /v LongPathsEnabled /t REG_DWORD /d 1 /f
+    }
+  displayName: 'Enable Long Path Support'
+  condition: succeeded()
+
 # Restore PowerShell Module dependencies if available in cache
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops
 - task: Cache@2
