@@ -97,6 +97,9 @@ function Add-Codefirst-Projects-To-Cdsproj{
     )
     if (-not ([string]::IsNullOrEmpty($pacPath)) -and (Test-Path "$pacPath\pac.exe"))
     {
+        # Ensure latest pac version is installed
+        Invoke-Pac-Install-Latest -pacPath $pacPath
+        
         Write-Host "Executing Pac Auth List command"
         $pacexepath = "$pacPath\pac.exe"
         $authCommand = "auth list"
@@ -241,6 +244,9 @@ function Invoke-Pac-Authenticate{
     )
     if(Test-Path "$pacPath\pac.exe")
     {
+        # Ensure latest pac version is installed
+        Invoke-Pac-Install-Latest -pacPath $pacPath
+        
         $pacexepath = "$pacPath\pac.exe"
         Invoke-Expression -Command "$pacexepath auth create --environment $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
     }
@@ -251,6 +257,52 @@ function Invoke-Pac-Authenticate{
 
     return $pacexepath
 }
+
+<#
+This function installs the latest version of pac CLI.
+This ensures that the latest pac version is available for subsequent commands.
+It checks the current version first and only installs if an update is needed.
+#>
+function Invoke-Pac-Install-Latest{
+    param (
+        [Parameter(Mandatory)] [String]$pacPath
+    )
+    if(Test-Path "$pacPath\pac.exe")
+    {
+        $pacexepath = "$pacPath\pac.exe"
+        
+        # Get current version
+        Write-Host "Checking current pac version..."
+        $currentVersionOutput = & $pacexepath --version 2>&1
+        Write-Host "Current pac version: $currentVersionOutput"
+        
+        # Attempt to install latest - pac CLI will skip if already at latest version
+        Write-Host "Checking for pac updates..."
+        $installOutput = & $pacexepath install latest 2>&1
+        
+        # Check if already at latest or if update occurred
+        if($installOutput -match "already|up to date|up-to-date" -or $installOutput -match "current version")
+        {
+            Write-Host "pac CLI is already at the latest version"
+        }
+        elseif($installOutput -match "successfully|installed|updated")
+        {
+            Write-Host "pac CLI has been updated to the latest version"
+            # Verify new version
+            $newVersionOutput = & $pacexepath --version 2>&1
+            Write-Host "New pac version: $newVersionOutput"
+        }
+        else
+        {
+            Write-Host "pac install latest output: $installOutput"
+        }
+    }
+    else
+    {
+        Write-Host "pac.exe NOT found at $pacPath"
+    }
+}
+
 <# 
 This function generates a cdsproj file for unpacked solutions that are not initialized
 using pac solution clone, sync or init commands. This is primarily used for pipeline artifacts
@@ -266,6 +318,9 @@ function Invoke-Generate-CdsProj-For-Unpacked-Solution {
     $pacexepath = "$pacPath\pac.exe"
     if(Test-Path "$pacexepath")
     {
+        # Ensure latest pac version is installed
+        Invoke-Pac-Install-Latest -pacPath $pacPath
+        
         if(-Not(Test-Path $buildSourceDirectory\$repo\$solutionName\SolutionPackage\*.cdsproj)){
             #Use fake publisher becaue it will skip everything but creating cdsproj file and gitignore file
             $initCommand = "solution init --publisher-name fake --publisher-prefix fake --outputDirectory `"$buildSourceDirectory\$repo\$solutionName\SolutionPackage\`""
@@ -298,6 +353,9 @@ function Invoke-Clone-Or-Sync-Solution{
     $pacexepath = "$pacPath\pac.exe"
     if(Test-Path "$pacexepath")
     {
+        # Ensure latest pac version is installed
+        Invoke-Pac-Install-Latest -pacPath $pacPath
+        
         # Trigger Auth
         Invoke-Expression -Command "$pacexepath auth create --environment $serviceConnectionUrl --name ppdev --applicationId $clientId --clientSecret $clientSecret --tenant $tenantID"
         $unpackfolderpath = "$buildSourceDirectory\$repo\$solutionName\SolutionPackage"
@@ -434,6 +492,9 @@ function Invoke-Restructure-Legacy-Folders{
         # Generate .cdsproj file by triggering Clone
         $temp_init_path = "$buildDirectory\temp_init"
 
+        # Ensure latest pac version is installed
+        Invoke-Pac-Install-Latest -pacPath $pacPath
+        
         $solInitCommand = "solution init --publisher-name $publisherName --publisher-prefix $publisherPrefix --outputDirectory $temp_init_path\$solutionName"
         Write-Host "Solution Init Command - $solInitCommand"
         Invoke-Expression -Command "$pacPath\pac.exe $solInitCommand"
